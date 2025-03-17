@@ -11,8 +11,9 @@ import (
 )
 
 type Config struct {
-	Ozon   ozon.Config
-	Google google.Config
+	Verbose bool
+	Ozon    ozon.Config
+	Google  google.Config
 }
 
 func NewOrFail(filename string) Config {

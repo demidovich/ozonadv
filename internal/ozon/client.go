@@ -1,6 +1,7 @@
 package ozon
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 const rootUrl = "https://api-performance.ozon.ru/api"
 
 type Client struct {
+	verbose      bool
 	clientId     string
 	clientSecret string
 	accesstoken  string
@@ -39,18 +41,59 @@ func NewClient(cfg Config) *Client {
 	return c
 }
 
-func (c *Client) Get(url string, params map[string]any, result any) error {
+func (c *Client) SetVerbose(value bool) {
+	c.verbose = value
+}
+
+func (c *Client) get(resource string, result any) error {
+	url := c.url(resource)
+	c.logRequest("GET", url)
+
+	resp, err := c.resty.R().
+		SetAuthToken(c.accesstoken).
+		SetResult(result).
+		Get(url)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return errors.New(
+			fmt.Sprintf("Response error: %s %s", resp.Status(), resp.String()),
+		)
+	}
+
 	return nil
 }
 
-func (c *Client) Post(url string, payload map[string]string, result any) error {
+func (c *Client) post(resource string, payload map[string]string, result any) error {
+	url := c.url(resource)
+	c.logRequest("POST", url)
+
+	resp, err := c.resty.R().
+		SetAuthToken(c.accesstoken).
+		SetBody(payload).
+		SetResult(result).
+		Post(url)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return errors.New(
+			fmt.Sprintf("Response error: %s %s", resp.Status(), resp.String()),
+		)
+	}
+
 	return nil
 }
 
 func (c *Client) initAccessToken() {
 
-	url := url("/client/token")
-	logRequest("POST", url)
+	url := c.url("/client/token")
+	c.logRequest("POST", url)
 
 	payload := map[string]string{
 		"client_id":     c.clientId,
@@ -85,10 +128,14 @@ func (c *Client) initAccessToken() {
 	fmt.Println("Получен токен API Озон:", c.accesstoken)
 }
 
-func url(resource string) string {
+func (c *Client) url(resource string) string {
 	return rootUrl + resource
 }
 
-func logRequest(method, url string) {
+func (c *Client) logRequest(method, url string) {
+	if !c.verbose {
+		return
+	}
+
 	fmt.Printf("Request: %s %s\n", method, url)
 }
