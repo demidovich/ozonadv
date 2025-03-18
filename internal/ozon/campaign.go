@@ -1,12 +1,18 @@
 package ozon
 
-// states
-// CAMPAIGN_STATE_ARCHIVED
-// CAMPAIGN_STATE_FINISHED
-// CAMPAIGN_STATE_INACTIVE
-// CAMPAIGN_STATE_RUNNING
+// Campaign states
+// CAMPAIGN_STATE_RUNNING                — активная кампания;
+// CAMPAIGN_STATE_PLANNED                — кампания, сроки проведения которой ещё не наступили;
+// CAMPAIGN_STATE_STOPPED                — кампания, приостановленная из-за нехватки бюджета;
+// CAMPAIGN_STATE_INACTIVE               — кампания, остановленная владельцем;
+// CAMPAIGN_STATE_ARCHIVED               — архивная кампания;
+// CAMPAIGN_STATE_MODERATION_DRAFT       — отредактированная кампания до отправки на модерацию;
+// CAMPAIGN_STATE_MODERATION_IN_PROGRESS — кампания, отправленная на модерацию;
+// CAMPAIGN_STATE_MODERATION_FAILED      — кампания, непрошедшая модерацию;
+// CAMPAIGN_STATE_FINISHED               — кампания завершена, дата окончания в прошлом, такую кампанию нельзя изменить,
+//                                         можно только клонировать или создать новую.
 
-// advObjectTypes
+// Campaign advObjectTypes
 // GLOBAL_PROMO
 // VIDEO_BANNER
 // BANNER
@@ -24,6 +30,14 @@ type Campaign struct {
 	UpdatedAt                string `json:"updatedAt"`
 	ProductCampaignMode      string `json:"productCampaignMode"`
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
+}
+
+func (c *Campaign) NotRunning() bool {
+	return !c.Running()
+}
+
+func (c *Campaign) Running() bool {
+	return c.State == "CAMPAIGN_STATE_RUNNING" || c.State == "CAMPAIGN_STATE_STOPPED"
 }
 
 func (c *Client) Campaigns() ([]Campaign, error) {

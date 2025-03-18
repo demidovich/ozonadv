@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"ozonadv/config"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
@@ -18,32 +17,31 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "ozonadv",
-		Short: "CLI версия приложения",
+		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
 	initFetchCommand(rootCmd, ozonClient)
 
 	fmt.Println("")
-	err := rootCmd.Execute()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	rootCmd.Execute()
 }
 
 func initFetchCommand(rootCmd *cobra.Command, ozonClient *ozon.Client) {
 	cmd := &cobra.Command{
-		Use:   "fetch",
-		Short: "Извлечь данные по кампаниям",
+		Use:     "stat",
+		Short:   "Статистика по кампаниям",
+		Example: "ozonadv stat --from-date 2025-01-01 --to-date 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			options := stat.FetchOptions{}
-			options.Days, _ = cmd.Flags().GetUint("days")
+			options := stat.HandleOptions{}
+			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
+			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
 
-			return stat.Fetch(ozonClient, options)
+			return stat.Handle(ozonClient, options)
 		},
 	}
 
-	cmd.Flags().Uint("days", 0, "Интервал дней")
+	cmd.PersistentFlags().String("from-date", "", "Начало периода")
+	cmd.PersistentFlags().String("to-date", "", "Окончание периода")
 
 	rootCmd.AddCommand(cmd)
 }
