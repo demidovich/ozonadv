@@ -7,6 +7,7 @@ import (
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
 	"ozonadv/internal/storage"
+	"ozonadv/pkg/console"
 
 	"github.com/spf13/cobra"
 )
@@ -14,9 +15,12 @@ import (
 func main() {
 	log.SetFlags(0)
 	fmt.Println("")
+	defer fmt.Println("")
+
+	storage := storage.New()
+	defer storage.SaveState()
 
 	cfg := config.NewOrFail("config.yml")
-	storage := storage.New()
 	ozonClient := ozon.NewClient(cfg.Ozon)
 	statUsecases := stat.New(storage, ozonClient)
 
@@ -37,9 +41,17 @@ func initFetchCommand(rootCmd *cobra.Command, statUsecases stat.Usecases) {
 		Short:   "Запрос на формирование отчетов статистики по кампаниям",
 		Example: "ozonadv fetch --from-date 2025-01-01 --to-date 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if statUsecases.HasIncompletedStatistics() {
+				fmt.Println("Найдены незагруженные отчеты.")
+				if console.Ask("Продолжить?") == false {
+					return nil
+				}
+			}
+
 			options := stat.FetchOptions{}
 			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
 			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
+			options.CampaignsPerRequest, _ = cmd.PersistentFlags().GetInt("campaigns-per-request")
 
 			return statUsecases.Fetch(options)
 		},
@@ -47,6 +59,7 @@ func initFetchCommand(rootCmd *cobra.Command, statUsecases stat.Usecases) {
 
 	cmd.PersistentFlags().String("from-date", "", "Начало периода")
 	cmd.PersistentFlags().String("to-date", "", "Окончание периода")
+	cmd.PersistentFlags().Int("campaigns-per-request", 10, "Количество кампаний на один запрос")
 
 	rootCmd.AddCommand(cmd)
 }

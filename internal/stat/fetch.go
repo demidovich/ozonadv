@@ -10,14 +10,14 @@ package stat
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/go-playground/validator/v10"
 )
 
 type FetchOptions struct {
-	FromDate string `validate:"required,datetime=2006-01-02"`
-	ToDate   string `validator:"required,datetime=2006-01-02"`
+	FromDate            string `validate:"required,datetime=2006-01-02"`
+	ToDate              string `validator:"required,datetime=2006-01-02"`
+	CampaignsPerRequest int    `validator:"required,integer,min=1,max=10"`
 }
 
 func (f *FetchOptions) validate() error {
@@ -39,7 +39,7 @@ func (uc Usecases) Fetch(options FetchOptions) error {
 
 	campaigns, err := uc.ozonClient.Campaigns()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	fmt.Println("")

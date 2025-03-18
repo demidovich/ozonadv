@@ -3,7 +3,6 @@ package ozon
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -26,7 +25,6 @@ type Config struct {
 
 func NewClient(cfg Config) *Client {
 	fmt.Println("Инициализация клиента API Озон")
-	fmt.Println("")
 
 	c := &Client{
 		resty:        resty.New(),
@@ -45,7 +43,9 @@ func (c *Client) SetVerbose(value bool) {
 }
 
 func (c *Client) get(resource string, result any) error {
-	c.initAccessToken()
+	if err := c.initAccessToken(); err != nil {
+		return err
+	}
 
 	url := c.url(resource)
 	c.logRequest("GET", url)
@@ -61,7 +61,7 @@ func (c *Client) get(resource string, result any) error {
 
 	if resp.StatusCode() != http.StatusOK {
 		return errors.New(
-			fmt.Sprintf("Response error: %s %s", resp.Status(), resp.String()),
+			fmt.Sprintf("Ozon Response: %s %s", resp.Status(), resp.String()),
 		)
 	}
 
@@ -69,7 +69,9 @@ func (c *Client) get(resource string, result any) error {
 }
 
 func (c *Client) post(resource string, payload map[string]string, result any) error {
-	c.initAccessToken()
+	if err := c.initAccessToken(); err != nil {
+		return err
+	}
 
 	url := c.url(resource)
 	c.logRequest("POST", url)
@@ -85,17 +87,15 @@ func (c *Client) post(resource string, payload map[string]string, result any) er
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return errors.New(
-			fmt.Sprintf("Response error: %s %s", resp.Status(), resp.String()),
-		)
+		return fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
 	}
 
 	return nil
 }
 
-func (c *Client) initAccessToken() {
+func (c *Client) initAccessToken() error {
 	if c.accesstoken != "" {
-		return
+		return nil
 	}
 
 	url := c.url("/client/token")
@@ -119,17 +119,18 @@ func (c *Client) initAccessToken() {
 		Post(url)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		log.Fatal("Response:", resp.Status(), resp.String())
+		return fmt.Errorf("Ozon Access Token Response: %s %s", resp.Status(), resp.String())
 	}
 
 	resp.StatusCode()
 	c.accesstoken = result.AccessToken
 
 	fmt.Println("Получен токен API Озон:", c.accesstoken)
+	return nil
 }
 
 func (c *Client) url(resource string) string {

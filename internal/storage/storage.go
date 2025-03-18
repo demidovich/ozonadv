@@ -1,10 +1,14 @@
+// Локальное хранилище
+// Используется для промежуточного хранения данных
+// Необходимо, так как генерация отчетов выполняется в три этапа
+// 1. Запрос на формирование
+// 2. Проверка готовности
+// 3. Получение результатов
+
 package storage
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
 	"os"
 	"ozonadv/internal/ozon"
 )
@@ -12,6 +16,7 @@ import (
 type Storage struct {
 	rootDir        string
 	statisticsFile string
+	statistics     map[string]ozon.Statistic
 }
 
 func New() *Storage {
@@ -21,10 +26,12 @@ func New() *Storage {
 	s := Storage{
 		rootDir:        root,
 		statisticsFile: root + "/statistics.json",
+		statistics:     make(map[string]ozon.Statistic),
 	}
 
 	initDir(s.rootDir)
 	initFile(s.statisticsFile)
+	readJsonFile(s.statisticsFile, &s.statistics, "{}")
 
 	fmt.Println("Директория локального хранилища", s.rootDir)
 	fmt.Println("")
@@ -32,103 +39,35 @@ func New() *Storage {
 	return &s
 }
 
-func (s *Storage) SaveStatistic(item ozon.Statistic) {
-	all := *s.FindAllStatistic()
-
-	updated := false
-	for i, row := range all {
-		if row.UUID == item.UUID {
-			all[i] = item
-			updated = true
-		}
-	}
-
-	if !updated {
-		all = append(all, item)
-	}
-
-	writeJsonFile(s.statisticsFile, &all)
+func (s *Storage) SetStatistic(item ozon.Statistic) {
+	s.statistics[item.UUID] = item
 }
 
-func (s *Storage) FindStatistic(uuid string) (*ozon.Statistic, error) {
-	all := s.FindAllStatistic()
-
-	for _, row := range *all {
-		if row.UUID == uuid {
-			return &row, nil
-		}
-	}
-
-	return nil, errors.New("not found")
+func (s *Storage) GetStatistic(uuid string) (ozon.Statistic, bool) {
+	item, ok := s.statistics[uuid]
+	return item, ok
 }
 
-func (s *Storage) FindAllStatistic() *[]ozon.Statistic {
-	result := []ozon.Statistic{}
-	readJsonFile(s.statisticsFile, &result, "[]")
+func (s *Storage) GetAllStatistic() []ozon.Statistic {
+	result := make([]ozon.Statistic, 0, len(s.statistics))
+	for _, item := range s.statistics {
+		result = append(result, item)
+	}
 
-	return &result
+	return result
 }
 
 func (s *Storage) RemoveStatistic(uuid string) {
-	current := s.FindAllStatistic()
-	updated := make([]ozon.Statistic, 0, len(*current))
-
-	for _, row := range *current {
-		if row.UUID != uuid {
-			updated = append(updated, row)
-		}
-	}
-
-	writeJsonFile(s.statisticsFile, &updated)
+	delete(s.statistics, uuid)
 }
 
-func readJsonFile(path string, result any, defaultContent string) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if string(content) == "" {
-		content = []byte(defaultContent)
-	}
-
-	err = json.Unmarshal(content, result)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (s *Storage) StatisticsSize() int {
+	return len(s.statistics)
 }
 
-func writeJsonFile(path string, data any) {
-	content, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal(err)
-	}
+// Сохранить состояние хранилища
+func (s *Storage) SaveState() {
+	fmt.Println("Сохранение локального хранилища")
 
-	err = os.WriteFile(path, content, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func initDir(path string) {
-	err := os.MkdirAll(path, 0777)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func initFile(path string) {
-	f, err := os.Open(path)
-	if err == nil {
-		f.Close()
-		return
-	}
-
-	if os.IsNotExist(err) {
-		f, err = os.Create(path)
-		if err != nil {
-			log.Fatal(err)
-		}
-		f.Close()
-	}
+	writeJsonFile(s.statisticsFile, s.statistics)
 }

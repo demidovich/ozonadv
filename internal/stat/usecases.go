@@ -16,3 +16,7 @@ func New(storage *storage.Storage, ozonClient *ozon.Client) Usecases {
 		ozonClient: ozonClient,
 	}
 }
+
+func (uc *Usecases) HasIncompletedStatistics() bool {
+	return uc.storage.StatisticsSize() > 0
+}

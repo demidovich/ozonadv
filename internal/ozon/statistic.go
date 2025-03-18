@@ -1,6 +1,6 @@
 package ozon
 
-// Report states
+// Statistic states
 // NOT_STARTED — запрос ожидает выполнения;
 // IN_PROGRESS — запрос выполняется в данный момент;
 // ERROR       — выполнение запроса завершилось ошибкой;
