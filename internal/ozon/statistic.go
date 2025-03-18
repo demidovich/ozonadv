@@ -20,5 +20,5 @@ func (r *Statistic) IsOk() bool {
 }
 
 func (c *Client) Statistics() []Statistic {
-
+	return []Statistic{}
 }

@@ -3,8 +3,8 @@ package ozon
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -113,13 +113,11 @@ func (c *Client) initAccessToken() {
 		Post(url)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		fmt.Fprintln(os.Stderr, "Response:", resp.Status(), resp.String())
-		os.Exit(1)
+		log.Fatal("Response:", resp.Status(), resp.String())
 	}
 
 	resp.StatusCode()

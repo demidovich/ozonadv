@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"os"
+	"log"
 	"ozonadv/internal/google"
 	"ozonadv/internal/ozon"
 
@@ -19,8 +19,7 @@ type Config struct {
 func NewOrFail(filename string) Config {
 	cfg, err := New(filename)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	return cfg
@@ -39,7 +38,7 @@ func New(filename string) (Config, error) {
 	}
 
 	if err := v.Unmarshal(&cfg); err != nil {
-		return cfg, fmt.Errorf("unable to decode config into struct, %v", err)
+		return cfg, fmt.Errorf("Ошибка парсинга конфигурационного файла, %v", err)
 	}
 
 	if cfg.Ozon.ClientId == "" {

@@ -10,18 +10,20 @@ package stat
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"ozonadv/internal/ozon"
+	"ozonadv/internal/storage"
 
 	"github.com/go-playground/validator/v10"
 )
 
-type HandleOptions struct {
+type FetchOptions struct {
 	FromDate string `validate:"required,datetime=2006-01-02"`
 	ToDate   string `validator:"required,datetime=2006-01-02"`
 }
 
-func (f *HandleOptions) validate() error {
+func (f *FetchOptions) validate() error {
 	validate := validator.New()
 
 	err := validate.Struct(f)
@@ -33,7 +35,7 @@ func (f *HandleOptions) validate() error {
 	return fmt.Errorf("%s", errs)
 }
 
-func Handle(ozonClient *ozon.Client, options HandleOptions) error {
+func Fetch(storage *storage.Storage, ozonClient *ozon.Client, options FetchOptions) error {
 	if err := options.validate(); err != nil {
 		return err
 	}
@@ -43,8 +45,7 @@ func Handle(ozonClient *ozon.Client, options HandleOptions) error {
 
 	campaigns, err := ozonClient.Campaigns()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	fmt.Println("")

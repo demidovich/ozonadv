@@ -2,17 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"ozonadv/config"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
+	"ozonadv/internal/storage"
 
 	"github.com/spf13/cobra"
 )
 
 func main() {
+	log.SetFlags(0)
 	fmt.Println("")
 
 	cfg := config.NewOrFail("config.yml")
+	storage := storage.New()
+
+	fmt.Println(storage)
+	os.Exit(1)
+
 	ozonClient := ozon.NewClient(cfg.Ozon)
 
 	rootCmd := &cobra.Command{
@@ -20,23 +29,23 @@ func main() {
 		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
-	initFetchCommand(rootCmd, ozonClient)
+	initFetchCommand(rootCmd, storage, ozonClient)
 
 	fmt.Println("")
 	rootCmd.Execute()
 }
 
-func initFetchCommand(rootCmd *cobra.Command, ozonClient *ozon.Client) {
+func initFetchCommand(rootCmd *cobra.Command, storage *storage.Storage, ozonClient *ozon.Client) {
 	cmd := &cobra.Command{
-		Use:     "stat",
-		Short:   "Статистика по кампаниям",
-		Example: "ozonadv stat --from-date 2025-01-01 --to-date 2025-01-02",
+		Use:     "fetch",
+		Short:   "Запрос на формирование отчетов статистики по кампаниям",
+		Example: "ozonadv fetch --from-date 2025-01-01 --to-date 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			options := stat.HandleOptions{}
+			options := stat.FetchOptions{}
 			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
 			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
 
-			return stat.Handle(ozonClient, options)
+			return stat.Fetch(storage, ozonClient, options)
 		},
 	}
 

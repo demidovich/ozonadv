@@ -23,6 +23,9 @@ nbproject
 *.so
 *.dylib
 
+# Temporary
+var/*
+
 # Test binary, built with `go test -c`
 *.test
 
