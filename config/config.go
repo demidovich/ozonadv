@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"ozonstat/internal/google"
-	"ozonstat/internal/ozon"
+	"ozonadv/internal/google"
+	"ozonadv/internal/ozon"
 
 	"github.com/spf13/viper"
 )

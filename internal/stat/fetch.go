@@ -3,7 +3,7 @@ package stat
 import (
 	"fmt"
 	"os"
-	"ozonstat/internal/ozon"
+	"ozonadv/internal/ozon"
 )
 
 type FetchOptions struct {

@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"ozonstat/config"
-	"ozonstat/internal/ozon"
-	"ozonstat/internal/stat"
+	"ozonadv/config"
+	"ozonadv/internal/ozon"
+	"ozonadv/internal/stat"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ func main() {
 	ozonClient := ozon.NewClient(cfg.Ozon)
 
 	rootCmd := &cobra.Command{
-		Use:   "ozonstat",
+		Use:   "ozonadv",
 		Short: "CLI версия приложения",
 	}
 

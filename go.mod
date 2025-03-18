@@ -1,4 +1,4 @@
-module ozonstat
+module ozonadv
 
 go 1.23.6
 

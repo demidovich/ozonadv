@@ -10,7 +10,7 @@ vendor: ## Go mod vendor
 	go mod vendor
 
 fetch:
-	go run ./cmd/ozonstat.go fetch
+	go run ./cmd/ozonadv.go fetch
 
 # ---------------------------------------------------------------------------------------------------------------------
 
