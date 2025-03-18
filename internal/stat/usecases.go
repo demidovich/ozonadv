@@ -10,8 +10,8 @@ type Usecases struct {
 	ozonClient *ozon.Client
 }
 
-func New(storage *storage.Storage, ozonClient *ozon.Client) Usecases {
-	return Usecases{
+func New(storage *storage.Storage, ozonClient *ozon.Client) *Usecases {
+	return &Usecases{
 		storage:    storage,
 		ozonClient: ozonClient,
 	}

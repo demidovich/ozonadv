@@ -34,7 +34,6 @@ func New() *Storage {
 	readJsonFile(s.statisticsFile, &s.statistics, "{}")
 
 	fmt.Println("Директория локального хранилища", s.rootDir)
-	fmt.Println("")
 
 	return &s
 }

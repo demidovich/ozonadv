@@ -5,5 +5,4 @@ ozon:
   ClientSecret:
 
 google:
- SheetId:
- 
+  SheetId:
