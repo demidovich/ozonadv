@@ -9,9 +9,6 @@ vendor: ## Go mod vendor
 	go mod tidy
 	go mod vendor
 
-fetch:
-	go run ./cmd/ozonadv.go fetch
-
 # ---------------------------------------------------------------------------------------------------------------------
 
 build-win: ## Build windows

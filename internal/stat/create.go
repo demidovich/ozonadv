@@ -14,16 +14,16 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type FetchOptions struct {
+type CreateOptions struct {
 	FromDate            string `validate:"required,datetime=2006-01-02"`
 	ToDate              string `validator:"required,datetime=2006-01-02"`
 	CampaignsPerRequest int    `validator:"required,integer,min=1,max=10"`
 }
 
-func (f *FetchOptions) validate() error {
+func (c *CreateOptions) validate() error {
 	validate := validator.New()
 
-	err := validate.Struct(f)
+	err := validate.Struct(c)
 	if err == nil {
 		return nil
 	}
@@ -32,7 +32,7 @@ func (f *FetchOptions) validate() error {
 	return fmt.Errorf("%s", errs)
 }
 
-func (uc Usecases) Fetch(options FetchOptions) error {
+func (uc *Usecases) Create(options CreateOptions) error {
 	if err := options.validate(); err != nil {
 		return err
 	}
