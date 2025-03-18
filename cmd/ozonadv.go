@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"ozonadv/config"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
@@ -18,24 +17,21 @@ func main() {
 
 	cfg := config.NewOrFail("config.yml")
 	storage := storage.New()
-
-	fmt.Println(storage)
-	os.Exit(1)
-
 	ozonClient := ozon.NewClient(cfg.Ozon)
+	statUsecases := stat.New(storage, ozonClient)
 
 	rootCmd := &cobra.Command{
 		Use:   "ozonadv",
 		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
-	initFetchCommand(rootCmd, storage, ozonClient)
+	initFetchCommand(rootCmd, statUsecases)
 
 	fmt.Println("")
 	rootCmd.Execute()
 }
 
-func initFetchCommand(rootCmd *cobra.Command, storage *storage.Storage, ozonClient *ozon.Client) {
+func initFetchCommand(rootCmd *cobra.Command, statUsecases stat.Usecases) {
 	cmd := &cobra.Command{
 		Use:     "fetch",
 		Short:   "Запрос на формирование отчетов статистики по кампаниям",
@@ -45,7 +41,7 @@ func initFetchCommand(rootCmd *cobra.Command, storage *storage.Storage, ozonClie
 			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
 			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
 
-			return stat.Fetch(storage, ozonClient, options)
+			return statUsecases.Fetch(options)
 		},
 	}
 

@@ -11,9 +11,6 @@ package stat
 import (
 	"fmt"
 	"log"
-	"os"
-	"ozonadv/internal/ozon"
-	"ozonadv/internal/storage"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -35,21 +32,18 @@ func (f *FetchOptions) validate() error {
 	return fmt.Errorf("%s", errs)
 }
 
-func Fetch(storage *storage.Storage, ozonClient *ozon.Client, options FetchOptions) error {
+func (uc Usecases) Fetch(options FetchOptions) error {
 	if err := options.validate(); err != nil {
 		return err
 	}
 
-	fmt.Println(1111)
-	os.Exit(1)
-
-	campaigns, err := ozonClient.Campaigns()
+	campaigns, err := uc.ozonClient.Campaigns()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println("")
-	fmt.Printf("Найдено компаний: %d\n", len(campaigns))
+	fmt.Printf("Найдено кампаний: %d\n", len(campaigns))
 	fmt.Println("")
 
 	for _, campaign := range campaigns {

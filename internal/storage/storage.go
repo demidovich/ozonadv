@@ -64,15 +64,32 @@ func (s *Storage) FindStatistic(uuid string) (*ozon.Statistic, error) {
 
 func (s *Storage) FindAllStatistic() *[]ozon.Statistic {
 	result := []ozon.Statistic{}
-	readJsonFile(s.statisticsFile, &result)
+	readJsonFile(s.statisticsFile, &result, "[]")
 
 	return &result
 }
 
-func readJsonFile(path string, result any) {
+func (s *Storage) RemoveStatistic(uuid string) {
+	current := s.FindAllStatistic()
+	updated := make([]ozon.Statistic, 0, len(*current))
+
+	for _, row := range *current {
+		if row.UUID != uuid {
+			updated = append(updated, row)
+		}
+	}
+
+	writeJsonFile(s.statisticsFile, &updated)
+}
+
+func readJsonFile(path string, result any, defaultContent string) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if string(content) == "" {
+		content = []byte(defaultContent)
 	}
 
 	err = json.Unmarshal(content, result)

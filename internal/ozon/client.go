@@ -36,7 +36,6 @@ func NewClient(cfg Config) *Client {
 
 	c.resty.SetHeader("Content-Type", "application/json")
 	c.resty.SetHeader("Accept", "application/json")
-	c.initAccessToken()
 
 	return c
 }
@@ -46,6 +45,8 @@ func (c *Client) SetVerbose(value bool) {
 }
 
 func (c *Client) get(resource string, result any) error {
+	c.initAccessToken()
+
 	url := c.url(resource)
 	c.logRequest("GET", url)
 
@@ -68,6 +69,8 @@ func (c *Client) get(resource string, result any) error {
 }
 
 func (c *Client) post(resource string, payload map[string]string, result any) error {
+	c.initAccessToken()
+
 	url := c.url(resource)
 	c.logRequest("POST", url)
 
@@ -91,6 +94,9 @@ func (c *Client) post(resource string, payload map[string]string, result any) er
 }
 
 func (c *Client) initAccessToken() {
+	if c.accesstoken != "" {
+		return
+	}
 
 	url := c.url("/client/token")
 	c.logRequest("POST", url)
