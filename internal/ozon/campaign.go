@@ -39,14 +39,3 @@ func (c *Campaign) NotRunning() bool {
 func (c *Campaign) Running() bool {
 	return c.State == "CAMPAIGN_STATE_RUNNING" || c.State == "CAMPAIGN_STATE_STOPPED"
 }
-
-func (c *Client) Campaigns() ([]Campaign, error) {
-	result := struct {
-		List  []Campaign `json:"list"`
-		Total string     `json:"total"`
-	}{}
-
-	err := c.get("/client/campaign", &result)
-
-	return result.List, err
-}

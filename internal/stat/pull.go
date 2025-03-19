@@ -1,5 +1,15 @@
 package stat
 
-func (uc *Usecases) Pull() error {
+import (
+	"ozonadv/internal/ozon"
+	"ozonadv/internal/storage"
+)
+
+type pullUsecase struct {
+	storage    *storage.Storage
+	ozonClient *ozon.Client
+}
+
+func (p *pullUsecase) Handle() error {
 	return nil
 }

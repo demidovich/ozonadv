@@ -15,8 +15,8 @@ type Statistic struct {
 	Link      string `json:"link"`
 }
 
-func (r *Statistic) IsOk() bool {
-	return r.State == "OK"
+func (s *Statistic) IsOk() bool {
+	return s.State == "OK"
 }
 
 func (c *Client) Statistics() []Statistic {

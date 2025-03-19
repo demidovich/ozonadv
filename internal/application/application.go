@@ -8,6 +8,7 @@ import (
 )
 
 type Application struct {
+	configFile    string
 	config        *config.Config
 	ozonCLient    *ozon.Client
 	storage       *storage.Storage

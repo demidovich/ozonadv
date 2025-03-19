@@ -42,7 +42,18 @@ func (c *Client) SetVerbose(value bool) {
 	c.verbose = value
 }
 
-func (c *Client) get(resource string, result any) error {
+func (c *Client) Campaigns() ([]Campaign, error) {
+	result := struct {
+		List  []Campaign `json:"list"`
+		Total string     `json:"total"`
+	}{}
+
+	err := c.Get("/client/campaign", &result)
+
+	return result.List, err
+}
+
+func (c *Client) Get(resource string, result any) error {
 	if err := c.initAccessToken(); err != nil {
 		return err
 	}
@@ -68,7 +79,7 @@ func (c *Client) get(resource string, result any) error {
 	return nil
 }
 
-func (c *Client) post(resource string, payload map[string]string, result any) error {
+func (c *Client) Post(resource string, payload any, result any) error {
 	if err := c.initAccessToken(); err != nil {
 		return err
 	}

@@ -48,15 +48,14 @@ func initStatCreateCommand(rootCmd *cobra.Command, app *application.Application)
 			options := stat.CreateOptions{}
 			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
 			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
-			options.CampaignsPerRequest, _ = cmd.PersistentFlags().GetInt("campaigns-per-request")
 
 			return statUsecases.Create(options)
 		},
 	}
 
-	cmd.PersistentFlags().String("from-date", "", "Начало периода")
-	cmd.PersistentFlags().String("to-date", "", "Окончание периода")
-	cmd.PersistentFlags().Int("campaigns-per-request", 10, "Количество кампаний на один запрос")
+	cmd.Flags().StringP("config", "c", "", "Конфигурационный файл")
+	cmd.PersistentFlags().StringP("from-date", "f", "", "Начало периода")
+	cmd.PersistentFlags().StringP("to-date", "t", "", "Окончание периода")
 
 	rootCmd.AddCommand(cmd)
 }

@@ -10,14 +10,15 @@ package stat
 
 import (
 	"fmt"
+	"ozonadv/internal/ozon"
+	"ozonadv/internal/storage"
 
 	"github.com/go-playground/validator/v10"
 )
 
 type CreateOptions struct {
-	FromDate            string `validate:"required,datetime=2006-01-02"`
-	ToDate              string `validator:"required,datetime=2006-01-02"`
-	CampaignsPerRequest int    `validator:"required,integer,min=1,max=10"`
+	FromDate string `validate:"required,datetime=2006-01-02"`
+	ToDate   string `validator:"required,datetime=2006-01-02"`
 }
 
 func (c *CreateOptions) validate() error {
@@ -32,12 +33,17 @@ func (c *CreateOptions) validate() error {
 	return fmt.Errorf("%s", errs)
 }
 
-func (uc *Usecases) Create(options CreateOptions) error {
+type createUsecase struct {
+	storage    *storage.Storage
+	ozonClient *ozon.Client
+}
+
+func (c *createUsecase) Handle(options CreateOptions) error {
 	if err := options.validate(); err != nil {
 		return err
 	}
 
-	campaigns, err := uc.ozonClient.Campaigns()
+	campaigns, err := c.ozonClient.Campaigns()
 	if err != nil {
 		return err
 	}
@@ -55,18 +61,54 @@ func (uc *Usecases) Create(options CreateOptions) error {
 			continue
 		}
 
-		// objects, err := ozonClient.CampaignObjects(campaign.ID)
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	continue
-		// }
+		err := c.createStatistic(campaign, options)
+		if err != nil {
+			fmt.Println("Ошибка запроса формирования отчета:", err)
+			continue
+		}
 
-		// if len(objects) == 0 {
-		// 	fmt.Println("Пропуск. Отсутствуют рекламные объекты.")
-		// 	fmt.Println("")
-		// 	continue
-		// }
+		fmt.Println("Отправлен запрос формирования отчета.")
+		fmt.Println("")
 	}
 
+	return nil
+}
+
+func (c *createUsecase) createStatistic(campaign ozon.Campaign, options CreateOptions) error {
+	var resource string
+	var payload map[string]any
+
+	if campaign.AdvObjectType == "VIDEO_BANNER" {
+		resource = "/api/adv-api/external/api/statistics/video"
+		payload = map[string]any{
+			"campaigns": []string{campaign.ID},
+			"dateFrom":  options.FromDate,
+			"dateTo":    options.ToDate,
+			"groupBy":   "DAY",
+		}
+	} else {
+		resource = "/api/adv-api/external/api/statistics"
+		payload = map[string]any{
+			"campaignId": campaign.ID,
+			"dateFrom":   options.FromDate,
+			"dateTo":     options.ToDate,
+			"groupBy":    "DAY",
+		}
+	}
+
+	result := struct {
+		UUID   string `json:"UUID"`
+		Vendor bool   `json:"vendor"`
+	}{}
+
+	err := c.ozonClient.Post(resource, payload, &result)
+	if err != nil {
+		return err
+	}
+
+	stat := ozon.Statistic{}
+	stat.UUID = result.UUID
+
+	c.storage.SetStatistic(stat)
 	return nil
 }
