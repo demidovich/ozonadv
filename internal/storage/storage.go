@@ -9,8 +9,10 @@ package storage
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"ozonadv/internal/ozon"
+	"ozonadv/pkg/utils"
 )
 
 type Storage struct {
@@ -29,9 +31,9 @@ func New() *Storage {
 		statistics:     make(map[string]ozon.Statistic),
 	}
 
-	initDir(s.rootDir)
-	initFile(s.statisticsFile)
-	readJsonFile(s.statisticsFile, &s.statistics, "{}")
+	utils.DirInitOrFail(s.rootDir)
+	utils.FileInitOrFail(s.statisticsFile)
+	utils.JsonFileReadOrFail(s.statisticsFile, &s.statistics, "{}")
 
 	fmt.Println("Директория локального хранилища", s.rootDir)
 
@@ -56,17 +58,26 @@ func (s *Storage) GetAllStatistic() []ozon.Statistic {
 	return result
 }
 
+func (s *Storage) StatisticsSize() int {
+	return len(s.statistics)
+}
+
 func (s *Storage) RemoveStatistic(uuid string) {
 	delete(s.statistics, uuid)
 }
 
-func (s *Storage) StatisticsSize() int {
-	return len(s.statistics)
+func (s *Storage) RemoveAllStatistics() {
+	for k := range s.statistics {
+		delete(s.statistics, k)
+	}
 }
 
 // Сохранить состояние хранилища
 func (s *Storage) SaveState() {
 	fmt.Println("Сохранение локального хранилища")
 
-	writeJsonFile(s.statisticsFile, s.statistics)
+	err := utils.JsonFileWrite(s.statisticsFile, s.statistics)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

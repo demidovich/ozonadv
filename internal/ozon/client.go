@@ -42,17 +42,6 @@ func (c *Client) SetVerbose(value bool) {
 	c.verbose = value
 }
 
-func (c *Client) Campaigns() ([]Campaign, error) {
-	result := struct {
-		List  []Campaign `json:"list"`
-		Total string     `json:"total"`
-	}{}
-
-	err := c.Get("/client/campaign", &result)
-
-	return result.List, err
-}
-
 func (c *Client) Get(resource string, result any) error {
 	if err := c.initAccessToken(); err != nil {
 		return err

@@ -22,7 +22,7 @@ func main() {
 		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
-	initStatCreateCommand(rootCmd, app)
+	initStatCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
 	initStatPullCommand(rootCmd, app)
 
@@ -30,24 +30,30 @@ func main() {
 	rootCmd.Execute()
 }
 
-func initStatCreateCommand(rootCmd *cobra.Command, app *application.Application) {
+func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	cmd := &cobra.Command{
-		Use:     "stat:create",
-		Short:   "Запрос формирования отчетов статистики по кампаниям",
-		Example: "ozonadv stat:create --from-date 2025-01-01 --to-date 2025-01-02",
+		Use:     "stat",
+		Short:   "Формирование и загрузка статистики по кампаниям",
+		Example: "ozonadv stat --from-date 2025-01-01 --to-date 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			statUsecases := app.StatUsecases()
 
-			if statUsecases.HasIncompletedStatistics() {
+			if statUsecases.HasStatistics() {
 				fmt.Println("Найдены незагруженные отчеты.")
+				fmt.Println("Предыдущая загрузка была завершена не полностью.")
+				fmt.Println("Для завершения загрузки следует выполнить команду stat:pull")
+				fmt.Println("")
+				fmt.Println("Незагруженные отчеты будут удалены.")
 				if console.Ask("Продолжить?") == false {
 					return nil
 				}
+				statUsecases.RemoveAllStatistics()
 			}
 
 			options := stat.CreateOptions{}
 			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
 			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
+			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
 
 			return statUsecases.Create(options)
 		},
@@ -56,6 +62,7 @@ func initStatCreateCommand(rootCmd *cobra.Command, app *application.Application)
 	cmd.Flags().StringP("config", "c", "", "Конфигурационный файл")
 	cmd.PersistentFlags().StringP("from-date", "f", "", "Начало периода")
 	cmd.PersistentFlags().StringP("to-date", "t", "", "Окончание периода")
+	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных")
 
 	rootCmd.AddCommand(cmd)
 }
@@ -76,7 +83,7 @@ func initStatInfoCommand(rootCmd *cobra.Command, app *application.Application) {
 func initStatPullCommand(rootCmd *cobra.Command, app *application.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat:pull",
-		Short:   "Получить отчеты",
+		Short:   "Получить незагруженные отчеты",
 		Example: "ozonadv stat:pull",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return app.StatUsecases().Pull()
