@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
 
 const rootUrl = "https://api-performance.ozon.ru/api"
+const requestInterval = 100 * time.Millisecond
 
 type Client struct {
 	verbose      bool
@@ -43,6 +45,8 @@ func (c *Client) SetVerbose(value bool) {
 }
 
 func (c *Client) Get(resource string, result any) error {
+	time.Sleep(requestInterval)
+
 	if err := c.initAccessToken(); err != nil {
 		return err
 	}
@@ -69,6 +73,8 @@ func (c *Client) Get(resource string, result any) error {
 }
 
 func (c *Client) Post(resource string, payload any, result any) error {
+	time.Sleep(requestInterval)
+
 	if err := c.initAccessToken(); err != nil {
 		return err
 	}
@@ -94,6 +100,8 @@ func (c *Client) Post(resource string, payload any, result any) error {
 }
 
 func (c *Client) DownloadStatistic(url string) (data []byte, err error) {
+	time.Sleep(requestInterval)
+
 	if err = c.initAccessToken(); err != nil {
 		return
 	}
@@ -116,6 +124,8 @@ func (c *Client) DownloadStatistic(url string) (data []byte, err error) {
 }
 
 func (c *Client) initAccessToken() error {
+	time.Sleep(requestInterval)
+
 	if c.accesstoken != "" {
 		return nil
 	}
