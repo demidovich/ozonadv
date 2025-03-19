@@ -19,7 +19,7 @@ ozonadv [command] --help
 Пример команды фомирования и загрузки статистики
 
 ```shell
-ozonadv stat --from-date 2025-01-01 --to-date 2025-01-02 --export-file ./mystat.csv
+ozonadv stat --date-from 2025-01-01 --date-to 2025-01-02 --export-file ./mystat.csv
 ```
 
 Документация Озон Performance Api

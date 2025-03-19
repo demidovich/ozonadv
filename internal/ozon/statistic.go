@@ -23,7 +23,7 @@ type Statistic struct {
 	Link      string `json:"link"`
 }
 
-func (s *Statistic) IsOk() bool {
+func (s *Statistic) IsReadyToDownload() bool {
 	return s.State == "OK"
 }
 

@@ -28,7 +28,7 @@ func NewOrFail(filename string) Config {
 func New(filename string) (Config, error) {
 	v := viper.New()
 	v.SetConfigFile(filename)
-	v.AddConfigPath("..")
+	v.AddConfigPath(".")
 	v.AutomaticEnv()
 
 	cfg := Config{}

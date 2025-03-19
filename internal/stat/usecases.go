@@ -41,6 +41,6 @@ func (u *Usecases) Info() error {
 	return u.infoUsecase.Handle()
 }
 
-func (u *Usecases) Pull() error {
-	return u.pullUsecase.Handle()
+func (u *Usecases) Pull(optons PullOptions) error {
+	return u.pullUsecase.Handle(optons)
 }

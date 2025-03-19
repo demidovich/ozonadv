@@ -32,12 +32,12 @@ type Campaign struct {
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
 }
 
-func (c *Campaign) NotRunning() bool {
-	return !c.Running()
+func (c *Campaign) NotRunned() bool {
+	return !c.Runned()
 }
 
-func (c *Campaign) Running() bool {
-	return c.State == "CAMPAIGN_STATE_RUNNING" || c.State == "CAMPAIGN_STATE_STOPPED"
+func (c *Campaign) Runned() bool {
+	return c.State != "CAMPAIGN_STATE_PLANNED"
 }
 
 func (c *Client) Campaigns() ([]Campaign, error) {

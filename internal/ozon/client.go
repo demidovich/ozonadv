@@ -93,6 +93,28 @@ func (c *Client) Post(resource string, payload any, result any) error {
 	return nil
 }
 
+func (c *Client) DownloadStatistic(url string) (data []byte, err error) {
+	if err = c.initAccessToken(); err != nil {
+		return
+	}
+
+	resp, err := c.resty.R().
+		SetAuthToken(c.accesstoken).
+		Get(url)
+
+	if err != nil {
+		return data, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return data, fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
+	}
+
+	data = resp.Body()
+
+	return
+}
+
 func (c *Client) initAccessToken() error {
 	if c.accesstoken != "" {
 		return nil
@@ -126,7 +148,6 @@ func (c *Client) initAccessToken() error {
 		return fmt.Errorf("Ozon Access Token Response: %s %s", resp.Status(), resp.String())
 	}
 
-	resp.StatusCode()
 	c.accesstoken = result.AccessToken
 
 	fmt.Println("Получен токен API Озон:", c.accesstoken)

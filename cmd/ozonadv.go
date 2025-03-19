@@ -24,7 +24,7 @@ func main() {
 
 	initStatCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
-	initStatPullCommand(rootCmd, app)
+	// initStatPullCommand(rootCmd, app)
 
 	fmt.Println("")
 	rootCmd.Execute()
@@ -34,16 +34,16 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat",
 		Short:   "Формирование и загрузка статистики по кампаниям",
-		Example: "ozonadv stat --from-date 2025-01-01 --to-date 2025-01-02",
+		Example: "ozonadv stat --date-from 2025-01-01 --date-to 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			statUsecases := app.StatUsecases()
 
 			if statUsecases.HasStatistics() {
-				fmt.Println("Найдены незагруженные отчеты.")
-				fmt.Println("Предыдущая загрузка была завершена не полностью.")
+				fmt.Println("Найдены незагруженные отчеты")
+				fmt.Println("Предыдущая загрузка была завершена не полностью")
 				fmt.Println("Для завершения загрузки следует выполнить команду stat:pull")
 				fmt.Println("")
-				fmt.Println("Незагруженные отчеты будут удалены.")
+				fmt.Println("Незагруженные отчеты будут удалены")
 				if console.Ask("Продолжить?") == false {
 					return nil
 				}
@@ -51,8 +51,8 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 			}
 
 			options := stat.CreateOptions{}
-			options.FromDate, _ = cmd.PersistentFlags().GetString("from-date")
-			options.ToDate, _ = cmd.PersistentFlags().GetString("to-date")
+			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
+			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
 			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
 
 			return statUsecases.Create(options)
@@ -60,8 +60,8 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	}
 
 	cmd.Flags().StringP("config", "c", "", "Конфигурационный файл")
-	cmd.PersistentFlags().StringP("from-date", "f", "", "Начало периода")
-	cmd.PersistentFlags().StringP("to-date", "t", "", "Окончание периода")
+	cmd.PersistentFlags().StringP("date-from", "f", "", "Начало периода")
+	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода")
 	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных")
 
 	rootCmd.AddCommand(cmd)
@@ -80,15 +80,15 @@ func initStatInfoCommand(rootCmd *cobra.Command, app *application.Application) {
 	rootCmd.AddCommand(cmd)
 }
 
-func initStatPullCommand(rootCmd *cobra.Command, app *application.Application) {
-	cmd := &cobra.Command{
-		Use:     "stat:pull",
-		Short:   "Получить незагруженные отчеты",
-		Example: "ozonadv stat:pull",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return app.StatUsecases().Pull()
-		},
-	}
+// func initStatPullCommand(rootCmd *cobra.Command, app *application.Application) {
+// 	cmd := &cobra.Command{
+// 		Use:     "stat:pull",
+// 		Short:   "Получить незагруженные отчеты",
+// 		Example: "ozonadv stat:pull",
+// 		RunE: func(cmd *cobra.Command, args []string) error {
+// 			return app.StatUsecases().Pull()
+// 		},
+// 	}
 
-	rootCmd.AddCommand(cmd)
-}
+// 	rootCmd.AddCommand(cmd)
+// }

@@ -44,6 +44,11 @@ func (s *Storage) SetStatistic(item ozon.Statistic) {
 	s.statistics[item.UUID] = item
 }
 
+func (s *Storage) HasStatistic(uuid string) bool {
+	_, ok := s.statistics[uuid]
+	return ok
+}
+
 func (s *Storage) GetStatistic(uuid string) (ozon.Statistic, bool) {
 	item, ok := s.statistics[uuid]
 	return item, ok

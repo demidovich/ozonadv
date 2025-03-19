@@ -19,8 +19,8 @@ import (
 )
 
 type CreateOptions struct {
-	FromDate   string `validate:"required,datetime=2006-01-02"`
-	ToDate     string `validate:"required,datetime=2006-01-02"`
+	DateFrom   string `validate:"required,datetime=2006-01-02"`
+	DateTo     string `validate:"required,datetime=2006-01-02"`
 	ExportFile string `validate:"required,filepath"`
 }
 
@@ -59,7 +59,7 @@ func (c *createUsecase) Handle(options CreateOptions) error {
 	fmt.Println("")
 
 	if len(campaigns) == 0 {
-		fmt.Println("Кампании не найдены.")
+		fmt.Println("Кампании не найдены")
 		return nil
 	}
 
@@ -67,7 +67,7 @@ func (c *createUsecase) Handle(options CreateOptions) error {
 	c.createStatisticRequests(campaigns, options)
 
 	if c.storage.StatisticsSize() == 0 {
-		fmt.Println("Ни одного запроса не сформировано.")
+		fmt.Println("Кампании для выкрузки статистики не найдены")
 		return nil
 	}
 
@@ -81,7 +81,7 @@ func (c *createUsecase) Handle(options CreateOptions) error {
 
 	for {
 		if attempt == retries {
-			return errors.New("Превышен лимит повторных попыток загрузки отчетов.")
+			return errors.New("Превышен лимит повторных попыток загрузки отчетов")
 		}
 
 		if c.storage.StatisticsSize() == 0 {
@@ -96,19 +96,19 @@ func (c *createUsecase) Handle(options CreateOptions) error {
 		c.pullUsecase.Handle(pullOptions)
 	}
 
-	fmt.Println("Все отчеты загружены.")
+	fmt.Println("Все отчеты загружены")
 	return nil
 }
 
 func (c *createUsecase) createStatisticRequests(campaigns []ozon.Campaign, options CreateOptions) {
-	fmt.Println("Формирование запросов на генерацию статистики.")
+	fmt.Println("Формирование запросов на генерацию статистики")
 	fmt.Println("")
 
 	for _, campaign := range campaigns {
 		fmt.Printf("#%s, %s, %s\n", campaign.ID, campaign.State, campaign.Title)
 
-		if campaign.NotRunning() {
-			fmt.Println("Пропуск. Кампания не была запущена.")
+		if campaign.NotRunned() {
+			fmt.Println("Пропуск. Кампания не была запущена")
 			fmt.Println("")
 			continue
 		}
@@ -119,7 +119,7 @@ func (c *createUsecase) createStatisticRequests(campaigns []ozon.Campaign, optio
 			continue
 		}
 
-		fmt.Println("Отправлен запрос формирования отчета.")
+		fmt.Println("Отправлен запрос формирования отчета")
 		fmt.Println("")
 	}
 }
@@ -127,26 +127,6 @@ func (c *createUsecase) createStatisticRequests(campaigns []ozon.Campaign, optio
 func (c *createUsecase) requestCampaignStatistic(campaign ozon.Campaign, options CreateOptions) error {
 	var resource string
 	var payload map[string]any
-
-	// Запрос UI
-	//
-	// if campaign.AdvObjectType == "VIDEO_BANNER" {
-	// 	resource = "/adv-api/external/api/statistics/video"
-	// 	payload = map[string]any{
-	// 		"campaigns": []string{campaign.ID},
-	// 		"dateFrom":  options.FromDate,
-	// 		"dateTo":    options.ToDate,
-	// 		"groupBy":   "DATE",
-	// 	}
-	// } else {
-	// 	resource = "/adv-api/external/api/statistics"
-	// 	payload = map[string]any{
-	// 		"campaignId": campaign.ID,
-	// 		"dateFrom":   options.FromDate,
-	// 		"dateTo":     options.ToDate,
-	// 		"groupBy":    "DATE",
-	// 	}
-	// }
 
 	if campaign.AdvObjectType == "VIDEO_BANNER" {
 		resource = "/client/statistics/video"
@@ -156,8 +136,8 @@ func (c *createUsecase) requestCampaignStatistic(campaign ozon.Campaign, options
 
 	payload = map[string]any{
 		"campaigns": []string{campaign.ID},
-		"dateFrom":  options.FromDate,
-		"dateTo":    options.ToDate,
+		"dateFrom":  options.DateFrom,
+		"dateTo":    options.DateTo,
 		"groupBy":   "DATE",
 	}
 
