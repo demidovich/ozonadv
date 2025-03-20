@@ -101,7 +101,7 @@ type StatisticRequestOptions struct {
 	CampaignId string `validate:"required,numeric"`
 	DateFrom   string `validate:"required,datetime=2006-01-02"`
 	DateTo     string `validate:"required,datetime=2006-01-02"`
-	GroupBy    string `validate:"required,oneof=NO_GROUP_BY,DATE,START_OF_WEEK,START_OF_MONTH"`
+	GroupBy    string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
 }
 
 func (s *StatisticRequestOptions) validate() error {

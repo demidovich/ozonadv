@@ -9,17 +9,22 @@
 package stat
 
 import (
-	"errors"
+	"fmt"
+	"os"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/storage"
+	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
+	"time"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 type StatOptions struct {
 	DateFrom   string `validate:"required,datetime=2006-01-02"`
 	DateTo     string `validate:"required,datetime=2006-01-02"`
 	ExportFile string `validate:"required,filepath"`
-	GroupBy    string `validate:"required,oneof=NO_GROUP_BY,DATE,START_OF_WEEK,START_OF_MONTH"`
+	GroupBy    string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
 }
 
 func (c *StatOptions) Validate() error {
@@ -37,30 +42,66 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 	}
 
 	s.storage.Reset()
-	s.initReport(options)
-	s.processReport(options)
+	s.initProcessingOptions(options)
+
+	if err := s.initCampaigns(); err != nil {
+		return err
+	}
+
+	s.startPocessing()
 
 	return nil
 }
 
 func (s *statUsecase) HandleContinue() error {
 	if s.storage.CampaignRequestsSize() == 0 {
-		return errors.New("Кампании для формирования отчета отсутствуют")
+		fmt.Println("Необработанные кампании отсутствуют")
+		return nil
 	}
 
-	options := StatOptions{
-		DateFrom:   s.storage.RequestOptions().DateFrom,
-		DateTo:     s.storage.RequestOptions().DateTo,
-		ExportFile: s.storage.RequestOptions().ExportFile,
-		GroupBy:    s.storage.RequestOptions().GroupBy,
-	}
-
-	s.processReport(options)
+	s.startPocessing()
 
 	return nil
 }
 
-func (s *statUsecase) initReport(options StatOptions) {
+func (s *statUsecase) initCampaigns() error {
+	campaigns, err := s.ozonClient.AllCampaigns()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range campaigns {
+		if c.NeverRun() {
+			continue
+		}
+		s.storage.AddCampaignRequest(c)
+	}
+
+	if s.storage.CampaignRequestsSize() == 0 {
+		fmt.Println("Кампании, которые могли работать, не найдены")
+		fmt.Println("")
+		os.Exit(0)
+	}
+
+	fmt.Printf("")
+	for _, c := range s.storage.CampaignRequests() {
+		fmt.Printf("#%-9s %-22s  %-12s  %s\n", c.ID, c.State, c.AdvObjectType, c.Title)
+	}
+
+	fmt.Println("Всего:", s.storage.CampaignRequestsSize())
+	fmt.Println("")
+
+	if console.Ask("Продолжить?") == false {
+		s.storage.Reset()
+		fmt.Println("")
+		os.Exit(0)
+	}
+	fmt.Println("")
+
+	return nil
+}
+
+func (s *statUsecase) initProcessingOptions(options StatOptions) {
 	storageOptions := storage.RequestOptions{
 		DateFrom:   options.DateFrom,
 		DateTo:     options.DateTo,
@@ -71,6 +112,26 @@ func (s *statUsecase) initReport(options StatOptions) {
 	s.storage.SetRequestOptions(storageOptions)
 }
 
-func (s *statUsecase) processReport(options StatOptions) {
+func (s *statUsecase) startPocessing() {
+	max := s.storage.CampaignRequestsSize()
+	bar := progressbar.Default(int64(max))
 
+	for {
+		campaign, ok := s.storage.NextCampaignRequest()
+		if !ok {
+			break
+		}
+
+		s.processCampaign(campaign)
+		bar.Add(1)
+	}
+}
+
+func (s *statUsecase) processCampaign(campaign ozon.Campaign) error {
+	// fmt.Printf("#%s, %s", campaign.ID, campaign.Title)
+
+	time.Sleep(5 * time.Second)
+
+	s.storage.RemoveCampaignRequest(campaign.ID)
+	return nil
 }

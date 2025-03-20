@@ -1,5 +1,7 @@
 package ozon
 
+import "strings"
+
 // Campaign states
 // CAMPAIGN_STATE_RUNNING                — активная кампания;
 // CAMPAIGN_STATE_PLANNED                — кампания, сроки проведения которой ещё не наступили;
@@ -32,12 +34,12 @@ type Campaign struct {
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
 }
 
-func (c *Campaign) NotRunned() bool {
-	return !c.Runned()
+func (c *Campaign) NeverRun() bool {
+	return c.State == "CAMPAIGN_STATE_PLANNED"
 }
 
-func (c *Campaign) Runned() bool {
-	return c.State != "CAMPAIGN_STATE_PLANNED"
+func (c *Campaign) ShortState() string {
+	return strings.TrimPrefix(c.State, "CAMPAIGN_STATE_")
 }
 
 func (c *Client) AllCampaigns() ([]Campaign, error) {

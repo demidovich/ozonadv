@@ -19,7 +19,7 @@ func (s *statInfoUsecase) Handle() error {
 		fmt.Println("ozonadv stat:continue Продолжить формирования отчета")
 		fmt.Println("ozonadv stat:reset    Удалить незавершенное формирование отчета")
 	} else {
-		fmt.Println("Незавершенные задания отсутствуют")
+		fmt.Println("Формирование отчета завершено")
 	}
 
 	return nil

@@ -59,6 +59,7 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
 			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
 			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
+			options.GroupBy = "DATE"
 
 			return statUsecases.Stat(options)
 		},

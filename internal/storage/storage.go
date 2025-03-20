@@ -83,6 +83,14 @@ func (s *Storage) RemoveCampaignRequest(id string) {
 	delete(s.campaigns, id)
 }
 
+func (s *Storage) NextCampaignRequest() (ozon.Campaign, bool) {
+	for _, item := range s.campaigns {
+		return item, true
+	}
+
+	return ozon.Campaign{}, false
+}
+
 func (s *Storage) SetRequestOptions(options RequestOptions) {
 	s.requestOptions = &options
 }
