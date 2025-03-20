@@ -31,7 +31,7 @@ func (u *Usecases) RemoveAllCampaignRequests() {
 	u.storage.Reset()
 }
 
-func (u *Usecases) Stat(options StatOptions) error {
+func (u *Usecases) StatNew(options StatOptions) error {
 	return u.statUsecase.HandleNew(options)
 }
 

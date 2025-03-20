@@ -15,7 +15,9 @@ import (
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
+	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -43,7 +45,6 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 
 	s.storage.Reset()
 	s.initProcessingOptions(options)
-
 	if err := s.initCampaigns(); err != nil {
 		return err
 	}
@@ -54,10 +55,9 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 }
 
 func (s *statUsecase) HandleContinue() error {
-	if s.storage.CampaignRequestsSize() == 0 {
-		fmt.Println("Необработанные кампании отсутствуют")
-		return nil
-	}
+	fmt.Printf("")
+	s.printCampaignRequests(s.storage.CampaignRequests())
+	fmt.Println("")
 
 	s.startPocessing()
 
@@ -84,11 +84,7 @@ func (s *statUsecase) initCampaigns() error {
 	}
 
 	fmt.Printf("")
-	for _, c := range s.storage.CampaignRequests() {
-		fmt.Printf("#%-9s %-22s  %-12s  %s\n", c.ID, c.State, c.AdvObjectType, c.Title)
-	}
-
-	fmt.Println("Всего:", s.storage.CampaignRequestsSize())
+	s.printCampaignRequests(s.storage.CampaignRequests())
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
@@ -134,4 +130,27 @@ func (s *statUsecase) processCampaign(campaign ozon.Campaign) error {
 
 	s.storage.RemoveCampaignRequest(campaign.ID)
 	return nil
+}
+
+func (s *statUsecase) printCampaignRequests(campaigns []ozon.Campaign) {
+	statMaxLength := 0
+	typeMaxLength := 0
+
+	for _, c := range campaigns {
+		statLength := utf8.RuneCountInString(c.ShortState())
+		if statLength > statMaxLength {
+			statMaxLength = statLength
+		}
+		typeLength := utf8.RuneCountInString(c.AdvObjectType)
+		if typeLength > typeMaxLength {
+			typeMaxLength = typeLength
+		}
+	}
+
+	format := "#%-9s %-" + strconv.Itoa(statMaxLength) + "s  %-" + strconv.Itoa(typeMaxLength) + "s  %s\n"
+	for _, c := range campaigns {
+		fmt.Printf(format, c.ID, c.ShortState(), c.AdvObjectType, c.Title)
+	}
+
+	fmt.Println("Всего:", len(campaigns))
 }

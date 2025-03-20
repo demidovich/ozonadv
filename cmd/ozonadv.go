@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"ozonadv/internal/application"
 	"ozonadv/internal/stat"
 	"ozonadv/pkg/console"
+	"syscall"
 
 	"github.com/spf13/cobra"
 )
@@ -17,13 +20,20 @@ func main() {
 	app := application.New()
 	defer app.Shutdown()
 
+	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sig
+		app.Shutdown()
+		os.Exit(1)
+	}()
+
 	rootCmd := &cobra.Command{
 		Use:   "ozonadv",
 		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
 	initStatCommand(rootCmd, app)
-	initStatContinueCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
 	initStatResetCommand(rootCmd, app)
 
@@ -44,24 +54,21 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 			fmt.Println("")
 
 			if statUsecases.HasCampaignRequests() {
-				fmt.Println("Найдены незагруженные отчеты")
-				fmt.Println("Предыдущая загрузка была завершена не полностью")
-				fmt.Println("Для завершения загрузки следует выполнить команду stat:pull")
-				fmt.Println("")
-				fmt.Println("Незагруженные отчеты будут удалены")
-				if console.Ask("Продолжить?") == false {
-					return nil
+				fmt.Println("Найдена незавершенная обработка кампаний")
+				if console.Ask("Продолжить ее?") == true {
+					fmt.Println("")
+					return statUsecases.StatContinue()
 				}
-				statUsecases.RemoveAllCampaignRequests()
 			}
 
+			fmt.Println("")
 			options := stat.StatOptions{}
 			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
 			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
 			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
 			options.GroupBy = "DATE"
 
-			return statUsecases.Stat(options)
+			return statUsecases.StatNew(options)
 		},
 	}
 
@@ -69,25 +76,6 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	cmd.PersistentFlags().StringP("date-from", "f", "", "Начало периода")
 	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода")
 	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных")
-
-	rootCmd.AddCommand(cmd)
-}
-
-func initStatContinueCommand(rootCmd *cobra.Command, app *application.Application) {
-	cmd := &cobra.Command{
-		Use:     "stat:continue",
-		Short:   "Возобновить формирования статистики",
-		Example: "ozonadv stat:continue",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(cmd.Short)
-			fmt.Println("")
-
-			statUsecases := app.StatUsecases()
-			fmt.Println("")
-
-			return statUsecases.StatContinue()
-		},
-	}
 
 	rootCmd.AddCommand(cmd)
 }

@@ -18,12 +18,14 @@ func (s *statResetUsecase) Handle() error {
 		return nil
 	}
 
-	fmt.Println("Найдено кампаний:", s.storage.CampaignRequestsSize())
+	fmt.Println("Найдено необработанных кампаний:", s.storage.CampaignRequestsSize())
+	fmt.Println("")
 	if console.Ask("Удалить?") == false {
 		return nil
 	}
 
 	s.storage.Reset()
+	fmt.Println("")
 	fmt.Println("Кампании удалены")
 
 	return nil
