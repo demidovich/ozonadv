@@ -40,13 +40,13 @@ func (c *Campaign) Runned() bool {
 	return c.State != "CAMPAIGN_STATE_PLANNED"
 }
 
-func (c *Client) Campaigns() ([]Campaign, error) {
+func (c *Client) AllCampaigns() ([]Campaign, error) {
 	response := struct {
 		List  []Campaign `json:"list"`
 		Total string     `json:"total"`
 	}{}
 
-	err := c.Get("/client/campaign", &response)
+	err := c.get("/client/campaign", &response)
 
 	return response.List, err
 }

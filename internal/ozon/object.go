@@ -9,7 +9,7 @@ func (c *Client) CampaignObjects(campaignId string) ([]CampaignObject, error) {
 		List []CampaignObject `json:"list"`
 	}{}
 
-	err := c.Get("/client/campaign/"+campaignId+"/objects", &result)
+	err := c.get("/client/campaign/"+campaignId+"/objects", &result)
 
 	return result.List, err
 }

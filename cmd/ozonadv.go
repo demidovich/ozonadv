@@ -23,8 +23,9 @@ func main() {
 	}
 
 	initStatCommand(rootCmd, app)
+	initStatContinueCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
-	// initStatPullCommand(rootCmd, app)
+	initStatResetCommand(rootCmd, app)
 
 	fmt.Println("")
 	rootCmd.Execute()
@@ -36,9 +37,13 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 		Short:   "Формирование и загрузка статистики по кампаниям",
 		Example: "ozonadv stat --date-from 2025-01-01 --date-to 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			statUsecases := app.StatUsecases()
+			fmt.Println(cmd.Short)
+			fmt.Println("")
 
-			if statUsecases.HasStatistics() {
+			statUsecases := app.StatUsecases()
+			fmt.Println("")
+
+			if statUsecases.HasCampaignRequests() {
 				fmt.Println("Найдены незагруженные отчеты")
 				fmt.Println("Предыдущая загрузка была завершена не полностью")
 				fmt.Println("Для завершения загрузки следует выполнить команду stat:pull")
@@ -47,15 +52,15 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 				if console.Ask("Продолжить?") == false {
 					return nil
 				}
-				statUsecases.RemoveAllStatistics()
+				statUsecases.RemoveAllCampaignRequests()
 			}
 
-			options := stat.CreateOptions{}
+			options := stat.StatOptions{}
 			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
 			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
 			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
 
-			return statUsecases.Create(options)
+			return statUsecases.Stat(options)
 		},
 	}
 
@@ -67,28 +72,59 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	rootCmd.AddCommand(cmd)
 }
 
-func initStatInfoCommand(rootCmd *cobra.Command, app *application.Application) {
+func initStatContinueCommand(rootCmd *cobra.Command, app *application.Application) {
 	cmd := &cobra.Command{
-		Use:     "stat:info",
-		Short:   "Статус формирования отчетов",
-		Example: "ozonadv stat:info",
+		Use:     "stat:continue",
+		Short:   "Возобновить формирования статистики",
+		Example: "ozonadv stat:continue",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return app.StatUsecases().Info()
+			fmt.Println(cmd.Short)
+			fmt.Println("")
+
+			statUsecases := app.StatUsecases()
+			fmt.Println("")
+
+			return statUsecases.StatContinue()
 		},
 	}
 
 	rootCmd.AddCommand(cmd)
 }
 
-// func initStatPullCommand(rootCmd *cobra.Command, app *application.Application) {
-// 	cmd := &cobra.Command{
-// 		Use:     "stat:pull",
-// 		Short:   "Получить незагруженные отчеты",
-// 		Example: "ozonadv stat:pull",
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			return app.StatUsecases().Pull()
-// 		},
-// 	}
+func initStatInfoCommand(rootCmd *cobra.Command, app *application.Application) {
+	cmd := &cobra.Command{
+		Use:     "stat:info",
+		Short:   "Статус формирования статистики",
+		Example: "ozonadv stat:info",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(cmd.Short)
+			fmt.Println("")
 
-// 	rootCmd.AddCommand(cmd)
-// }
+			statUsecases := app.StatUsecases()
+			fmt.Println("")
+
+			return statUsecases.StatInfo()
+		},
+	}
+
+	rootCmd.AddCommand(cmd)
+}
+
+func initStatResetCommand(rootCmd *cobra.Command, app *application.Application) {
+	cmd := &cobra.Command{
+		Use:     "stat:reset",
+		Short:   "Удалить незавершенное формирование статистики",
+		Example: "ozonadv stat:reset",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(cmd.Short)
+			fmt.Println("")
+
+			statUsecases := app.StatUsecases()
+			fmt.Println("")
+
+			return statUsecases.StatReset()
+		},
+	}
+
+	rootCmd.AddCommand(cmd)
+}

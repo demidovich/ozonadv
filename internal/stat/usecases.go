@@ -6,41 +6,43 @@ import (
 )
 
 type Usecases struct {
-	storage       *storage.Storage
-	ozonClient    *ozon.Client
-	createUsecase createUsecase
-	infoUsecase   infoUsecase
-	pullUsecase   pullUsecase
+	storage          *storage.Storage
+	ozonClient       *ozon.Client
+	statUsecase      statUsecase
+	statInfoUsecase  statInfoUsecase
+	statResetUsecase statResetUsecase
 }
 
 func New(storage *storage.Storage, ozonClient *ozon.Client) *Usecases {
-	pull := pullUsecase{ozonClient: ozonClient, storage: storage}
-
 	return &Usecases{
-		storage:       storage,
-		ozonClient:    ozonClient,
-		createUsecase: createUsecase{pullUsecase: pull, ozonClient: ozonClient, storage: storage},
-		infoUsecase:   infoUsecase{ozonClient: ozonClient, storage: storage},
-		pullUsecase:   pull,
+		storage:          storage,
+		ozonClient:       ozonClient,
+		statUsecase:      statUsecase{ozonClient: ozonClient, storage: storage},
+		statInfoUsecase:  statInfoUsecase{ozonClient: ozonClient, storage: storage},
+		statResetUsecase: statResetUsecase{ozonClient: ozonClient, storage: storage},
 	}
 }
 
-func (u *Usecases) HasStatistics() bool {
-	return u.storage.StatisticsSize() > 0
+func (u *Usecases) HasCampaignRequests() bool {
+	return u.storage.CampaignRequestsSize() > 0
 }
 
-func (u *Usecases) RemoveAllStatistics() {
-	u.storage.RemoveAllStatistics()
+func (u *Usecases) RemoveAllCampaignRequests() {
+	u.storage.Reset()
 }
 
-func (u *Usecases) Create(options CreateOptions) error {
-	return u.createUsecase.Handle(options)
+func (u *Usecases) Stat(options StatOptions) error {
+	return u.statUsecase.HandleNew(options)
 }
 
-func (u *Usecases) Info() error {
-	return u.infoUsecase.Handle()
+func (u *Usecases) StatContinue() error {
+	return u.statUsecase.HandleContinue()
 }
 
-func (u *Usecases) Pull(optons PullOptions) error {
-	return u.pullUsecase.Handle(optons)
+func (u *Usecases) StatInfo() error {
+	return u.statInfoUsecase.Handle()
+}
+
+func (u *Usecases) StatReset() error {
+	return u.statResetUsecase.Handle()
 }

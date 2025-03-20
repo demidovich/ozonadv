@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fmt"
 	"ozonadv/config"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
@@ -31,6 +32,7 @@ func (a *Application) Config() *config.Config {
 
 func (a *Application) OzonClient() *ozon.Client {
 	if a.ozonCLient == nil {
+		fmt.Println("Инициализация клиента API Озон")
 		a.ozonCLient = ozon.NewClient(a.Config().Ozon)
 	}
 
@@ -39,8 +41,10 @@ func (a *Application) OzonClient() *ozon.Client {
 
 func (a *Application) Storage() *storage.Storage {
 	if a.storage == nil {
+		fmt.Println("Инициализация локального хранилища")
 		a.storage = storage.New()
 		a.shutdownFuncs = append(a.shutdownFuncs, a.storage.SaveState)
+		fmt.Println("Директория локального хранилища", a.storage.RootDir())
 	}
 
 	return a.storage

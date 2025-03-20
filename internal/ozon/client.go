@@ -9,15 +9,27 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const rootUrl = "https://api-performance.ozon.ru/api"
-const requestInterval = 100 * time.Millisecond
+const apiRoot = "https://api-performance.ozon.ru/api"
 
 type Client struct {
 	verbose      bool
 	clientId     string
 	clientSecret string
-	accesstoken  string
+	accessToken  *accessToken
 	resty        *resty.Client
+}
+
+type accessToken struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	CreatedAt   time.Time
+}
+
+func (a *accessToken) Valid() bool {
+	lifetime := time.Now().Sub(a.CreatedAt)
+	// Токен быстро протухает, возможно это какой-то баг
+	// return lifetime < (time.Duration(a.ExpiresIn-500) * time.Second)
+	return lifetime < (time.Duration(120) * time.Second)
 }
 
 type Config struct {
@@ -26,8 +38,6 @@ type Config struct {
 }
 
 func NewClient(cfg Config) *Client {
-	fmt.Println("Инициализация клиента API Озон")
-
 	c := &Client{
 		resty:        resty.New(),
 		clientId:     cfg.ClientId,
@@ -40,14 +50,15 @@ func NewClient(cfg Config) *Client {
 	return c
 }
 
+// Enable verbose logging
 func (c *Client) SetVerbose(value bool) {
 	c.verbose = value
 }
 
-func (c *Client) Get(resource string, result any) error {
-	time.Sleep(requestInterval)
-
-	if err := c.initAccessToken(); err != nil {
+// HTTP Get Request
+func (c *Client) get(resource string, result any) error {
+	token, err := c.validAccessToken()
+	if err != nil {
 		return err
 	}
 
@@ -55,12 +66,12 @@ func (c *Client) Get(resource string, result any) error {
 	c.logRequest("GET", url)
 
 	resp, err := c.resty.R().
-		SetAuthToken(c.accesstoken).
+		SetAuthToken(token).
 		SetResult(result).
 		Get(url)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Ozon API: GET %s %v", url, err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
@@ -72,46 +83,19 @@ func (c *Client) Get(resource string, result any) error {
 	return nil
 }
 
-func (c *Client) Post(resource string, payload any, result any) error {
-	time.Sleep(requestInterval)
-
-	if err := c.initAccessToken(); err != nil {
-		return err
-	}
-
-	url := c.url(resource)
-	c.logRequest("POST", url)
-
-	resp, err := c.resty.R().
-		SetAuthToken(c.accesstoken).
-		SetBody(payload).
-		SetResult(result).
-		Post(url)
-
+// HTTP Raw Get Request
+func (c *Client) getRaw(url string) (data []byte, err error) {
+	token, err := c.validAccessToken()
 	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
-	}
-
-	return nil
-}
-
-func (c *Client) DownloadStatistic(url string) (data []byte, err error) {
-	time.Sleep(requestInterval)
-
-	if err = c.initAccessToken(); err != nil {
 		return
 	}
 
 	resp, err := c.resty.R().
-		SetAuthToken(c.accesstoken).
+		SetAuthToken(token).
 		Get(url)
 
 	if err != nil {
-		return data, err
+		return data, fmt.Errorf("Ozon API: GET RAW %s %v", url, err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
@@ -123,11 +107,36 @@ func (c *Client) DownloadStatistic(url string) (data []byte, err error) {
 	return
 }
 
-func (c *Client) initAccessToken() error {
-	time.Sleep(requestInterval)
+// HTTP Post Request
+func (c *Client) post(resource string, payload any, result any) error {
+	token, err := c.validAccessToken()
+	if err != nil {
+		return err
+	}
 
-	if c.accesstoken != "" {
-		return nil
+	url := c.url(resource)
+	c.logRequest("POST", url)
+
+	resp, err := c.resty.R().
+		SetAuthToken(token).
+		SetBody(payload).
+		SetResult(result).
+		Post(url)
+
+	if err != nil {
+		return fmt.Errorf("Ozon API: POST %s %v", url, err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
+	}
+
+	return nil
+}
+
+func (c *Client) validAccessToken() (string, error) {
+	if c.accessToken != nil && c.accessToken.Valid() {
+		return c.accessToken.AccessToken, nil
 	}
 
 	url := c.url("/client/token")
@@ -139,33 +148,28 @@ func (c *Client) initAccessToken() error {
 		"grant_type":    "client_credentials",
 	}
 
-	result := &struct {
-		AccessToken string `json:"access_token"`
-		ExpiresIn   int    `json:"expires_in"`
-		TokenType   string `json:"token_type"`
-	}{}
-
 	resp, err := c.resty.R().
 		SetBody(payload).
-		SetResult(result).
+		SetResult(&c.accessToken).
 		Post(url)
 
 	if err != nil {
-		return err
+		return "", fmt.Errorf("Ozon API: POST %s %v", url, err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("Ozon Access Token Response: %s %s", resp.Status(), resp.String())
+		return "", fmt.Errorf("Ozon API: %s Response: %s %s", url, resp.Status(), resp.String())
 	}
 
-	c.accesstoken = result.AccessToken
+	c.accessToken.CreatedAt = time.Now()
 
-	fmt.Println("Получен токен API Озон:", c.accesstoken)
-	return nil
+	fmt.Println("Ozon API: получен токен доступа")
+
+	return c.accessToken.AccessToken, nil
 }
 
 func (c *Client) url(resource string) string {
-	return rootUrl + resource
+	return apiRoot + resource
 }
 
 func (c *Client) logRequest(method, url string) {
@@ -173,5 +177,5 @@ func (c *Client) logRequest(method, url string) {
 		return
 	}
 
-	fmt.Printf("Request: %s %s\n", method, url)
+	fmt.Printf("Ozon API Request: %s %s\n", method, url)
 }
