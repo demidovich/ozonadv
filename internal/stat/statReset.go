@@ -2,14 +2,12 @@ package stat
 
 import (
 	"fmt"
-	"ozonadv/internal/ozon"
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 )
 
 type statResetUsecase struct {
-	storage    *storage.Storage
-	ozonClient *ozon.Client
+	storage *storage.Storage
 }
 
 func (s *statResetUsecase) Handle() error {

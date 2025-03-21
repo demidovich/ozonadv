@@ -42,13 +42,13 @@ func (c *Campaign) ShortState() string {
 	return strings.TrimPrefix(c.State, "CAMPAIGN_STATE_")
 }
 
-func (c *Client) AllCampaigns() ([]Campaign, error) {
+func (a *Api) AllCampaigns() ([]Campaign, error) {
 	response := struct {
 		List  []Campaign `json:"list"`
 		Total string     `json:"total"`
 	}{}
 
-	err := c.get("/client/campaign", &response)
+	err := a.get("/client/campaign", &response)
 
 	return response.List, err
 }

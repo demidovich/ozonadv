@@ -77,7 +77,7 @@ func (s *StatisticRequest) IsReadyToDownload() bool {
 	return s.State == "OK"
 }
 
-func (c *Client) StatisticRequests() ([]StatisticRequest, error) {
+func (a *Api) StatisticRequests() ([]StatisticRequest, error) {
 	type item struct {
 		Meta StatisticRequest `json:"meta"`
 	}
@@ -87,7 +87,7 @@ func (c *Client) StatisticRequests() ([]StatisticRequest, error) {
 		Total string `json:"total"`
 	}{}
 
-	err := c.get("/client/statistics/externallist", &response)
+	err := a.get("/client/statistics/externallist", &response)
 
 	result := []StatisticRequest{}
 	for _, item := range response.Items {
@@ -108,7 +108,7 @@ func (s *StatisticRequestOptions) validate() error {
 	return validation.ValidateStruct(s)
 }
 
-func (c *Client) CreateStatisticRequest(campaign Campaign, options StatisticRequestOptions) (*StatisticRequest, error) {
+func (a *Api) CreateStatisticRequest(campaign Campaign, options StatisticRequestOptions) (*StatisticRequest, error) {
 	if err := options.validate(); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c *Client) CreateStatisticRequest(campaign Campaign, options StatisticRequ
 		Vendor bool   `json:"vendor"`
 	}{}
 
-	err := c.post(resource, payload, &result)
+	err := a.post(resource, payload, &result)
 	if err != nil {
 		return nil, err
 	}

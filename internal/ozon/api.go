@@ -11,7 +11,7 @@ import (
 
 const apiRoot = "https://api-performance.ozon.ru/api"
 
-type Client struct {
+type Api struct {
 	verbose      bool
 	clientId     string
 	clientSecret string
@@ -37,35 +37,35 @@ type Config struct {
 	ClientSecret string
 }
 
-func NewClient(cfg Config) *Client {
-	c := &Client{
+func NewApi(cfg Config) *Api {
+	a := &Api{
 		resty:        resty.New(),
 		clientId:     cfg.ClientId,
 		clientSecret: cfg.ClientSecret,
 	}
 
-	c.resty.SetHeader("Content-Type", "application/json")
-	c.resty.SetHeader("Accept", "application/json")
+	a.resty.SetHeader("Content-Type", "application/json")
+	a.resty.SetHeader("Accept", "application/json")
 
-	return c
+	return a
 }
 
 // Enable verbose logging
-func (c *Client) SetVerbose(value bool) {
-	c.verbose = value
+func (a *Api) SetVerbose(value bool) {
+	a.verbose = value
 }
 
 // HTTP Get Request
-func (c *Client) get(resource string, result any) error {
-	token, err := c.validAccessToken()
+func (a *Api) get(resource string, result any) error {
+	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
 
-	url := c.url(resource)
-	c.logRequest("GET", url)
+	url := a.url(resource)
+	a.logRequest("GET", url)
 
-	resp, err := c.resty.R().
+	resp, err := a.resty.R().
 		SetAuthToken(token).
 		SetResult(result).
 		Get(url)
@@ -84,13 +84,13 @@ func (c *Client) get(resource string, result any) error {
 }
 
 // HTTP Raw Get Request
-func (c *Client) getRaw(url string) (data []byte, err error) {
-	token, err := c.validAccessToken()
+func (a *Api) getRaw(url string) (data []byte, err error) {
+	token, err := a.validAccessToken()
 	if err != nil {
 		return
 	}
 
-	resp, err := c.resty.R().
+	resp, err := a.resty.R().
 		SetAuthToken(token).
 		Get(url)
 
@@ -108,16 +108,16 @@ func (c *Client) getRaw(url string) (data []byte, err error) {
 }
 
 // HTTP Post Request
-func (c *Client) post(resource string, payload any, result any) error {
-	token, err := c.validAccessToken()
+func (a *Api) post(resource string, payload any, result any) error {
+	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
 
-	url := c.url(resource)
-	c.logRequest("POST", url)
+	url := a.url(resource)
+	a.logRequest("POST", url)
 
-	resp, err := c.resty.R().
+	resp, err := a.resty.R().
 		SetAuthToken(token).
 		SetBody(payload).
 		SetResult(result).
@@ -134,23 +134,23 @@ func (c *Client) post(resource string, payload any, result any) error {
 	return nil
 }
 
-func (c *Client) validAccessToken() (string, error) {
-	if c.accessToken != nil && c.accessToken.Valid() {
-		return c.accessToken.AccessToken, nil
+func (a *Api) validAccessToken() (string, error) {
+	if a.accessToken != nil && a.accessToken.Valid() {
+		return a.accessToken.AccessToken, nil
 	}
 
-	url := c.url("/client/token")
-	c.logRequest("POST", url)
+	url := a.url("/client/token")
+	a.logRequest("POST", url)
 
 	payload := map[string]string{
-		"client_id":     c.clientId,
-		"client_secret": c.clientSecret,
+		"client_id":     a.clientId,
+		"client_secret": a.clientSecret,
 		"grant_type":    "client_credentials",
 	}
 
-	resp, err := c.resty.R().
+	resp, err := a.resty.R().
 		SetBody(payload).
-		SetResult(&c.accessToken).
+		SetResult(&a.accessToken).
 		Post(url)
 
 	if err != nil {
@@ -161,19 +161,19 @@ func (c *Client) validAccessToken() (string, error) {
 		return "", fmt.Errorf("Ozon API: %s Response: %s %s", url, resp.Status(), resp.String())
 	}
 
-	c.accessToken.CreatedAt = time.Now()
+	a.accessToken.CreatedAt = time.Now()
 
 	fmt.Println("Ozon API: получен токен доступа")
 
-	return c.accessToken.AccessToken, nil
+	return a.accessToken.AccessToken, nil
 }
 
-func (c *Client) url(resource string) string {
+func (a *Api) url(resource string) string {
 	return apiRoot + resource
 }
 
-func (c *Client) logRequest(method, url string) {
-	if !c.verbose {
+func (a *Api) logRequest(method, url string) {
+	if !a.verbose {
 		return
 	}
 

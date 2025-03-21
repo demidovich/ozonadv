@@ -11,7 +11,7 @@ import (
 type Application struct {
 	configFile    string
 	config        *config.Config
-	ozonCLient    *ozon.Client
+	ozonApi       *ozon.Api
 	storage       *storage.Storage
 	statUsecases  *stat.Usecases
 	shutdownFuncs []func()
@@ -30,13 +30,13 @@ func (a *Application) Config() *config.Config {
 	return a.config
 }
 
-func (a *Application) OzonClient() *ozon.Client {
-	if a.ozonCLient == nil {
+func (a *Application) OzonApi() *ozon.Api {
+	if a.ozonApi == nil {
 		fmt.Println("Инициализация клиента API Озон")
-		a.ozonCLient = ozon.NewClient(a.Config().Ozon)
+		a.ozonApi = ozon.NewApi(a.Config().Ozon)
 	}
 
-	return a.ozonCLient
+	return a.ozonApi
 }
 
 func (a *Application) Storage() *storage.Storage {
@@ -54,7 +54,7 @@ func (a *Application) StatUsecases() *stat.Usecases {
 	if a.statUsecases == nil {
 		a.statUsecases = stat.New(
 			a.Storage(),
-			a.OzonClient(),
+			a.OzonApi(),
 		)
 	}
 

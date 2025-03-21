@@ -34,8 +34,8 @@ func (c *StatOptions) Validate() error {
 }
 
 type statUsecase struct {
-	storage    *storage.Storage
-	ozonClient *ozon.Client
+	storage *storage.Storage
+	ozonApi *ozon.Api
 }
 
 func (s *statUsecase) HandleNew(options StatOptions) error {
@@ -65,7 +65,7 @@ func (s *statUsecase) HandleContinue() error {
 }
 
 func (s *statUsecase) initCampaigns() error {
-	campaigns, err := s.ozonClient.AllCampaigns()
+	campaigns, err := s.ozonApi.AllCampaigns()
 	if err != nil {
 		return err
 	}

@@ -2,13 +2,11 @@ package stat
 
 import (
 	"fmt"
-	"ozonadv/internal/ozon"
 	"ozonadv/internal/storage"
 )
 
 type statInfoUsecase struct {
-	storage    *storage.Storage
-	ozonClient *ozon.Client
+	storage *storage.Storage
 }
 
 func (s *statInfoUsecase) Handle() error {

@@ -7,19 +7,19 @@ import (
 
 type Usecases struct {
 	storage          *storage.Storage
-	ozonClient       *ozon.Client
+	ozonApi          *ozon.Api
 	statUsecase      statUsecase
 	statInfoUsecase  statInfoUsecase
 	statResetUsecase statResetUsecase
 }
 
-func New(storage *storage.Storage, ozonClient *ozon.Client) *Usecases {
+func New(storage *storage.Storage, ozonApi *ozon.Api) *Usecases {
 	return &Usecases{
 		storage:          storage,
-		ozonClient:       ozonClient,
-		statUsecase:      statUsecase{ozonClient: ozonClient, storage: storage},
-		statInfoUsecase:  statInfoUsecase{ozonClient: ozonClient, storage: storage},
-		statResetUsecase: statResetUsecase{ozonClient: ozonClient, storage: storage},
+		ozonApi:          ozonApi,
+		statUsecase:      statUsecase{ozonApi: ozonApi, storage: storage},
+		statInfoUsecase:  statInfoUsecase{storage: storage},
+		statResetUsecase: statResetUsecase{storage: storage},
 	}
 }
 

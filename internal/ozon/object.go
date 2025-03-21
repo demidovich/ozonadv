@@ -4,12 +4,12 @@ type CampaignObject struct {
 	ID string `json:"id"`
 }
 
-func (c *Client) CampaignObjects(campaignId string) ([]CampaignObject, error) {
+func (a *Api) CampaignObjects(campaignId string) ([]CampaignObject, error) {
 	result := struct {
 		List []CampaignObject `json:"list"`
 	}{}
 
-	err := c.get("/client/campaign/"+campaignId+"/objects", &result)
+	err := a.get("/client/campaign/"+campaignId+"/objects", &result)
 
 	return result.List, err
 }
