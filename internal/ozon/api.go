@@ -13,7 +13,7 @@ const apiHost = "https://api-performance.ozon.ru"
 
 var ErrTooManyRequests = errors.New("Ozon 429")
 
-type Api struct {
+type api struct {
 	verbose      bool
 	clientId     string
 	clientSecret string
@@ -34,13 +34,8 @@ func (a *accessToken) Valid() bool {
 	return lifetime < (time.Duration(120) * time.Second)
 }
 
-type Config struct {
-	ClientId     string
-	ClientSecret string
-}
-
-func NewApi(cfg Config) *Api {
-	a := &Api{
+func newApi(cfg Config) *api {
+	a := &api{
 		resty:        resty.New(),
 		clientId:     cfg.ClientId,
 		clientSecret: cfg.ClientSecret,
@@ -53,18 +48,18 @@ func NewApi(cfg Config) *Api {
 }
 
 // Enable verbose logging
-func (a *Api) SetVerbose(value bool) {
+func (a *api) SetVerbose(value bool) {
 	a.verbose = value
 }
 
 // HTTP Get Request
-func (a *Api) get(resource string, result any) error {
+func (a *api) Get(resource string, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
 
-	url := a.url(resource)
+	url := a.Url(resource)
 	a.logRequest("GET", url)
 
 	resp, err := a.resty.R().
@@ -86,7 +81,7 @@ func (a *Api) get(resource string, result any) error {
 }
 
 // HTTP Raw Get Request
-func (a *Api) getRaw(url string) (data []byte, err error) {
+func (a *api) GetRaw(url string) (data []byte, err error) {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return
@@ -110,13 +105,13 @@ func (a *Api) getRaw(url string) (data []byte, err error) {
 }
 
 // HTTP Post Request
-func (a *Api) post(resource string, payload any, result any) error {
+func (a *api) Post(resource string, payload any, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
 
-	url := a.url(resource)
+	url := a.Url(resource)
 	a.logRequest("POST", url)
 
 	resp, err := a.resty.R().
@@ -140,12 +135,12 @@ func (a *Api) post(resource string, payload any, result any) error {
 	return nil
 }
 
-func (a *Api) validAccessToken() (string, error) {
+func (a *api) validAccessToken() (string, error) {
 	if a.accessToken != nil && a.accessToken.Valid() {
 		return a.accessToken.AccessToken, nil
 	}
 
-	url := a.url("/client/token")
+	url := a.Url("/client/token")
 	a.logRequest("POST", url)
 
 	payload := map[string]string{
@@ -174,11 +169,11 @@ func (a *Api) validAccessToken() (string, error) {
 	return a.accessToken.AccessToken, nil
 }
 
-func (a *Api) url(resource string) string {
+func (a *api) Url(resource string) string {
 	return fmt.Sprintf("%s/api%s", apiHost, resource)
 }
 
-func (a *Api) logRequest(method, url string) {
+func (a *api) logRequest(method, url string) {
 	if !a.verbose {
 		return
 	}

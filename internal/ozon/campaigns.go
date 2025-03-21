@@ -1,0 +1,29 @@
+package ozon
+
+import (
+	"strings"
+)
+
+type campaigns struct {
+	api *api
+}
+
+func (c *campaigns) Find(filters FindCampaignsFilters) ([]Campaign, error) {
+	params := ""
+	if len(filters.Ids) > 0 {
+		params = "?campaignIds=" + strings.Join(filters.Ids, ",")
+	}
+
+	response := struct {
+		List  []Campaign `json:"list"`
+		Total string     `json:"total"`
+	}{}
+
+	err := c.api.Get("/client/campaign"+params, &response)
+
+	return response.List, err
+}
+
+func (c *campaigns) All() ([]Campaign, error) {
+	return c.Find(FindCampaignsFilters{})
+}

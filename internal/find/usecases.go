@@ -5,17 +5,15 @@ import (
 )
 
 type Usecases struct {
-	ozonApi              *ozon.Api
-	findCampaignsUsecase findCampaignsUsecase
+	findCampaigns findCampaignsUsecase
 }
 
-func New(ozonApi *ozon.Api) *Usecases {
+func New(ozon *ozon.Ozon) *Usecases {
 	return &Usecases{
-		ozonApi:              ozonApi,
-		findCampaignsUsecase: findCampaignsUsecase{ozonApi: ozonApi},
+		findCampaigns: findCampaignsUsecase{ozon: ozon},
 	}
 }
 
 func (u *Usecases) Campaigns() error {
-	return u.findCampaignsUsecase.Handle()
+	return u.findCampaigns.Handle()
 }

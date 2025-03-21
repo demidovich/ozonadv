@@ -47,23 +47,3 @@ func (c *Campaign) ShortState() string {
 type FindCampaignsFilters struct {
 	Ids []string
 }
-
-func (a *Api) FindCampaigns(filters FindCampaignsFilters) ([]Campaign, error) {
-	params := ""
-	if len(filters.Ids) > 0 {
-		params = "?campaignIds=" + strings.Join(filters.Ids, ",")
-	}
-
-	response := struct {
-		List  []Campaign `json:"list"`
-		Total string     `json:"total"`
-	}{}
-
-	err := a.get("/client/campaign"+params, &response)
-
-	return response.List, err
-}
-
-func (a *Api) AllCampaigns() ([]Campaign, error) {
-	return a.FindCampaigns(FindCampaignsFilters{})
-}

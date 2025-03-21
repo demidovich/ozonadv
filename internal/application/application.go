@@ -12,7 +12,7 @@ import (
 type Application struct {
 	configFile    string
 	config        *config.Config
-	ozonApi       *ozon.Api
+	ozon          *ozon.Ozon
 	storage       *storage.Storage
 	findUsecases  *find.Usecases
 	statUsecases  *stat.Usecases
@@ -32,13 +32,13 @@ func (a *Application) Config() *config.Config {
 	return a.config
 }
 
-func (a *Application) OzonApi() *ozon.Api {
-	if a.ozonApi == nil {
-		fmt.Println("Инициализация клиента API Озон")
-		a.ozonApi = ozon.NewApi(a.Config().Ozon)
+func (a *Application) Ozon() *ozon.Ozon {
+	if a.ozon == nil {
+		fmt.Println("Инициализация клиента Озон")
+		a.ozon = ozon.New(a.Config().Ozon)
 	}
 
-	return a.ozonApi
+	return a.ozon
 }
 
 func (a *Application) Storage() *storage.Storage {
@@ -56,7 +56,7 @@ func (a *Application) StatUsecases() *stat.Usecases {
 	if a.statUsecases == nil {
 		a.statUsecases = stat.New(
 			a.Storage(),
-			a.OzonApi(),
+			a.Ozon(),
 		)
 	}
 
@@ -66,7 +66,7 @@ func (a *Application) StatUsecases() *stat.Usecases {
 func (a *Application) FindUsecases() *find.Usecases {
 	if a.findUsecases == nil {
 		a.findUsecases = find.New(
-			a.OzonApi(),
+			a.Ozon(),
 		)
 	}
 

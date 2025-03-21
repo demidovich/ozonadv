@@ -22,7 +22,7 @@ type Storage struct {
 	requestOptionsFile   string
 	requestOptions       *RequestOptions
 	processedRequestFile string
-	processedRequest     *ozon.StatisticRequest
+	processedRequest     *ozon.StatRequest
 	downloadsDir         string
 	Downloads            Downloads
 }
@@ -70,11 +70,11 @@ func (s *Storage) RequestOptions() *RequestOptions {
 	return s.requestOptions
 }
 
-func (s *Storage) SetProcessedRequest(request *ozon.StatisticRequest) {
+func (s *Storage) SetProcessedRequest(request *ozon.StatRequest) {
 	s.processedRequest = request
 }
 
-func (s *Storage) ProcessedRequest() *ozon.StatisticRequest {
+func (s *Storage) ProcessedRequest() *ozon.StatRequest {
 	return s.processedRequest
 }
 

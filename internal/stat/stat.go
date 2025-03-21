@@ -36,7 +36,7 @@ func (c *StatOptions) Validate() error {
 
 type statUsecase struct {
 	storage *storage.Storage
-	ozonApi *ozon.Api
+	ozon    *ozon.Ozon
 }
 
 func (s *statUsecase) HandleNew(options StatOptions) error {
@@ -74,7 +74,7 @@ func (s *statUsecase) initCampaigns(options StatOptions) error {
 		filters.Ids = append(filters.Ids, options.CampaignId)
 	}
 
-	campaigns, err := s.ozonApi.FindCampaigns(filters)
+	campaigns, err := s.ozon.Campaigns.Find(filters)
 	if err != nil {
 		return err
 	}
@@ -140,14 +140,14 @@ func (s *statUsecase) startPocessing() {
 }
 
 func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time.Duration) error {
-	options := ozon.StatisticRequestOptions{
+	options := ozon.CreateStatRequestOptions{
 		CampaignId: campaign.ID,
 		DateFrom:   s.storage.RequestOptions().DateFrom,
 		DateTo:     s.storage.RequestOptions().DateTo,
 		GroupBy:    s.storage.RequestOptions().GroupBy,
 	}
 
-	statRequest, err := s.ozonApi.CreateStatisticRequest(campaign, options)
+	statRequest, err := s.ozon.StatRequests.Create(campaign, options)
 	if err != nil {
 		return err
 	}
@@ -160,11 +160,11 @@ func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time
 		log.Printf("\nSleep\n")
 		time.Sleep(retryInterval)
 
-		statRequest, err = s.ozonApi.StatisticRequest(s.storage.ProcessedRequest().UUID)
+		statRequest, err = s.ozon.StatRequests.First(s.storage.ProcessedRequest().UUID)
 		log.Printf("Stat Request #%s %s\n", statRequest.UUID, statRequest.State)
 
 		if statRequest.IsReadyToDownload() {
-			data, err = s.ozonApi.DownloadStatistic(*statRequest)
+			data, err = s.ozon.StatRequests.Download(*statRequest)
 			if err == nil {
 				break
 			}

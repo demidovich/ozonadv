@@ -6,20 +6,18 @@ import (
 )
 
 type Usecases struct {
-	storage          *storage.Storage
-	ozonApi          *ozon.Api
-	statUsecase      statUsecase
-	statInfoUsecase  statInfoUsecase
-	statResetUsecase statResetUsecase
+	storage   *storage.Storage
+	stat      statUsecase
+	statInfo  statInfoUsecase
+	statReset statResetUsecase
 }
 
-func New(storage *storage.Storage, ozonApi *ozon.Api) *Usecases {
+func New(storage *storage.Storage, ozon *ozon.Ozon) *Usecases {
 	return &Usecases{
-		storage:          storage,
-		ozonApi:          ozonApi,
-		statUsecase:      statUsecase{ozonApi: ozonApi, storage: storage},
-		statInfoUsecase:  statInfoUsecase{storage: storage},
-		statResetUsecase: statResetUsecase{storage: storage},
+		storage:   storage,
+		stat:      statUsecase{ozon: ozon, storage: storage},
+		statInfo:  statInfoUsecase{storage: storage},
+		statReset: statResetUsecase{storage: storage},
 	}
 }
 
@@ -28,17 +26,17 @@ func (u *Usecases) HasIncompleteProcessing() bool {
 }
 
 func (u *Usecases) StatNew(options StatOptions) error {
-	return u.statUsecase.HandleNew(options)
+	return u.stat.HandleNew(options)
 }
 
 func (u *Usecases) StatContinue() error {
-	return u.statUsecase.HandleContinue()
+	return u.stat.HandleContinue()
 }
 
 func (u *Usecases) StatInfo() error {
-	return u.statInfoUsecase.Handle()
+	return u.statInfo.Handle()
 }
 
 func (u *Usecases) StatReset() error {
-	return u.statResetUsecase.Handle()
+	return u.statReset.Handle()
 }

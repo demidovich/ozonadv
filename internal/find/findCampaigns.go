@@ -8,11 +8,11 @@ import (
 )
 
 type findCampaignsUsecase struct {
-	ozonApi *ozon.Api
+	ozon *ozon.Ozon
 }
 
 func (f *findCampaignsUsecase) Handle() error {
-	campaigns, err := f.ozonApi.AllCampaigns()
+	campaigns, err := f.ozon.Campaigns.All()
 	if err != nil {
 		return err
 	}
