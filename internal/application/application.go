@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"ozonadv/config"
+	"ozonadv/internal/find"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
 	"ozonadv/internal/storage"
@@ -13,6 +14,7 @@ type Application struct {
 	config        *config.Config
 	ozonApi       *ozon.Api
 	storage       *storage.Storage
+	findUsecases  *find.Usecases
 	statUsecases  *stat.Usecases
 	shutdownFuncs []func()
 }
@@ -59,6 +61,16 @@ func (a *Application) StatUsecases() *stat.Usecases {
 	}
 
 	return a.statUsecases
+}
+
+func (a *Application) FindUsecases() *find.Usecases {
+	if a.findUsecases == nil {
+		a.findUsecases = find.New(
+			a.OzonApi(),
+		)
+	}
+
+	return a.findUsecases
 }
 
 func (a *Application) Shutdown() {

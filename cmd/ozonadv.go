@@ -33,12 +33,32 @@ func main() {
 		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
+	initFindCampaignsCommand(rootCmd, app)
 	initStatCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
 	initStatResetCommand(rootCmd, app)
 
 	fmt.Println("")
 	rootCmd.Execute()
+}
+
+func initFindCampaignsCommand(rootCmd *cobra.Command, app *application.Application) {
+	cmd := &cobra.Command{
+		Use:     "find:campaigns",
+		Short:   "Поиск кампаний в Озон",
+		Example: "ozonadv find:campaigns",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(cmd.Short)
+			fmt.Println("")
+
+			findUsecases := app.FindUsecases()
+			fmt.Println("")
+
+			return findUsecases.Campaigns()
+		},
+	}
+
+	rootCmd.AddCommand(cmd)
 }
 
 func initStatCommand(rootCmd *cobra.Command, app *application.Application) {

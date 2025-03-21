@@ -17,6 +17,7 @@ Thumbs.db
 nbproject
 
 # Binaries
+build/*
 *.exe
 *.exe~
 *.dll

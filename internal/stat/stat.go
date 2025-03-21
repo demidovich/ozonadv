@@ -15,10 +15,9 @@ import (
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
-	"strconv"
 	"time"
-	"unicode/utf8"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -141,24 +140,45 @@ func (s *statUsecase) processCampaign(campaign ozon.Campaign) error {
 }
 
 func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {
-	statMaxLength := 0
-	typeMaxLength := 0
+	tw := table.NewWriter()
+	tw.SetStyle(table.StyleRounded)
+	tw.AppendRow(table.Row{"#", "State", "Type", "From", "To", "Title"})
+	tw.AppendRow(table.Row{"", "", "", "", "", ""})
 
 	for _, c := range campaigns {
-		statLength := utf8.RuneCountInString(c.ShortState())
-		if statLength > statMaxLength {
-			statMaxLength = statLength
-		}
-		typeLength := utf8.RuneCountInString(c.AdvObjectType)
-		if typeLength > typeMaxLength {
-			typeMaxLength = typeLength
-		}
+		tw.AppendRow(table.Row{
+			c.ID,
+			c.ShortState(),
+			c.AdvObjectType,
+			c.FromDate,
+			c.ToDate,
+			c.Title,
+		})
 	}
 
-	format := "#%-9s %-" + strconv.Itoa(statMaxLength) + "s  %-" + strconv.Itoa(typeMaxLength) + "s  %s\n"
-	for _, c := range campaigns {
-		fmt.Printf(format, c.ID, c.ShortState(), c.AdvObjectType, c.Title)
-	}
-
+	fmt.Println(tw.Render())
 	fmt.Println("Всего:", len(campaigns))
 }
+
+// func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {
+// 	statMaxLen := 0
+// 	typeMaxLen := 0
+
+// 	for _, c := range campaigns {
+// 		statLen := utf8.RuneCountInString(c.ShortState())
+// 		if statLen > statMaxLen {
+// 			statMaxLen = statLen
+// 		}
+// 		typeLen := utf8.RuneCountInString(c.AdvObjectType)
+// 		if typeLen > typeMaxLen {
+// 			typeMaxLen = typeLen
+// 		}
+// 	}
+
+// 	format := "#%-9s %-" + strconv.Itoa(statMaxLen) + "s  %-" + strconv.Itoa(typeMaxLen) + "s  %s\n"
+// 	for _, c := range campaigns {
+// 		fmt.Printf(format, c.ID, c.ShortState(), c.AdvObjectType, c.Title)
+// 	}
+
+// 	fmt.Println("Всего:", len(campaigns))
+// }

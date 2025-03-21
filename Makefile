@@ -11,8 +11,18 @@ vendor: ## Go mod vendor
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-build-win: ## Build windows
-	GOOS=windows GOARCH=amd64 go build -o build/cian-street-url-$(GIT_TAG).exe cian_street_url.go
+build-linux: ## Build Linux
+	GOOS=linux GOARCH=amd64 go build -o build/ozonadv cmd/ozonadv.go
 
-build-mac: ## Build mac
-	GOOS=darwin GOARCH=amd64 go build -o build/cian-street-url-mac-$(GIT_TAG) cian_street_url.go
+build-mac: ## Build Mac
+	GOOS=darwin GOARCH=amd64 go build -o build/ozonadv-mac cmd/ozonadv.go
+
+build-win: ## Build Windows
+	GOOS=windows GOARCH=amd64 go build -o build/ozonadv.exe cmd/ozonadv.go
+
+build-ci-mac: ## Build CI Mac
+	GOOS=darwin GOARCH=amd64 go build -o build/ozonadv-mac-$(GIT_TAG) cmd/ozonadv.go
+
+build-ci-win: ## Build CI Windows
+	GOOS=windows GOARCH=amd64 go build -o build/ozonadv-$(GIT_TAG).exe cmd/ozonadv.go
+
