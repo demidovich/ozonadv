@@ -1,6 +1,8 @@
 package ozon
 
-import "strings"
+import (
+	"strings"
+)
 
 // Campaign states
 // CAMPAIGN_STATE_RUNNING                — активная кампания;
@@ -42,13 +44,26 @@ func (c *Campaign) ShortState() string {
 	return strings.TrimPrefix(c.State, "CAMPAIGN_STATE_")
 }
 
-func (a *Api) AllCampaigns() ([]Campaign, error) {
+type FindCampaignsFilters struct {
+	Ids []string
+}
+
+func (a *Api) FindCampaigns(filters FindCampaignsFilters) ([]Campaign, error) {
+	params := ""
+	if len(filters.Ids) > 0 {
+		params = "?campaignIds=" + strings.Join(filters.Ids, ",")
+	}
+
 	response := struct {
 		List  []Campaign `json:"list"`
 		Total string     `json:"total"`
 	}{}
 
-	err := a.get("/client/campaign", &response)
+	err := a.get("/client/campaign"+params, &response)
 
 	return response.List, err
+}
+
+func (a *Api) AllCampaigns() ([]Campaign, error) {
+	return a.FindCampaigns(FindCampaignsFilters{})
 }

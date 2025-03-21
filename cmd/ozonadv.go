@@ -65,6 +65,7 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 			options := stat.StatOptions{}
 			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
 			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
+			options.CampaignId, _ = cmd.Flags().GetString("campaign-id")
 			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
 			options.GroupBy = "DATE"
 
@@ -73,9 +74,10 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	}
 
 	cmd.Flags().StringP("config", "c", "", "Конфигурационный файл")
-	cmd.PersistentFlags().StringP("date-from", "f", "", "Начало периода")
-	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода")
-	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных")
+	cmd.PersistentFlags().StringP("date-from", "f", "", "Начало периода, обязательный")
+	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода, обязательный")
+	cmd.Flags().StringP("campaign-id", "i", "", "ID кампании")
+	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных, обязательный")
 
 	rootCmd.AddCommand(cmd)
 }

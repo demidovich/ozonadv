@@ -25,6 +25,7 @@ import (
 type StatOptions struct {
 	DateFrom   string `validate:"required,datetime=2006-01-02"`
 	DateTo     string `validate:"required,datetime=2006-01-02"`
+	CampaignId string `validate:"omitempty,numeric"`
 	ExportFile string `validate:"required,filepath"`
 	GroupBy    string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
 }
@@ -48,7 +49,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 	}
 
 	s.initProcessingOptions(options)
-	if err := s.initCampaigns(); err != nil {
+	if err := s.initCampaigns(options); err != nil {
 		return err
 	}
 
@@ -67,8 +68,13 @@ func (s *statUsecase) HandleContinue() error {
 	return nil
 }
 
-func (s *statUsecase) initCampaigns() error {
-	campaigns, err := s.ozonApi.AllCampaigns()
+func (s *statUsecase) initCampaigns(options StatOptions) error {
+	filters := ozon.FindCampaignsFilters{}
+	if options.CampaignId != "" {
+		filters.Ids = append(filters.Ids, options.CampaignId)
+	}
+
+	campaigns, err := s.ozonApi.FindCampaigns(filters)
 	if err != nil {
 		return err
 	}
