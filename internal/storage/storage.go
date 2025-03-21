@@ -15,16 +15,18 @@ import (
 )
 
 type Storage struct {
-	rootDir            string
-	campanignsFile     string
-	Campaigns          *campaigns
-	requestOptionsFile string
-	requestOptions     *RequestOptions
-	downloadsDir       string
-	Downloads          Downloads
+	rootDir         string
+	statOptionsFile string
+	statOptions     *StatOptions
+	campanignsFile  string
+	Campaigns       *campaigns
+	downloadsDir    string
+	Downloads       Downloads
 }
 
-type RequestOptions struct {
+// По сути это stat.StatOptions
+// Но импортировать ее нельзя из-за циклической зависомости
+type StatOptions struct {
 	DateFrom   string `json:"dateFrom"`
 	DateTo     string `json:"dateTo"`
 	ExportFile string `json:"exportFile"`
@@ -34,17 +36,17 @@ type RequestOptions struct {
 func New() *Storage {
 	root := os.TempDir() + "/ozonadv"
 	s := Storage{
-		rootDir:            root,
-		campanignsFile:     root + "/campaigns.json",
-		requestOptionsFile: root + "/request-options.json",
-		downloadsDir:       root + "/downloads",
+		rootDir:         root,
+		statOptionsFile: root + "/stat-options.json",
+		campanignsFile:  root + "/campaigns.json",
+		downloadsDir:    root + "/downloads",
 	}
 
 	utils.DirInitOrFail(s.rootDir)
+	utils.FileInitOrFail(s.statOptionsFile)
 	utils.FileInitOrFail(s.campanignsFile)
-	utils.FileInitOrFail(s.requestOptionsFile)
-	utils.JsonFileReadOrFail(s.requestOptionsFile, &s.requestOptions, "{}")
 	utils.DirInitOrFail(s.downloadsDir)
+	utils.JsonFileReadOrFail(s.statOptionsFile, &s.statOptions, "{}")
 
 	s.Campaigns = NewCampaigns(s.campanignsFile)
 	s.Downloads = NewDownloads(s.downloadsDir)
@@ -56,18 +58,18 @@ func (s *Storage) RootDir() string {
 	return s.rootDir
 }
 
-func (s *Storage) SetRequestOptions(options RequestOptions) {
-	s.requestOptions = &options
+func (s *Storage) SetStatOptions(options StatOptions) {
+	s.statOptions = &options
 }
 
-func (s *Storage) RequestOptions() *RequestOptions {
-	return s.requestOptions
+func (s *Storage) StatOptions() *StatOptions {
+	return s.statOptions
 }
 
 // Reset all storage data
 func (s *Storage) Reset() error {
 	s.Campaigns.RemoveAll()
-	s.requestOptions = nil
+	s.statOptions = nil
 
 	return s.Downloads.RemoveAll()
 }
@@ -82,7 +84,7 @@ func (s *Storage) SaveState() {
 		log.Fatal(err)
 	}
 
-	err = utils.JsonFileWrite(s.requestOptionsFile, s.requestOptions)
+	err = utils.JsonFileWrite(s.statOptionsFile, s.statOptions)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -25,9 +25,9 @@ import (
 type StatOptions struct {
 	DateFrom   string `validate:"required,datetime=2006-01-02"`
 	DateTo     string `validate:"required,datetime=2006-01-02"`
-	CampaignId string `validate:"omitempty,numeric"`
 	ExportFile string `validate:"required,filepath"`
 	GroupBy    string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
+	CampaignId string `validate:"omitempty,numeric"`
 }
 
 func (c *StatOptions) Validate() error {
@@ -48,7 +48,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
-	s.initProcessingOptions(options)
+	s.initOptions(options)
 	if err := s.initCampaigns(options); err != nil {
 		return err
 	}
@@ -105,15 +105,15 @@ func (s *statUsecase) initCampaigns(options StatOptions) error {
 	return nil
 }
 
-func (s *statUsecase) initProcessingOptions(options StatOptions) {
-	storageOptions := storage.RequestOptions{
+func (s *statUsecase) initOptions(options StatOptions) {
+	storageOptions := storage.StatOptions{
 		DateFrom:   options.DateFrom,
 		DateTo:     options.DateTo,
 		ExportFile: options.ExportFile,
 		GroupBy:    options.GroupBy,
 	}
 
-	s.storage.SetRequestOptions(storageOptions)
+	s.storage.SetStatOptions(storageOptions)
 }
 
 func (s *statUsecase) startPocessing() {
@@ -142,9 +142,9 @@ func (s *statUsecase) startPocessing() {
 func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time.Duration) error {
 	options := ozon.CreateStatRequestOptions{
 		CampaignId: campaign.ID,
-		DateFrom:   s.storage.RequestOptions().DateFrom,
-		DateTo:     s.storage.RequestOptions().DateTo,
-		GroupBy:    s.storage.RequestOptions().GroupBy,
+		DateFrom:   s.storage.StatOptions().DateFrom,
+		DateTo:     s.storage.StatOptions().DateTo,
+		GroupBy:    s.storage.StatOptions().GroupBy,
 	}
 
 	statRequest, err := s.ozon.StatRequests.Create(campaign, options)
