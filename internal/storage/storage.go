@@ -70,6 +70,10 @@ func (s *Storage) RequestOptions() *RequestOptions {
 	return s.requestOptions
 }
 
+func (s *Storage) SetProcessedRequest(request *ozon.StatisticRequest) {
+	s.processedRequest = request
+}
+
 func (s *Storage) ProcessedRequest() *ozon.StatisticRequest {
 	return s.processedRequest
 }

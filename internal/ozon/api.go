@@ -9,7 +9,9 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const apiRoot = "https://api-performance.ozon.ru/api"
+const apiHost = "https://api-performance.ozon.ru"
+
+var ErrTooManyRequests = errors.New("Ozon 429")
 
 type Api struct {
 	verbose      bool
@@ -127,6 +129,10 @@ func (a *Api) post(resource string, payload any, result any) error {
 		return fmt.Errorf("Ozon API: POST %s %v", url, err)
 	}
 
+	if resp.StatusCode() == http.StatusTooManyRequests {
+		return fmt.Errorf("Ozon Response: %s %s: %w", resp.Status(), resp.String(), ErrTooManyRequests)
+	}
+
 	if resp.StatusCode() != http.StatusOK {
 		return fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
 	}
@@ -169,7 +175,7 @@ func (a *Api) validAccessToken() (string, error) {
 }
 
 func (a *Api) url(resource string) string {
-	return apiRoot + resource
+	return fmt.Sprintf("%s/api%s", apiHost, resource)
 }
 
 func (a *Api) logRequest(method, url string) {

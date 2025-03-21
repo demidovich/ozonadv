@@ -9,7 +9,9 @@
 package stat
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/storage"
@@ -18,7 +20,6 @@ import (
 	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/schollz/progressbar/v3"
 )
 
 type StatOptions struct {
@@ -116,8 +117,10 @@ func (s *statUsecase) initProcessingOptions(options StatOptions) {
 }
 
 func (s *statUsecase) startPocessing() {
-	max := s.storage.Campaigns.Size()
-	bar := progressbar.Default(int64(max))
+	// max := s.storage.Campaigns.Size()
+	// bar := progressbar.Default(int64(max))
+	fmt.Println(1)
+	retryInterval := 5 * time.Second
 
 	for {
 		campaign, ok := s.storage.Campaigns.Next()
@@ -125,15 +128,60 @@ func (s *statUsecase) startPocessing() {
 			break
 		}
 
-		s.processCampaign(campaign)
-		bar.Add(1)
+		err := s.processCampaign(campaign, retryInterval)
+		if err != nil && errors.Is(err, ozon.ErrTooManyRequests) {
+			log.Fatal(err)
+		}
+
+		fmt.Println("1111")
+		os.Exit(1)
+		// bar.Add(1)
 	}
 }
 
-func (s *statUsecase) processCampaign(campaign ozon.Campaign) error {
-	// fmt.Printf("#%s, %s", campaign.ID, campaign.Title)
+func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time.Duration) error {
+	options := ozon.StatisticRequestOptions{
+		CampaignId: campaign.ID,
+		DateFrom:   s.storage.RequestOptions().DateFrom,
+		DateTo:     s.storage.RequestOptions().DateTo,
+		GroupBy:    s.storage.RequestOptions().GroupBy,
+	}
 
-	time.Sleep(5 * time.Second)
+	statRequest, err := s.ozonApi.CreateStatisticRequest(campaign, options)
+	if err != nil {
+		return err
+	}
+
+	s.storage.SetProcessedRequest(statRequest)
+	attempt := 1
+	retries := 5
+	var data []byte
+	for {
+		log.Printf("\nSleep\n")
+		time.Sleep(retryInterval)
+
+		statRequest, err = s.ozonApi.StatisticRequest(s.storage.ProcessedRequest().UUID)
+		log.Printf("Stat Request #%s %s\n", statRequest.UUID, statRequest.State)
+
+		if statRequest.IsReadyToDownload() {
+			data, err = s.ozonApi.DownloadStatistic(*statRequest)
+			if err == nil {
+				break
+			}
+			log.Printf("%v\n", err)
+		}
+
+		if attempt > retries {
+			break
+		}
+
+		attempt++
+	}
+
+	fname := fmt.Sprintf("%s.json", statRequest.UUID)
+	if err := s.storage.Downloads.Write(fname, data); err != nil {
+		return err
+	}
 
 	s.storage.Campaigns.Remove(campaign.ID)
 	return nil
@@ -159,26 +207,3 @@ func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {
 	fmt.Println(tw.Render())
 	fmt.Println("Всего:", len(campaigns))
 }
-
-// func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {
-// 	statMaxLen := 0
-// 	typeMaxLen := 0
-
-// 	for _, c := range campaigns {
-// 		statLen := utf8.RuneCountInString(c.ShortState())
-// 		if statLen > statMaxLen {
-// 			statMaxLen = statLen
-// 		}
-// 		typeLen := utf8.RuneCountInString(c.AdvObjectType)
-// 		if typeLen > typeMaxLen {
-// 			typeMaxLen = typeLen
-// 		}
-// 	}
-
-// 	format := "#%-9s %-" + strconv.Itoa(statMaxLen) + "s  %-" + strconv.Itoa(typeMaxLen) + "s  %s\n"
-// 	for _, c := range campaigns {
-// 		fmt.Printf(format, c.ID, c.ShortState(), c.AdvObjectType, c.Title)
-// 	}
-
-// 	fmt.Println("Всего:", len(campaigns))
-// }

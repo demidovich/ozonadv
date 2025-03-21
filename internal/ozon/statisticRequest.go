@@ -1,6 +1,8 @@
 package ozon
 
 import (
+	"fmt"
+	"os"
 	"ozonadv/pkg/validation"
 )
 
@@ -139,4 +141,32 @@ func (a *Api) CreateStatisticRequest(campaign Campaign, options StatisticRequest
 	statRequest.UUID = result.UUID
 
 	return &statRequest, nil
+}
+
+func (a *Api) StatisticRequest(uuid string) (*StatisticRequest, error) {
+	url := a.url("/client/statistics/" + uuid)
+
+	result := StatisticRequest{}
+
+	err := a.get(url, &result)
+	fmt.Println(url)
+	fmt.Println(err)
+	os.Exit(1)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (a *Api) DownloadStatistic(request StatisticRequest) ([]byte, error) {
+	url := apiHost + request.Link
+
+	data, err := a.getRaw(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

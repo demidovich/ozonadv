@@ -31,8 +31,8 @@ func (d *Downloads) list() (result []string, err error) {
 	return
 }
 
-func (d *Downloads) Write(fname string, data string) error {
-	return os.WriteFile(d.fpath(fname), []byte(data), 0644)
+func (d *Downloads) Write(fname string, data []byte) error {
+	return os.WriteFile(d.fpath(fname), data, 0644)
 }
 
 func (d *Downloads) Read(fname string) ([]byte, error) {
