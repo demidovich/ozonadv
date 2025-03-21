@@ -152,7 +152,7 @@ func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time
 		return err
 	}
 
-	s.storage.SetProcessedRequest(statRequest)
+	requestUUID := statRequest.UUID
 	attempt := 1
 	retries := 5
 	var data []byte
@@ -160,7 +160,7 @@ func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time
 		log.Printf("\nSleep\n")
 		time.Sleep(retryInterval)
 
-		statRequest, err = s.ozon.StatRequests.First(s.storage.ProcessedRequest().UUID)
+		statRequest, err = s.ozon.StatRequests.Retrieve(requestUUID)
 		log.Printf("Stat Request #%s %s\n", statRequest.UUID, statRequest.State)
 
 		if statRequest.IsReadyToDownload() {

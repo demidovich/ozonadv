@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"ozonadv/internal/application"
+	"ozonadv/internal/app"
 	"ozonadv/internal/stat"
 	"ozonadv/pkg/console"
 	"syscall"
@@ -17,7 +17,7 @@ func main() {
 	log.SetFlags(0)
 	defer fmt.Println("")
 
-	app := application.New()
+	app := app.New()
 	defer app.Shutdown()
 
 	sig := make(chan os.Signal)
@@ -42,7 +42,7 @@ func main() {
 	rootCmd.Execute()
 }
 
-func initFindCampaignsCommand(rootCmd *cobra.Command, app *application.Application) {
+func initFindCampaignsCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "find:campaigns",
 		Short:   "Поиск кампаний в Озон",
@@ -61,7 +61,7 @@ func initFindCampaignsCommand(rootCmd *cobra.Command, app *application.Applicati
 	rootCmd.AddCommand(cmd)
 }
 
-func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
+func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat",
 		Short:   "Формирование и загрузка статистики по кампаниям",
@@ -102,7 +102,7 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 	rootCmd.AddCommand(cmd)
 }
 
-func initStatInfoCommand(rootCmd *cobra.Command, app *application.Application) {
+func initStatInfoCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat:info",
 		Short:   "Статус формирования статистики",
@@ -121,7 +121,7 @@ func initStatInfoCommand(rootCmd *cobra.Command, app *application.Application) {
 	rootCmd.AddCommand(cmd)
 }
 
-func initStatResetCommand(rootCmd *cobra.Command, app *application.Application) {
+func initStatResetCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat:reset",
 		Short:   "Удалить незавершенное формирование статистики",

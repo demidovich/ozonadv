@@ -74,7 +74,7 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 	return &statRequest, nil
 }
 
-func (s *statRequests) First(uuid string) (*StatRequest, error) {
+func (s *statRequests) Retrieve(uuid string) (*StatRequest, error) {
 	url := s.api.Url("/client/statistics/" + uuid)
 
 	result := StatRequest{}
