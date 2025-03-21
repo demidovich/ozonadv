@@ -23,6 +23,8 @@ type Storage struct {
 	requestOptions       *RequestOptions
 	processedRequestFile string
 	processedRequest     *ozon.StatisticRequest
+	downloadsDir         string
+	Downloads            Downloads
 }
 
 type RequestOptions struct {
@@ -40,6 +42,7 @@ func New() *Storage {
 		requestOptionsFile:   root + "/request-options.json",
 		processedRequestFile: root + "/processed-request.json",
 		campaigns:            make(map[string]ozon.Campaign),
+		downloadsDir:         root + "/downloads",
 	}
 
 	utils.DirInitOrFail(s.rootDir)
@@ -49,6 +52,9 @@ func New() *Storage {
 	utils.JsonFileReadOrFail(s.campanignsFile, &s.campaigns, "{}")
 	utils.JsonFileReadOrFail(s.requestOptionsFile, &s.requestOptions, "{}")
 	utils.JsonFileReadOrFail(s.processedRequestFile, &s.processedRequest, "{}")
+	utils.DirInitOrFail(s.downloadsDir)
+
+	s.Downloads = NewDownloads(s.downloadsDir)
 
 	return &s
 }
