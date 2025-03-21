@@ -53,7 +53,7 @@ func initStatCommand(rootCmd *cobra.Command, app *application.Application) {
 			statUsecases := app.StatUsecases()
 			fmt.Println("")
 
-			if statUsecases.HasCampaignRequests() {
+			if statUsecases.HasIncompleteProcessing() {
 				fmt.Println("Найдена незавершенная обработка кампаний")
 				if console.Ask("Продолжить ее?") == true {
 					fmt.Println("")

@@ -18,7 +18,7 @@ import (
 type Storage struct {
 	rootDir              string
 	campanignsFile       string
-	campaigns            map[string]ozon.Campaign
+	Campaigns            *campaigns
 	requestOptionsFile   string
 	requestOptions       *RequestOptions
 	processedRequestFile string
@@ -41,7 +41,6 @@ func New() *Storage {
 		campanignsFile:       root + "/campaigns.json",
 		requestOptionsFile:   root + "/request-options.json",
 		processedRequestFile: root + "/processed-request.json",
-		campaigns:            make(map[string]ozon.Campaign),
 		downloadsDir:         root + "/downloads",
 	}
 
@@ -49,11 +48,11 @@ func New() *Storage {
 	utils.FileInitOrFail(s.campanignsFile)
 	utils.FileInitOrFail(s.requestOptionsFile)
 	utils.FileInitOrFail(s.processedRequestFile)
-	utils.JsonFileReadOrFail(s.campanignsFile, &s.campaigns, "{}")
 	utils.JsonFileReadOrFail(s.requestOptionsFile, &s.requestOptions, "{}")
 	utils.JsonFileReadOrFail(s.processedRequestFile, &s.processedRequest, "{}")
 	utils.DirInitOrFail(s.downloadsDir)
 
+	s.Campaigns = NewCampaigns(s.campanignsFile)
 	s.Downloads = NewDownloads(s.downloadsDir)
 
 	return &s
@@ -61,40 +60,6 @@ func New() *Storage {
 
 func (s *Storage) RootDir() string {
 	return s.rootDir
-}
-
-func (s *Storage) AddCampaignRequest(item ozon.Campaign) {
-	s.campaigns[item.ID] = item
-}
-
-func (s *Storage) HasCampaignRequest(id string) bool {
-	_, ok := s.campaigns[id]
-	return ok
-}
-
-func (s *Storage) CampaignRequests() []ozon.Campaign {
-	result := make([]ozon.Campaign, 0, len(s.campaigns))
-	for _, item := range s.campaigns {
-		result = append(result, item)
-	}
-
-	return result
-}
-
-func (s *Storage) CampaignRequestsSize() int {
-	return len(s.campaigns)
-}
-
-func (s *Storage) RemoveCampaignRequest(id string) {
-	delete(s.campaigns, id)
-}
-
-func (s *Storage) NextCampaignRequest() (ozon.Campaign, bool) {
-	for _, item := range s.campaigns {
-		return item, true
-	}
-
-	return ozon.Campaign{}, false
 }
 
 func (s *Storage) SetRequestOptions(options RequestOptions) {
@@ -110,12 +75,12 @@ func (s *Storage) ProcessedRequest() *ozon.StatisticRequest {
 }
 
 // Reset all storage data
-func (s *Storage) Reset() {
-	for k := range s.campaigns {
-		delete(s.campaigns, k)
-	}
+func (s *Storage) Reset() error {
+	s.Campaigns.RemoveAll()
 	s.requestOptions = nil
 	s.processedRequest = nil
+
+	return s.Downloads.RemoveAll()
 }
 
 // Сохранить состояние хранилища
@@ -123,7 +88,7 @@ func (s *Storage) SaveState() {
 	fmt.Println("")
 	fmt.Println("Сохранение локального хранилища")
 
-	err := utils.JsonFileWrite(s.campanignsFile, s.campaigns)
+	err := utils.JsonFileWrite(s.campanignsFile, s.Campaigns.All())
 	if err != nil {
 		log.Fatal(err)
 	}

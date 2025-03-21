@@ -43,7 +43,10 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
-	s.storage.Reset()
+	if err := s.storage.Reset(); err != nil {
+		return err
+	}
+
 	s.initProcessingOptions(options)
 	if err := s.initCampaigns(); err != nil {
 		return err
@@ -56,7 +59,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 
 func (s *statUsecase) HandleContinue() error {
 	fmt.Printf("")
-	s.printCampaignRequests(s.storage.CampaignRequests())
+	s.printCampaigns(s.storage.Campaigns.All())
 	fmt.Println("")
 
 	s.startPocessing()
@@ -74,21 +77,20 @@ func (s *statUsecase) initCampaigns() error {
 		if c.NeverRun() {
 			continue
 		}
-		s.storage.AddCampaignRequest(c)
+		s.storage.Campaigns.Add(c)
 	}
 
-	if s.storage.CampaignRequestsSize() == 0 {
+	if s.storage.Campaigns.Size() == 0 {
 		fmt.Println("Кампании, которые могли работать, не найдены")
 		fmt.Println("")
 		os.Exit(0)
 	}
 
 	fmt.Printf("")
-	s.printCampaignRequests(s.storage.CampaignRequests())
+	s.printCampaigns(s.storage.Campaigns.All())
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
-		s.storage.Reset()
 		fmt.Println("")
 		os.Exit(0)
 	}
@@ -109,11 +111,11 @@ func (s *statUsecase) initProcessingOptions(options StatOptions) {
 }
 
 func (s *statUsecase) startPocessing() {
-	max := s.storage.CampaignRequestsSize()
+	max := s.storage.Campaigns.Size()
 	bar := progressbar.Default(int64(max))
 
 	for {
-		campaign, ok := s.storage.NextCampaignRequest()
+		campaign, ok := s.storage.Campaigns.Next()
 		if !ok {
 			break
 		}
@@ -128,11 +130,11 @@ func (s *statUsecase) processCampaign(campaign ozon.Campaign) error {
 
 	time.Sleep(5 * time.Second)
 
-	s.storage.RemoveCampaignRequest(campaign.ID)
+	s.storage.Campaigns.Remove(campaign.ID)
 	return nil
 }
 
-func (s *statUsecase) printCampaignRequests(campaigns []ozon.Campaign) {
+func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {
 	statMaxLength := 0
 	typeMaxLength := 0
 

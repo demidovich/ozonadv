@@ -67,6 +67,7 @@ func (d *Downloads) RemoveAll() error {
 	return nil
 }
 
+// Absolute file path
 func (d *Downloads) fpath(fname string) string {
 	return fmt.Sprintf("%s/%s", d.dir, fname)
 }

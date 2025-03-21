@@ -23,12 +23,8 @@ func New(storage *storage.Storage, ozonApi *ozon.Api) *Usecases {
 	}
 }
 
-func (u *Usecases) HasCampaignRequests() bool {
-	return u.storage.CampaignRequestsSize() > 0
-}
-
-func (u *Usecases) RemoveAllCampaignRequests() {
-	u.storage.Reset()
+func (u *Usecases) HasIncompleteProcessing() bool {
+	return u.storage.Campaigns.Size() > 0
 }
 
 func (u *Usecases) StatNew(options StatOptions) error {
