@@ -25,6 +25,7 @@ func New() *Application {
 
 func (a *Application) Config() *config.Config {
 	if a.config == nil {
+		fmt.Println("[app init] конфигурация")
 		instance := config.NewOrFail("config.yml")
 		a.config = &instance
 	}
@@ -34,8 +35,9 @@ func (a *Application) Config() *config.Config {
 
 func (a *Application) Ozon() *ozon.Ozon {
 	if a.ozon == nil {
-		fmt.Println("Инициализация клиента Озон")
-		a.ozon = ozon.New(a.Config().Ozon)
+		fmt.Println("[app init] клиент ozon")
+		a.ozon = ozon.New(a.Config().Ozon, a.Config().Verbose)
+		a.shutdownFuncs = append(a.shutdownFuncs, a.ozon.ApiUsageInfo)
 	}
 
 	return a.ozon
@@ -43,10 +45,10 @@ func (a *Application) Ozon() *ozon.Ozon {
 
 func (a *Application) Storage() *storage.Storage {
 	if a.storage == nil {
-		fmt.Println("Инициализация локального хранилища")
+		fmt.Println("[app init] локальное хранилище")
 		a.storage = storage.New()
 		a.shutdownFuncs = append(a.shutdownFuncs, a.storage.SaveState)
-		fmt.Println("Директория локального хранилища", a.storage.RootDir())
+		fmt.Println("[app init] директория локального хранилища", a.storage.RootDir())
 	}
 
 	return a.storage

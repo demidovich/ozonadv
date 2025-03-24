@@ -1,8 +1,6 @@
 package ozon
 
 import (
-	"fmt"
-	"os"
 	"ozonadv/pkg/validation"
 )
 
@@ -20,7 +18,7 @@ func (s *statRequests) All() ([]StatRequest, error) {
 		Total string `json:"total"`
 	}{}
 
-	err := s.api.Get("/client/statistics/externallist", &response)
+	err := s.api.httpGet("/client/statistics/externallist", &response)
 
 	result := []StatRequest{}
 	for _, item := range response.Items {
@@ -41,9 +39,9 @@ func (s *CreateStatRequestOptions) validate() error {
 	return validation.ValidateStruct(s)
 }
 
-func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOptions) (*StatRequest, error) {
+func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
 	if err := options.validate(); err != nil {
-		return nil, err
+		return StatRequest{}, err
 	}
 
 	resource := "/client/statistics/json"
@@ -58,43 +56,37 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 		"groupBy":   options.GroupBy,
 	}
 
-	result := struct {
+	response := struct {
 		UUID   string `json:"UUID"`
 		Vendor bool   `json:"vendor"`
 	}{}
 
-	err := s.api.Post(resource, payload, &result)
+	err := s.api.httpPost(resource, payload, &response)
 	if err != nil {
-		return nil, err
+		return StatRequest{}, err
 	}
 
 	statRequest := StatRequest{}
-	statRequest.UUID = result.UUID
+	statRequest.UUID = response.UUID
+	statRequest.Request.CampaignId = campaign.ID
 
-	return &statRequest, nil
+	return statRequest, nil
 }
 
-func (s *statRequests) Retrieve(uuid string) (*StatRequest, error) {
-	url := s.api.Url("/client/statistics/" + uuid)
+func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
+	resource := "/client/statistics/" + uuid
+	response := StatRequest{}
 
-	result := StatRequest{}
-
-	err := s.api.Get(url, &result)
-	fmt.Println(url)
-	fmt.Println(err)
-	os.Exit(1)
-
+	err := s.api.httpGet(resource, &response)
 	if err != nil {
-		return nil, err
+		return StatRequest{}, err
 	}
 
-	return &result, nil
+	return response, nil
 }
 
 func (s *statRequests) Download(statRequest StatRequest) ([]byte, error) {
-	url := apiHost + statRequest.Link
-
-	data, err := s.api.GetRaw(url)
+	data, err := s.api.httpGetRaw(statRequest.Link)
 	if err != nil {
 		return nil, err
 	}

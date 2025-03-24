@@ -14,11 +14,12 @@ const apiHost = "https://api-performance.ozon.ru"
 var ErrTooManyRequests = errors.New("Ozon 429")
 
 type api struct {
-	verbose      bool
-	clientId     string
-	clientSecret string
-	accessToken  *accessToken
-	resty        *resty.Client
+	verbose       bool
+	clientId      string
+	clientSecret  string
+	accessToken   *accessToken
+	resty         *resty.Client
+	requestsCount int
 }
 
 type accessToken struct {
@@ -34,8 +35,9 @@ func (a *accessToken) Valid() bool {
 	return lifetime < (time.Duration(120) * time.Second)
 }
 
-func newApi(cfg Config) *api {
+func newApi(cfg Config, verbose bool) *api {
 	a := &api{
+		verbose:      verbose,
 		resty:        resty.New(),
 		clientId:     cfg.ClientId,
 		clientSecret: cfg.ClientSecret,
@@ -53,13 +55,15 @@ func (a *api) SetVerbose(value bool) {
 }
 
 // HTTP Get Request
-func (a *api) Get(resource string, result any) error {
+func (a *api) httpGet(resource string, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
 
 	url := a.Url(resource)
+
+	a.requestsCount++
 	a.logRequest("GET", url)
 
 	resp, err := a.resty.R().
@@ -68,12 +72,12 @@ func (a *api) Get(resource string, result any) error {
 		Get(url)
 
 	if err != nil {
-		return fmt.Errorf("Ozon API: GET %s %v", url, err)
+		return err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
 		return errors.New(
-			fmt.Sprintf("Ozon Response: %s %s", resp.Status(), resp.String()),
+			fmt.Sprintf("response: %s %s", resp.Status(), resp.Body()),
 		)
 	}
 
@@ -81,22 +85,25 @@ func (a *api) Get(resource string, result any) error {
 }
 
 // HTTP Raw Get Request
-func (a *api) GetRaw(url string) (data []byte, err error) {
+func (a *api) httpGetRaw(url string) (data []byte, err error) {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return
 	}
+
+	a.requestsCount++
+	a.logRequest("GET RAW", url)
 
 	resp, err := a.resty.R().
 		SetAuthToken(token).
 		Get(url)
 
 	if err != nil {
-		return data, fmt.Errorf("Ozon API: GET RAW %s %v", url, err)
+		return data, fmt.Errorf("GET RAW %s %v", url, err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return data, fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
+		return data, fmt.Errorf("response: %s %s", resp.Status(), resp.Body())
 	}
 
 	data = resp.Body()
@@ -105,13 +112,15 @@ func (a *api) GetRaw(url string) (data []byte, err error) {
 }
 
 // HTTP Post Request
-func (a *api) Post(resource string, payload any, result any) error {
+func (a *api) httpPost(resource string, payload any, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
 
 	url := a.Url(resource)
+
+	a.requestsCount++
 	a.logRequest("POST", url)
 
 	resp, err := a.resty.R().
@@ -121,15 +130,15 @@ func (a *api) Post(resource string, payload any, result any) error {
 		Post(url)
 
 	if err != nil {
-		return fmt.Errorf("Ozon API: POST %s %v", url, err)
+		return err
 	}
 
 	if resp.StatusCode() == http.StatusTooManyRequests {
-		return fmt.Errorf("Ozon Response: %s %s: %w", resp.Status(), resp.String(), ErrTooManyRequests)
+		return fmt.Errorf("response: %s %s: %w", resp.Status(), resp.Body(), ErrTooManyRequests)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("Ozon Response: %s %s", resp.Status(), resp.String())
+		return fmt.Errorf("response: %s %s", resp.Status(), resp.Body())
 	}
 
 	return nil
@@ -141,7 +150,6 @@ func (a *api) validAccessToken() (string, error) {
 	}
 
 	url := a.Url("/client/token")
-	a.logRequest("POST", url)
 
 	payload := map[string]string{
 		"client_id":     a.clientId,
@@ -149,24 +157,31 @@ func (a *api) validAccessToken() (string, error) {
 		"grant_type":    "client_credentials",
 	}
 
+	a.requestsCount++
+	a.logRequest("POST", url)
+
 	resp, err := a.resty.R().
 		SetBody(payload).
 		SetResult(&a.accessToken).
 		Post(url)
 
 	if err != nil {
-		return "", fmt.Errorf("Ozon API: POST %s %v", url, err)
+		return "", err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return "", fmt.Errorf("Ozon API: %s Response: %s %s", url, resp.Status(), resp.String())
+		return "", fmt.Errorf("response: %s %s", resp.Status(), resp.Body())
 	}
 
 	a.accessToken.CreatedAt = time.Now()
 
-	fmt.Println("Ozon API: получен токен доступа")
+	fmt.Println("[ozon api] получен токен доступа")
 
 	return a.accessToken.AccessToken, nil
+}
+
+func (a *api) RequestsCount() int {
+	return a.requestsCount
 }
 
 func (a *api) Url(resource string) string {
@@ -178,5 +193,5 @@ func (a *api) logRequest(method, url string) {
 		return
 	}
 
-	fmt.Printf("Ozon API Request: %s %s\n", method, url)
+	fmt.Printf("[ozon api] %s %s\n", method, url)
 }

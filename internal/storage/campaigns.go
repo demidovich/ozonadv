@@ -18,37 +18,38 @@ func NewCampaigns(file string) *campaigns {
 	return instance
 }
 
-func (d *campaigns) Add(item ozon.Campaign) {
-	d.data[item.ID] = item
+func (c *campaigns) Add(item ozon.Campaign) {
+	c.data[item.ID] = item
 }
 
-func (d *campaigns) Has(id string) bool {
-	_, ok := d.data[id]
+func (c *campaigns) Has(id string) bool {
+	_, ok := c.data[id]
 	return ok
 }
 
-func (d *campaigns) Next() (ozon.Campaign, bool) {
-	for _, item := range d.data {
-		return item, true
-	}
-
-	return ozon.Campaign{}, false
+func (c *campaigns) Remove(id string) {
+	delete(c.data, id)
 }
 
-func (d *campaigns) Remove(id string) {
-	delete(d.data, id)
-}
-
-func (d *campaigns) RemoveAll() {
-	for id, _ := range d.data {
-		delete(d.data, id)
+func (c *campaigns) RemoveAll() {
+	for id := range c.data {
+		delete(c.data, id)
 	}
 }
 
-func (d *campaigns) All() map[string]ozon.Campaign {
-	return d.data
+func (c *campaigns) All() []ozon.Campaign {
+	result := make([]ozon.Campaign, 0, len(c.data))
+	for _, c := range c.data {
+		result = append(result, c)
+	}
+
+	return result
 }
 
-func (d *campaigns) Size() int {
-	return len(d.data)
+func (c *campaigns) Data() map[string]ozon.Campaign {
+	return c.data
+}
+
+func (c *campaigns) Size() int {
+	return len(c.data)
 }

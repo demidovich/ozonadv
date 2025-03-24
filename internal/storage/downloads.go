@@ -5,17 +5,17 @@ import (
 	"os"
 )
 
-type Downloads struct {
+type downloads struct {
 	dir string
 }
 
-func NewDownloads(dir string) Downloads {
-	return Downloads{
+func NewDownloads(dir string) downloads {
+	return downloads{
 		dir: dir,
 	}
 }
 
-func (d *Downloads) list() (result []string, err error) {
+func (d downloads) list() (result []string, err error) {
 	entries, err := os.ReadDir(d.dir)
 	if err != nil {
 		return
@@ -31,15 +31,15 @@ func (d *Downloads) list() (result []string, err error) {
 	return
 }
 
-func (d *Downloads) Write(fname string, data []byte) error {
+func (d downloads) Write(fname string, data []byte) error {
 	return os.WriteFile(d.fpath(fname), data, 0644)
 }
 
-func (d *Downloads) Read(fname string) ([]byte, error) {
+func (d downloads) Read(fname string) ([]byte, error) {
 	return os.ReadFile(d.fpath(fname))
 }
 
-func (d *Downloads) ReadString(fname string) (string, error) {
+func (d downloads) ReadString(fname string) (string, error) {
 	b, err := d.Read(fname)
 	if err != nil {
 		return "", err
@@ -48,11 +48,11 @@ func (d *Downloads) ReadString(fname string) (string, error) {
 	return string(b), nil
 }
 
-func (d *Downloads) Remove(fname string) error {
+func (d downloads) Remove(fname string) error {
 	return os.Remove(d.fpath(fname))
 }
 
-func (d *Downloads) RemoveAll() error {
+func (d downloads) RemoveAll() error {
 	list, err := d.list()
 	if err != nil {
 		return err
@@ -68,6 +68,6 @@ func (d *Downloads) RemoveAll() error {
 }
 
 // Absolute file path
-func (d *Downloads) fpath(fname string) string {
+func (d downloads) fpath(fname string) string {
 	return fmt.Sprintf("%s/%s", d.dir, fname)
 }
