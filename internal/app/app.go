@@ -35,7 +35,7 @@ func (a *Application) Config() *config.Config {
 func (a *Application) Ozon() *ozon.Ozon {
 	if a.ozon == nil {
 		fmt.Println("Инициализация клиента Озон")
-		a.ozon = ozon.New(a.Config().Ozon)
+		a.ozon = ozon.New(a.Config().Ozon, a.Config().Verbose)
 	}
 
 	return a.ozon

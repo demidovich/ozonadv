@@ -14,11 +14,12 @@ const apiHost = "https://api-performance.ozon.ru"
 var ErrTooManyRequests = errors.New("Ozon 429")
 
 type api struct {
-	verbose      bool
-	clientId     string
-	clientSecret string
-	accessToken  *accessToken
-	resty        *resty.Client
+	verbose       bool
+	clientId      string
+	clientSecret  string
+	accessToken   *accessToken
+	resty         *resty.Client
+	requestsCount int
 }
 
 type accessToken struct {
@@ -34,8 +35,9 @@ func (a *accessToken) Valid() bool {
 	return lifetime < (time.Duration(120) * time.Second)
 }
 
-func newApi(cfg Config) *api {
+func newApi(cfg Config, verbose bool) *api {
 	a := &api{
+		verbose:      verbose,
 		resty:        resty.New(),
 		clientId:     cfg.ClientId,
 		clientSecret: cfg.ClientSecret,
@@ -60,6 +62,8 @@ func (a *api) Get(resource string, result any) error {
 	}
 
 	url := a.Url(resource)
+
+	a.requestsCount++
 	a.logRequest("GET", url)
 
 	resp, err := a.resty.R().
@@ -87,6 +91,9 @@ func (a *api) GetRaw(url string) (data []byte, err error) {
 		return
 	}
 
+	a.requestsCount++
+	a.logRequest("GET RAW", url)
+
 	resp, err := a.resty.R().
 		SetAuthToken(token).
 		Get(url)
@@ -112,6 +119,8 @@ func (a *api) Post(resource string, payload any, result any) error {
 	}
 
 	url := a.Url(resource)
+
+	a.requestsCount++
 	a.logRequest("POST", url)
 
 	resp, err := a.resty.R().
@@ -141,13 +150,15 @@ func (a *api) validAccessToken() (string, error) {
 	}
 
 	url := a.Url("/client/token")
-	a.logRequest("POST", url)
 
 	payload := map[string]string{
 		"client_id":     a.clientId,
 		"client_secret": a.clientSecret,
 		"grant_type":    "client_credentials",
 	}
+
+	a.requestsCount++
+	a.logRequest("POST", url)
 
 	resp, err := a.resty.R().
 		SetBody(payload).
@@ -169,6 +180,10 @@ func (a *api) validAccessToken() (string, error) {
 	return a.accessToken.AccessToken, nil
 }
 
+func (a *api) RequestsCount() int {
+	return a.requestsCount
+}
+
 func (a *api) Url(resource string) string {
 	return fmt.Sprintf("%s/api%s", apiHost, resource)
 }
@@ -178,5 +193,5 @@ func (a *api) logRequest(method, url string) {
 		return
 	}
 
-	fmt.Printf("Ozon API Request: %s %s\n", method, url)
+	fmt.Printf("Ozon API: %s %s\n", method, url)
 }

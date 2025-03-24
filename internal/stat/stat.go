@@ -9,15 +9,13 @@
 package stat
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"os"
 	"ozonadv/internal/ozon"
+	"ozonadv/internal/stat/stat_processor"
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
-	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -30,8 +28,8 @@ type StatOptions struct {
 	CampaignId string `validate:"omitempty,numeric"`
 }
 
-func (c *StatOptions) Validate() error {
-	return validation.ValidateStruct(c)
+func (s *StatOptions) Validate() error {
+	return validation.ValidateStruct(s)
 }
 
 type statUsecase struct {
@@ -49,6 +47,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 	}
 
 	s.initOptions(options)
+
 	if err := s.initCampaigns(options); err != nil {
 		return err
 	}
@@ -68,13 +67,24 @@ func (s *statUsecase) HandleContinue() error {
 	return nil
 }
 
+func (s *statUsecase) initOptions(options StatOptions) {
+	storageOptions := storage.StatOptions{
+		DateFrom:   options.DateFrom,
+		DateTo:     options.DateTo,
+		ExportFile: options.ExportFile,
+		GroupBy:    options.GroupBy,
+	}
+
+	s.storage.SetStatOptions(storageOptions)
+}
+
 func (s *statUsecase) initCampaigns(options StatOptions) error {
 	filters := ozon.FindCampaignsFilters{}
 	if options.CampaignId != "" {
 		filters.Ids = append(filters.Ids, options.CampaignId)
 	}
 
-	campaigns, err := s.ozon.Campaigns.Find(filters)
+	campaigns, err := s.ozon.Campaigns().Find(filters)
 	if err != nil {
 		return err
 	}
@@ -105,86 +115,22 @@ func (s *statUsecase) initCampaigns(options StatOptions) error {
 	return nil
 }
 
-func (s *statUsecase) initOptions(options StatOptions) {
-	storageOptions := storage.StatOptions{
-		DateFrom:   options.DateFrom,
-		DateTo:     options.DateTo,
-		ExportFile: options.ExportFile,
-		GroupBy:    options.GroupBy,
-	}
-
-	s.storage.SetStatOptions(storageOptions)
-}
-
 func (s *statUsecase) startPocessing() {
-	// max := s.storage.Campaigns.Size()
-	// bar := progressbar.Default(int64(max))
-	fmt.Println(1)
-	retryInterval := 5 * time.Second
-
-	for {
-		campaign, ok := s.storage.Campaigns.Next()
-		if !ok {
-			break
+	campaigns := make(chan ozon.Campaign)
+	defer close(campaigns)
+	go func() {
+		for _, campaign := range s.storage.Campaigns.All() {
+			campaigns <- campaign
 		}
+	}()
 
-		err := s.processCampaign(campaign, retryInterval)
-		if err != nil && errors.Is(err, ozon.ErrTooManyRequests) {
-			log.Fatal(err)
-		}
-
-		fmt.Println("1111")
-		os.Exit(1)
-		// bar.Add(1)
-	}
-}
-
-func (s *statUsecase) processCampaign(campaign ozon.Campaign, retryInterval time.Duration) error {
-	options := ozon.CreateStatRequestOptions{
-		CampaignId: campaign.ID,
-		DateFrom:   s.storage.StatOptions().DateFrom,
-		DateTo:     s.storage.StatOptions().DateTo,
-		GroupBy:    s.storage.StatOptions().GroupBy,
+	statFiles := stat_processor.Start(s.ozon, s.storage, campaigns)
+	for file := range statFiles {
+		fmt.Println(file)
+		fmt.Println("222222222222222")
 	}
 
-	statRequest, err := s.ozon.StatRequests.Create(campaign, options)
-	if err != nil {
-		return err
-	}
-
-	requestUUID := statRequest.UUID
-	attempt := 1
-	retries := 5
-	var data []byte
-	for {
-		log.Printf("\nSleep\n")
-		time.Sleep(retryInterval)
-
-		statRequest, err = s.ozon.StatRequests.Retrieve(requestUUID)
-		log.Printf("Stat Request #%s %s\n", statRequest.UUID, statRequest.State)
-
-		if statRequest.IsReadyToDownload() {
-			data, err = s.ozon.StatRequests.Download(*statRequest)
-			if err == nil {
-				break
-			}
-			log.Printf("%v\n", err)
-		}
-
-		if attempt > retries {
-			break
-		}
-
-		attempt++
-	}
-
-	fname := fmt.Sprintf("%s.json", statRequest.UUID)
-	if err := s.storage.Downloads.Write(fname, data); err != nil {
-		return err
-	}
-
-	s.storage.Campaigns.Remove(campaign.ID)
-	return nil
+	fmt.Println("33333333333")
 }
 
 func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {

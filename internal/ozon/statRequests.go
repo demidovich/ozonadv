@@ -1,8 +1,6 @@
 package ozon
 
 import (
-	"fmt"
-	"os"
 	"ozonadv/pkg/validation"
 )
 
@@ -76,14 +74,9 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 
 func (s *statRequests) Retrieve(uuid string) (*StatRequest, error) {
 	url := s.api.Url("/client/statistics/" + uuid)
-
 	result := StatRequest{}
 
 	err := s.api.Get(url, &result)
-	fmt.Println(url)
-	fmt.Println(err)
-	os.Exit(1)
-
 	if err != nil {
 		return nil, err
 	}
