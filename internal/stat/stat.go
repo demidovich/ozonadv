@@ -10,6 +10,7 @@ package stat
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat/stat_processor"
@@ -46,28 +47,36 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
-	s.initOptions(options)
+	s.storeOptions(options)
 
-	if err := s.initCampaigns(options); err != nil {
-		return err
+	campaigns := s.selectCampaigns(options)
+	for _, c := range campaigns {
+		s.storage.Campaigns.Add(c)
 	}
 
-	s.startPocessing()
+	s.startPocessing(campaigns)
 
 	return nil
 }
 
 func (s *statUsecase) HandleContinue() error {
+	campaigns := s.storage.Campaigns.All()
+
 	fmt.Printf("")
-	s.printCampaigns(s.storage.Campaigns.All())
+	s.printCampaigns(campaigns)
 	fmt.Println("")
 
-	s.startPocessing()
+	if console.Ask("Продолжить?") == false {
+		fmt.Println("")
+		os.Exit(0)
+	}
+
+	s.startPocessing(campaigns)
 
 	return nil
 }
 
-func (s *statUsecase) initOptions(options StatOptions) {
+func (s *statUsecase) storeOptions(options StatOptions) {
 	storageOptions := storage.StatOptions{
 		DateFrom:   options.DateFrom,
 		DateTo:     options.DateTo,
@@ -78,7 +87,7 @@ func (s *statUsecase) initOptions(options StatOptions) {
 	s.storage.SetStatOptions(storageOptions)
 }
 
-func (s *statUsecase) initCampaigns(options StatOptions) error {
+func (s *statUsecase) selectCampaigns(options StatOptions) []ozon.Campaign {
 	filters := ozon.FindCampaignsFilters{}
 	if options.CampaignId != "" {
 		filters.Ids = append(filters.Ids, options.CampaignId)
@@ -86,54 +95,42 @@ func (s *statUsecase) initCampaigns(options StatOptions) error {
 
 	campaigns, err := s.ozon.Campaigns().Find(filters)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	for _, c := range campaigns {
-		if c.NeverRun() {
-			continue
-		}
-		s.storage.Campaigns.Add(c)
-	}
-
-	if s.storage.Campaigns.Size() == 0 {
-		fmt.Println("Кампании, которые могли работать, не найдены")
-		fmt.Println("")
-		os.Exit(0)
+	if len(campaigns) == 0 {
+		log.Fatal("Кампании не найдены")
 	}
 
 	fmt.Printf("")
-	s.printCampaigns(s.storage.Campaigns.All())
+	s.printCampaigns(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
 		fmt.Println("")
 		os.Exit(0)
 	}
-	fmt.Println("")
 
-	return nil
+	return campaigns
 }
 
-func (s *statUsecase) startPocessing() {
-	campaigns := make(chan ozon.Campaign)
-	defer close(campaigns)
+func (s *statUsecase) startPocessing(campaigns []ozon.Campaign) {
+	campaignsCh := make(chan ozon.Campaign)
+
 	go func() {
-		for _, campaign := range s.storage.Campaigns.All() {
-			campaigns <- campaign
+		defer close(campaignsCh)
+		for _, campaign := range campaigns {
+			campaignsCh <- campaign
 		}
 	}()
 
-	statFiles := stat_processor.Start(s.ozon, s.storage, campaigns)
+	statFiles := stat_processor.Start(s.ozon, s.storage, campaignsCh)
 	for file := range statFiles {
 		fmt.Println(file)
-		fmt.Println("222222222222222")
 	}
-
-	fmt.Println("33333333333")
 }
 
-func (s *statUsecase) printCampaigns(campaigns map[string]ozon.Campaign) {
+func (s *statUsecase) printCampaigns(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "State", "Type", "From", "To", "Title"})

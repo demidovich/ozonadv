@@ -19,9 +19,9 @@ type Storage struct {
 	statOptionsFile string
 	statOptions     *StatOptions
 	campanignsFile  string
-	Campaigns       *campaigns
+	campaigns       *campaigns
 	downloadsDir    string
-	Downloads       Downloads
+	downloads       downloads
 }
 
 // По сути это stat.StatOptions
@@ -48,8 +48,8 @@ func New() *Storage {
 	utils.DirInitOrFail(s.downloadsDir)
 	utils.JsonFileReadOrFail(s.statOptionsFile, &s.statOptions, "{}")
 
-	s.Campaigns = NewCampaigns(s.campanignsFile)
-	s.Downloads = NewDownloads(s.downloadsDir)
+	s.campaigns = NewCampaigns(s.campanignsFile)
+	s.downloads = NewDownloads(s.downloadsDir)
 
 	return &s
 }
@@ -66,12 +66,20 @@ func (s *Storage) StatOptions() *StatOptions {
 	return s.statOptions
 }
 
+func (s *Storage) Campaigns() *campaigns {
+	return s.campaigns
+}
+
+func (s *Storage) Downloads() downloads {
+	return s.downloads
+}
+
 // Reset all storage data
 func (s *Storage) Reset() error {
-	s.Campaigns.RemoveAll()
+	s.campaigns.RemoveAll()
 	s.statOptions = nil
 
-	return s.Downloads.RemoveAll()
+	return s.downloads.RemoveAll()
 }
 
 // Сохранить состояние хранилища
@@ -79,7 +87,7 @@ func (s *Storage) SaveState() {
 	fmt.Println("")
 	fmt.Println("Сохранение локального хранилища")
 
-	err := utils.JsonFileWrite(s.campanignsFile, s.Campaigns.All())
+	err := utils.JsonFileWrite(s.campanignsFile, s.campaigns.Data())
 	if err != nil {
 		log.Fatal(err)
 	}

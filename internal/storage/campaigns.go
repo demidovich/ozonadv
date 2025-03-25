@@ -37,7 +37,16 @@ func (c *campaigns) RemoveAll() {
 	}
 }
 
-func (c *campaigns) All() map[string]ozon.Campaign {
+func (c *campaigns) All() []ozon.Campaign {
+	result := make([]ozon.Campaign, 0, len(c.data))
+	for _, c := range c.data {
+		result = append(result, c)
+	}
+
+	return result
+}
+
+func (c *campaigns) Data() map[string]ozon.Campaign {
 	return c.data
 }
 
