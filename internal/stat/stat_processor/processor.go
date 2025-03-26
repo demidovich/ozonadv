@@ -19,21 +19,42 @@ const (
 )
 
 type StatProcessor struct {
-	storage *storage.Storage
-	ozon    *ozon.Ozon
+	storage     *storage.Storage
+	ozon        *ozon.Ozon
+	procresults *procresults
 }
 
-func Start(o *ozon.Ozon, s *storage.Storage, campaigns <-chan ozon.Campaign) <-chan string {
-	proc := StatProcessor{
-		ozon:    o,
-		storage: s,
+func New(o *ozon.Ozon, s *storage.Storage) *StatProcessor {
+	return &StatProcessor{
+		ozon:        o,
+		storage:     s,
+		procresults: newProcresults(),
+	}
+}
+
+func (p *StatProcessor) Start(c []ozon.Campaign) <-chan bool {
+	for _, campaign := range c {
+		p.procresults.RegisterCampaign(campaign)
 	}
 
-	createdRequests := proc.createStatRequestsStage(campaigns)
-	readyRequests := proc.readyStatRequestsStage(createdRequests)
-	statFiles := proc.downloadStatsStage(readyRequests)
+	campaigns := make(chan ozon.Campaign)
+	go func() {
+		defer close(campaigns)
+		for _, campaign := range c {
+			campaigns <- campaign
+		}
+	}()
 
-	return statFiles
+	createdRequests := p.createStatRequestsStage(campaigns)
+	readyRequests := p.readyStatRequestsStage(createdRequests)
+	complete := p.downloadStatsStage(readyRequests)
+
+	return complete
+}
+
+func (p *StatProcessor) PrintSummaryTable() {
+	p.procresults.PrintSummaryTable()
+	fmt.Println("")
 }
 
 func (p *StatProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan ozon.StatRequest {
@@ -62,14 +83,15 @@ func (p *StatProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-cha
 			} else {
 				logStatRequest(r, err)
 			}
+			p.procresults.RegisterStatRequest(statRequest)
 		}
 	}()
 
 	return out
 }
 
-func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan string {
-	out := make(chan string)
+func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool {
+	out := make(chan bool)
 
 	go func() {
 		defer close(out)
@@ -77,11 +99,12 @@ func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan st
 			filename, err := p.downloadStat(statRequest)
 			if err == nil {
 				p.storage.Campaigns().Remove(statRequest.Request.CampaignId)
-				out <- filename
 			} else {
 				logStatRequest(statRequest, err)
 			}
+			p.procresults.RegisterStatDownload(statRequest, filename)
 		}
+		out <- true
 	}()
 
 	return out
@@ -157,14 +180,14 @@ func (p *StatProcessor) downloadStat(statRequest ozon.StatRequest) (string, erro
 
 		data, err := p.ozon.StatRequests().Download(statRequest)
 		if err != nil {
-			logStatRequest(statRequest, "скачивание статистики:", err)
+			logStatRequest(statRequest, "скачивание статистики: ", err)
 			time.Sleep(downloadWaitTime)
 			continue
 		}
 
 		err = p.storage.Downloads().Write(filename, data)
 		if err != nil {
-			logStatRequest(statRequest, "скачивание статистики:", err)
+			logStatRequest(statRequest, "скачивание статистики: ", err)
 			time.Sleep(downloadWaitTime)
 			continue
 		}

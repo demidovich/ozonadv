@@ -22,12 +22,12 @@ func (f *findCampaignsUsecase) Handle() error {
 		return nil
 	}
 
-	f.printCampaigns(campaigns)
+	f.printCampaignsTable(campaigns)
 
 	return nil
 }
 
-func (s *findCampaignsUsecase) printCampaigns(campaigns []ozon.Campaign) {
+func (s *findCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "State", "Type", "From", "To", "Title"})

@@ -12,11 +12,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat/stat_processor"
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
+	"syscall"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -63,7 +65,7 @@ func (s *statUsecase) HandleContinue() error {
 	campaigns := s.storage.Campaigns().All()
 
 	fmt.Printf("")
-	s.printCampaigns(campaigns)
+	s.printCampaignsTable(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
@@ -104,7 +106,7 @@ func (s *statUsecase) selectCampaigns(options StatOptions) []ozon.Campaign {
 	}
 
 	fmt.Printf("")
-	s.printCampaigns(campaigns)
+	s.printCampaignsTable(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
@@ -117,22 +119,19 @@ func (s *statUsecase) selectCampaigns(options StatOptions) []ozon.Campaign {
 }
 
 func (s *statUsecase) startPocessing(campaigns []ozon.Campaign) {
-	campaignsCh := make(chan ozon.Campaign)
+	statProcessor := stat_processor.New(s.ozon, s.storage)
 
+	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		defer close(campaignsCh)
-		for _, campaign := range campaigns {
-			campaignsCh <- campaign
-		}
+		<-sig
+		statProcessor.PrintSummaryTable()
 	}()
 
-	statFiles := stat_processor.Start(s.ozon, s.storage, campaignsCh)
-	for file := range statFiles {
-		fmt.Println(file)
-	}
+	<-statProcessor.Start(campaigns)
 }
 
-func (s *statUsecase) printCampaigns(campaigns []ozon.Campaign) {
+func (s *statUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "State", "Type", "From", "To", "Title"})

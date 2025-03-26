@@ -37,7 +37,7 @@ func (a *Application) Ozon() *ozon.Ozon {
 	if a.ozon == nil {
 		fmt.Println("[app init] клиент ozon")
 		a.ozon = ozon.New(a.Config().Ozon, a.Config().Verbose)
-		a.shutdownFuncs = append(a.shutdownFuncs, a.ozon.ApiUsageInfo)
+		a.RegisterShutdownFunc(a.ozon.ApiUsageInfo)
 	}
 
 	return a.ozon
@@ -47,7 +47,7 @@ func (a *Application) Storage() *storage.Storage {
 	if a.storage == nil {
 		fmt.Println("[app init] локальное хранилище")
 		a.storage = storage.New()
-		a.shutdownFuncs = append(a.shutdownFuncs, a.storage.SaveState)
+		a.RegisterShutdownFunc(a.storage.SaveState)
 		fmt.Println("[app init] директория локального хранилища", a.storage.RootDir())
 	}
 
@@ -73,6 +73,10 @@ func (a *Application) FindUsecases() *find.Usecases {
 	}
 
 	return a.findUsecases
+}
+
+func (a *Application) RegisterShutdownFunc(f func()) {
+	a.shutdownFuncs = append(a.shutdownFuncs, f)
 }
 
 func (a *Application) Shutdown() {
