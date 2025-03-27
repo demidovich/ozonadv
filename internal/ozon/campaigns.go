@@ -23,7 +23,8 @@ func (c *campaigns) Find(filters FindCampaignsFilters) ([]Campaign, error) {
 		Total string     `json:"total"`
 	}{}
 
-	err := c.api.httpGet("/client/campaign"+params, &response)
+	url := urlApi("/client/campaign") + params
+	err := c.api.httpGet(url, &response)
 
 	return response.List, err
 }

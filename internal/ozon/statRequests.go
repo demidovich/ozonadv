@@ -2,6 +2,7 @@ package ozon
 
 import (
 	"ozonadv/pkg/validation"
+	"strings"
 )
 
 type statRequests struct {
@@ -18,7 +19,8 @@ func (s *statRequests) All() ([]StatRequest, error) {
 		Total string `json:"total"`
 	}{}
 
-	err := s.api.httpGet("/client/statistics/externallist", &response)
+	url := urlApi("/client/statistics/externallist")
+	err := s.api.httpGet(url, &response)
 
 	result := []StatRequest{}
 	for _, item := range response.Items {
@@ -48,6 +50,7 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 	if campaign.AdvObjectType == "VIDEO_BANNER" {
 		resource = "/client/statistics/video/json"
 	}
+	url := urlApi(resource)
 
 	payload := map[string]any{
 		"campaigns": []string{campaign.ID},
@@ -61,7 +64,7 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 		Vendor bool   `json:"vendor"`
 	}{}
 
-	err := s.api.httpPost(resource, payload, &response)
+	err := s.api.httpPost(url, payload, &response)
 	if err != nil {
 		return StatRequest{}, err
 	}
@@ -74,10 +77,10 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 }
 
 func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
-	resource := "/client/statistics/" + uuid
 	response := StatRequest{}
 
-	err := s.api.httpGet(resource, &response)
+	url := urlApi("/client/statistics/" + uuid)
+	err := s.api.httpGet(url, &response)
 	if err != nil {
 		return StatRequest{}, err
 	}
@@ -86,7 +89,12 @@ func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
 }
 
 func (s *statRequests) Download(statRequest StatRequest) ([]byte, error) {
-	data, err := s.api.httpGetRaw(statRequest.Link)
+	url := statRequest.Link
+	if !strings.HasPrefix(url, "http") {
+		url = urlApi(url)
+	}
+
+	data, err := s.api.httpGetRaw(url)
 	if err != nil {
 		return nil, err
 	}

@@ -4,13 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 )
-
-const apiHost = "https://api-performance.ozon.ru"
 
 var ErrTooManyRequests = errors.New("Ozon 429")
 
@@ -56,13 +53,11 @@ func (a *api) SetVerbose(value bool) {
 }
 
 // HTTP Get Request
-func (a *api) httpGet(resource string, result any) error {
+func (a *api) httpGet(url string, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
-
-	url := a.Url(resource)
 
 	a.requestsCount++
 	a.logRequest("GET", url)
@@ -92,10 +87,6 @@ func (a *api) httpGetRaw(url string) (data []byte, err error) {
 		return
 	}
 
-	if !strings.HasPrefix(url, "http") {
-		url = apiHost + url
-	}
-
 	a.requestsCount++
 	a.logRequest("GET RAW", url)
 
@@ -117,13 +108,11 @@ func (a *api) httpGetRaw(url string) (data []byte, err error) {
 }
 
 // HTTP Post Request
-func (a *api) httpPost(resource string, payload any, result any) error {
+func (a *api) httpPost(url string, payload any, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
 	}
-
-	url := a.Url(resource)
 
 	a.requestsCount++
 	a.logRequest("POST", url)
@@ -154,7 +143,7 @@ func (a *api) validAccessToken() (string, error) {
 		return a.accessToken.AccessToken, nil
 	}
 
-	url := a.Url("/client/token")
+	url := urlApi("/client/token")
 
 	payload := map[string]string{
 		"client_id":     a.clientId,
@@ -189,14 +178,18 @@ func (a *api) RequestsCount() int {
 	return a.requestsCount
 }
 
-func (a *api) Url(resource string) string {
-	return fmt.Sprintf("%s/api%s", apiHost, resource)
-}
-
 func (a *api) logRequest(method, url string) {
 	if !a.verbose {
 		return
 	}
 
 	fmt.Printf("[ozon api] %s %s\n", method, url)
+}
+
+func urlApi(resource string) string {
+	return fmt.Sprintf("https://api-performance.ozon.ru/api%s", resource)
+}
+
+func urlAdvApi(resource string) string {
+	return fmt.Sprintf("https://performance.ozon.ru/api/adv-api/external/api%s", resource)
 }
