@@ -35,6 +35,7 @@ func main() {
 
 	initFindCampaignsCommand(rootCmd, app)
 	initStatCommand(rootCmd, app)
+	initStatContinueCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
 	initStatResetCommand(rootCmd, app)
 
@@ -98,6 +99,25 @@ func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода, обязательный")
 	cmd.Flags().StringP("campaign-id", "i", "", "ID кампании")
 	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных, обязательный")
+
+	rootCmd.AddCommand(cmd)
+}
+
+func initStatContinueCommand(rootCmd *cobra.Command, app *app.Application) {
+	cmd := &cobra.Command{
+		Use:     "stat:continue",
+		Short:   "Продолжить прерваное формирования статистики",
+		Example: "ozonadv stat:continue",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(cmd.Short)
+			fmt.Println("")
+
+			statUsecases := app.StatUsecases()
+			fmt.Println("")
+
+			return statUsecases.StatContinue()
+		},
+	}
 
 	rootCmd.AddCommand(cmd)
 }
