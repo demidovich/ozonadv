@@ -65,18 +65,18 @@ func initFindCampaignsCommand(rootCmd *cobra.Command, app *app.Application) {
 func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat",
-		Short:   "Формирование и загрузка статистики по кампаниям",
+		Short:   "Сформировать статистику по кампаниям",
 		Example: "ozonadv stat --date-from 2025-01-01 --date-to 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(cmd.Short)
+			fmt.Println("Формирование статистики по кампаниям")
 			fmt.Println("")
 
 			statUsecases := app.StatUsecases()
 
 			if statUsecases.HasIncompleteProcessing() {
 				fmt.Println("")
-				fmt.Println("Найдена незавершенная обработка кампаний")
-				if console.Ask("Продолжить ее?") == true {
+				fmt.Println("Найдено незавершенное формирование статистики")
+				if console.Ask("Продолжить ее формирование?") == true {
 					fmt.Println("")
 					return statUsecases.StatContinue()
 				}
@@ -109,7 +109,7 @@ func initStatContinueCommand(rootCmd *cobra.Command, app *app.Application) {
 		Short:   "Продолжить прерваное формирования статистики",
 		Example: "ozonadv stat:continue",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(cmd.Short)
+			fmt.Println("Продолжение прерваного формирования статистики")
 			fmt.Println("")
 
 			statUsecases := app.StatUsecases()
@@ -125,7 +125,7 @@ func initStatContinueCommand(rootCmd *cobra.Command, app *app.Application) {
 func initStatInfoCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat:info",
-		Short:   "Статус формирования статистики",
+		Short:   "Состояние формирования статистики",
 		Example: "ozonadv stat:info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(cmd.Short)
@@ -147,7 +147,7 @@ func initStatResetCommand(rootCmd *cobra.Command, app *app.Application) {
 		Short:   "Удалить незавершенное формирование статистики",
 		Example: "ozonadv stat:reset",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(cmd.Short)
+			fmt.Println("Удаление незавершенного формирования статистики")
 			fmt.Println("")
 
 			statUsecases := app.StatUsecases()
