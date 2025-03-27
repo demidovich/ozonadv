@@ -27,10 +27,12 @@ type Storage struct {
 // По сути это stat.StatOptions
 // Но импортировать ее нельзя из-за циклической зависомости
 type StatOptions struct {
-	DateFrom   string `json:"dateFrom"`
-	DateTo     string `json:"dateTo"`
-	ExportFile string `json:"exportFile"`
-	GroupBy    string `json:"groupBy"`
+	DateFrom         string `json:"dateFrom"`
+	DateTo           string `json:"dateTo"`
+	GroupBy          string `json:"groupBy"`
+	CreatedAt        string `json:"createdAt"`
+	StartedAt        string `json:"startedAt"`
+	ApiRequestsCount int    `json:"apiRequestsCount"`
 }
 
 func New() *Storage {

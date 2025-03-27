@@ -19,24 +19,18 @@ const (
 )
 
 type StatProcessor struct {
-	storage     *storage.Storage
-	ozon        *ozon.Ozon
-	procresults *procresults
+	storage *storage.Storage
+	ozon    *ozon.Ozon
 }
 
 func New(o *ozon.Ozon, s *storage.Storage) *StatProcessor {
 	return &StatProcessor{
-		ozon:        o,
-		storage:     s,
-		procresults: newProcresults(),
+		ozon:    o,
+		storage: s,
 	}
 }
 
-func (p *StatProcessor) Start(c []ozon.Campaign) <-chan bool {
-	for _, campaign := range c {
-		p.procresults.RegisterCampaign(campaign)
-	}
-
+func (p *StatProcessor) Start(c []ozon.Campaign) {
 	campaigns := make(chan ozon.Campaign)
 	go func() {
 		defer close(campaigns)
@@ -47,14 +41,7 @@ func (p *StatProcessor) Start(c []ozon.Campaign) <-chan bool {
 
 	createdRequests := p.createStatRequestsStage(campaigns)
 	readyRequests := p.readyStatRequestsStage(createdRequests)
-	complete := p.downloadStatsStage(readyRequests)
-
-	return complete
-}
-
-func (p *StatProcessor) PrintSummaryTable() {
-	p.procresults.PrintSummaryTable()
-	fmt.Println("")
+	<-p.downloadStatsStage(readyRequests)
 }
 
 func (p *StatProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan ozon.StatRequest {
@@ -79,6 +66,7 @@ func (p *StatProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan 
 			} else {
 				statRequest = p.createStatRequest(campaign)
 				campaign.StorageStatRequestUUID = statRequest.UUID
+				p.storage.Campaigns().Add(campaign)
 			}
 
 			out <- statRequest
@@ -104,14 +92,21 @@ func (p *StatProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-cha
 				statRequest = r
 			} else {
 				statRequest, err = p.readyStatRequest(r)
+				// Не получилось, запрос не сфоррмирован
 				if err != nil {
 					logStatRequest(r, err)
 					continue
 				}
 			}
 
+			// Привязываем к сохраненным данным кампании ссылку на скачивание
+			// Будет использована, если консольная команда будет остановлена
+			if campaign, ok := p.storage.Campaigns().ByStatRequestUUID(statRequest.UUID); ok {
+				campaign.StorageStatLink = statRequest.Link
+				p.storage.Campaigns().Add(campaign)
+			}
+
 			out <- statRequest
-			p.procresults.RegisterStatRequest(statRequest)
 		}
 	}()
 
@@ -124,10 +119,21 @@ func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bo
 	go func() {
 		defer close(complete)
 		for statRequest := range in {
+			campaign, ok := p.storage.Campaigns().ByStatRequestUUID(statRequest.UUID)
+			if !ok {
+				logStatRequest(statRequest, "не найдена кампания в storage!!! пропуск")
+				continue
+			}
+
+			if campaign.StorageStatFile != "" {
+				logStatRequest(statRequest, "статистика скачана ранее")
+				continue
+			}
+
 			filename, err := p.downloadStat(statRequest)
 			if err == nil {
-				p.procresults.RegisterStatDownload(statRequest, filename)
-				p.storage.Campaigns().Remove(statRequest.Request.CampaignId)
+				campaign.StorageStatFile = filename
+				p.storage.Campaigns().Add(campaign)
 			} else {
 				logStatRequest(statRequest, err)
 			}
@@ -221,6 +227,7 @@ func (p *StatProcessor) downloadStat(statRequest ozon.StatRequest) (string, erro
 		}
 
 		logStatRequest(statRequest, "скачан файл:", filename)
+		return filename, nil
 	}
 
 	return "", errors.New("превышено количество попыток скачивания")
@@ -231,5 +238,5 @@ func logCampaign(c ozon.Campaign, msg ...any) {
 }
 
 func logStatRequest(r ozon.StatRequest, msg ...any) {
-	fmt.Printf("[%s] %s\n", r.Request.CampaignId, fmt.Sprint(msg...))
+	fmt.Printf("[%s] %s\n", r.CampaignId(), fmt.Sprint(msg...))
 }

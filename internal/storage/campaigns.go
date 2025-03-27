@@ -27,8 +27,13 @@ func (c *campaigns) Has(id string) bool {
 	return ok
 }
 
-func (c *campaigns) Remove(id string) {
-	delete(c.data, id)
+func (c *campaigns) ByStatRequestUUID(uuid string) (ozon.Campaign, bool) {
+	for _, c := range c.data {
+		if c.StorageStatRequestUUID == uuid {
+			return c, true
+		}
+	}
+	return ozon.Campaign{}, false
 }
 
 func (c *campaigns) RemoveAll() {

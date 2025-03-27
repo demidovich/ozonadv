@@ -76,6 +76,7 @@ func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 			if statUsecases.HasIncompleteProcessing() {
 				fmt.Println("")
 				fmt.Println("Найдено незавершенное формирование статистики")
+				fmt.Println("")
 				if console.Ask("Продолжить ее формирование?") == true {
 					fmt.Println("")
 					return statUsecases.StatContinue()
@@ -87,7 +88,6 @@ func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
 			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
 			options.CampaignId, _ = cmd.Flags().GetString("campaign-id")
-			options.ExportFile, _ = cmd.PersistentFlags().GetString("export-file")
 			options.GroupBy = "DATE"
 
 			return statUsecases.StatNew(options)
@@ -98,7 +98,6 @@ func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd.PersistentFlags().StringP("date-from", "f", "", "Начало периода, обязательный")
 	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода, обязательный")
 	cmd.Flags().StringP("campaign-id", "i", "", "ID кампании")
-	cmd.PersistentFlags().StringP("export-file", "e", "", "Файл для экспорта данных, обязательный")
 
 	rootCmd.AddCommand(cmd)
 }

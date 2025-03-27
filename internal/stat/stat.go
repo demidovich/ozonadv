@@ -12,23 +12,22 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat/stat_processor"
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
-	"syscall"
-
-	"github.com/jedib0t/go-pretty/v6/table"
+	"time"
 )
 
 type StatOptions struct {
-	DateFrom   string `validate:"required,datetime=2006-01-02"`
-	DateTo     string `validate:"required,datetime=2006-01-02"`
-	ExportFile string `validate:"required,filepath"`
-	GroupBy    string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
-	CampaignId string `validate:"omitempty,numeric"`
+	DateFrom         string `validate:"required,datetime=2006-01-02"`
+	DateTo           string `validate:"required,datetime=2006-01-02"`
+	GroupBy          string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
+	CampaignId       string `validate:"omitempty,numeric"`
+	CreatedAt        string `validate:"omitempty,datetime=2006-01-02"`
+	StartedAt        string `validate:"omitempty,datetime=2006-01-02"`
+	ApiRequestsCount int    `validate:"omitempty,numeric"`
 }
 
 func (s *StatOptions) Validate() error {
@@ -49,6 +48,8 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
+	options.CreatedAt = time.Now().String()
+	options.StartedAt = time.Now().String()
 	s.storeOptions(options)
 
 	campaigns := s.selectCampaigns(options)
@@ -56,7 +57,8 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		s.storage.Campaigns().Add(c)
 	}
 
-	s.startPocessing(campaigns)
+	statProcessor := stat_processor.New(s.ozon, s.storage)
+	statProcessor.Start(campaigns)
 
 	return nil
 }
@@ -64,8 +66,8 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 func (s *statUsecase) HandleContinue() error {
 	campaigns := s.storage.Campaigns().All()
 
-	fmt.Printf("")
-	s.printCampaignsTable(campaigns)
+	fmt.Println("Есть незавершенное формирование отчета по кампаниям")
+	printCampaignsTable(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
@@ -74,17 +76,24 @@ func (s *statUsecase) HandleContinue() error {
 	}
 
 	fmt.Println("")
-	s.startPocessing(campaigns)
+
+	options := s.storage.StatOptions()
+	options.StartedAt = time.Now().String()
+	s.storage.SetStatOptions(*options)
+
+	statProcessor := stat_processor.New(s.ozon, s.storage)
+	statProcessor.Start(campaigns)
 
 	return nil
 }
 
 func (s *statUsecase) storeOptions(options StatOptions) {
 	storageOptions := storage.StatOptions{
-		DateFrom:   options.DateFrom,
-		DateTo:     options.DateTo,
-		ExportFile: options.ExportFile,
-		GroupBy:    options.GroupBy,
+		DateFrom:  options.DateFrom,
+		DateTo:    options.DateTo,
+		GroupBy:   options.GroupBy,
+		CreatedAt: options.CreatedAt,
+		StartedAt: options.StartedAt,
 	}
 
 	s.storage.SetStatOptions(storageOptions)
@@ -105,8 +114,8 @@ func (s *statUsecase) selectCampaigns(options StatOptions) []ozon.Campaign {
 		log.Fatal("Кампании не найдены")
 	}
 
-	fmt.Printf("")
-	s.printCampaignsTable(campaigns)
+	fmt.Println("")
+	printCampaignsTable(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
@@ -116,38 +125,4 @@ func (s *statUsecase) selectCampaigns(options StatOptions) []ozon.Campaign {
 
 	fmt.Println("")
 	return campaigns
-}
-
-func (s *statUsecase) startPocessing(campaigns []ozon.Campaign) {
-	statProcessor := stat_processor.New(s.ozon, s.storage)
-
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sig
-		statProcessor.PrintSummaryTable()
-	}()
-
-	<-statProcessor.Start(campaigns)
-}
-
-func (s *statUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
-	tw := table.NewWriter()
-	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"#", "Статус", "Тип", "Запуск", "Останов", "Название"})
-	tw.AppendRow(table.Row{"", "", "", "", "", ""})
-
-	for _, c := range campaigns {
-		tw.AppendRow(table.Row{
-			c.ID,
-			c.ShortState(),
-			c.AdvObjectType,
-			c.FromDate,
-			c.ToDate,
-			c.Title,
-		})
-	}
-
-	fmt.Println(tw.Render())
-	fmt.Println("Всего:", len(campaigns))
 }

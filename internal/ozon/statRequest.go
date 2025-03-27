@@ -29,7 +29,7 @@ type StatRequest struct {
 		From       string   `json:"from"`
 		To         string   `json:"to"`
 		GroupBy    string   `json:"groupBy"`
-	}
+	} `json:"request"`
 }
 
 func (s *StatRequest) CampaignId() (value string) {

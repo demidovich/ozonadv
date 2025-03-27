@@ -1,4 +1,4 @@
-package stat
+package export
 
 type StatExport struct {
 	СampaignId         string `json:"campaignId"` // Кампания

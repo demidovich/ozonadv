@@ -2,6 +2,7 @@ package ozon
 
 import (
 	"strings"
+	"unicode/utf8"
 )
 
 // Campaign states
@@ -35,12 +36,43 @@ type Campaign struct {
 	ProductCampaignMode      string `json:"productCampaignMode"`
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
 	StorageStatRequestUUID   string `json:"storageStatRequestUUID"`
+	StorageStatLink          string `json:"storageStatLink"`
+	StorageStatFile          string `json:"storageStatFile"`
 }
 
 func (c *Campaign) NeverRun() bool {
 	return c.State == "CAMPAIGN_STATE_PLANNED"
 }
 
-func (c *Campaign) ShortState() string {
+func (c *Campaign) StateShort() string {
 	return strings.TrimPrefix(c.State, "CAMPAIGN_STATE_")
+}
+
+func (c *Campaign) TitleTruncated(length int) string {
+	suffix := "..."
+	suffixLength := utf8.RuneCountInString(suffix)
+
+	if utf8.RuneCountInString(c.Title)+suffixLength <= length {
+		return c.Title
+	}
+
+	r := []rune(c.Title)
+	return string(r[:length-suffixLength]) + suffix
+}
+
+func (c *Campaign) StatReportState() string {
+	var val string
+
+	switch true {
+	case c.StorageStatFile != "":
+		val = "Файл скачан"
+	case c.StorageStatLink != "":
+		val = "Готов к скачиванию"
+	case c.StorageStatRequestUUID != "":
+		val = "Запрос создан"
+	default:
+		val = ""
+	}
+
+	return val
 }

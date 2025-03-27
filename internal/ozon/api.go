@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -89,6 +90,10 @@ func (a *api) httpGetRaw(url string) (data []byte, err error) {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return
+	}
+
+	if !strings.HasPrefix(url, "http") {
+		url = apiHost + url
 	}
 
 	a.requestsCount++
