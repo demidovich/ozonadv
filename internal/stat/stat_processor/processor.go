@@ -203,7 +203,6 @@ func (p *StatProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.Sta
 
 func (p *StatProcessor) downloadStat(statRequest ozon.StatRequest) (string, error) {
 	filename := statRequest.UUID + ".json"
-
 	for attempt := 1; attempt <= downloadAttempts; attempt++ {
 		logStatRequest(statRequest, "скачивание статистики: попытка ", attempt)
 
