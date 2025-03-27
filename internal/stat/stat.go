@@ -134,7 +134,7 @@ func (s *statUsecase) startPocessing(campaigns []ozon.Campaign) {
 func (s *statUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"#", "State", "Type", "From", "To", "Title"})
+	tw.AppendRow(table.Row{"#", "Статус", "Тип", "Запуск", "Останов", "Название"})
 	tw.AppendRow(table.Row{"", "", "", "", "", ""})
 
 	for _, c := range campaigns {

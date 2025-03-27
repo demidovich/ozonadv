@@ -63,7 +63,24 @@ func (p *StatProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan 
 	go func() {
 		defer close(out)
 		for campaign := range in {
-			statRequest := p.createStatRequest(campaign)
+			var statRequest ozon.StatRequest
+			var err error
+
+			// Если ранее отчет формировался и закончился с ошибками либо был остановлен
+			// Для некоторых кампаний уже были отправлены запросы для формирования статистики
+			// Здесь мы проверяем есть ли они и используем их, если они есть
+			if campaign.StorageStatRequestUUID != "" {
+				statRequest, err = p.ozon.StatRequests().Retrieve(campaign.StorageStatRequestUUID)
+				if err != nil {
+					logCampaign(campaign, "уже есть сформированный запрос #", campaign.StorageStatRequestUUID)
+					logCampaign(campaign, "ошибка получения запроса: ", err)
+					continue
+				}
+			} else {
+				statRequest = p.createStatRequest(campaign)
+				campaign.StorageStatRequestUUID = statRequest.UUID
+			}
+
 			out <- statRequest
 		}
 	}()
@@ -77,12 +94,23 @@ func (p *StatProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-cha
 	go func() {
 		defer close(out)
 		for r := range in {
-			statRequest, err := p.readyStatRequest(r)
-			if err == nil {
-				out <- statRequest
+			var statRequest ozon.StatRequest
+			var err error
+
+			// Если ранее отчет формировался и закончился с ошибками либо был остановлен
+			// Для некоторых кампаний уже были отправлены запросы для формирования статистики
+			// Здесь мы проверяем в каком они состоянии и используем их, если с ними все ок
+			if r.IsReadyToDownload() {
+				statRequest = r
 			} else {
-				logStatRequest(r, err)
+				statRequest, err = p.readyStatRequest(r)
+				if err != nil {
+					logStatRequest(r, err)
+					continue
+				}
 			}
+
+			out <- statRequest
 			p.procresults.RegisterStatRequest(statRequest)
 		}
 	}()
@@ -91,23 +119,23 @@ func (p *StatProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-cha
 }
 
 func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool {
-	out := make(chan bool)
+	complete := make(chan bool)
 
 	go func() {
-		defer close(out)
+		defer close(complete)
 		for statRequest := range in {
 			filename, err := p.downloadStat(statRequest)
 			if err == nil {
+				p.procresults.RegisterStatDownload(statRequest, filename)
 				p.storage.Campaigns().Remove(statRequest.Request.CampaignId)
 			} else {
 				logStatRequest(statRequest, err)
 			}
-			p.procresults.RegisterStatDownload(statRequest, filename)
 		}
-		out <- true
+		complete <- true
 	}()
 
-	return out
+	return complete
 }
 
 func (p *StatProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatRequest {
@@ -137,6 +165,7 @@ func (p *StatProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatReque
 	fmt.Println("Превышено количество количество попыток создания запроса.")
 	fmt.Println("Возможно существует тяжелый несформированый запрос.")
 	fmt.Println("Пока Озон не закончит его формирование создать новый не получится.")
+	fmt.Println("Выдержите паузу и запустите ozonadv stat:continue.")
 	fmt.Println("")
 	os.Exit(1)
 

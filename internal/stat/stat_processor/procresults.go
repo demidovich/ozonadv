@@ -3,20 +3,13 @@ package stat_processor
 import (
 	"fmt"
 	"ozonadv/internal/ozon"
+	"unicode/utf8"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 type procresults struct {
 	entries map[string]procresultsEntry
-}
-
-type procresultsEntry struct {
-	campaignID       string
-	campaignTitle    string
-	statRequestUUID  string
-	statRequestState string
-	downloadedFile   string
 }
 
 func newProcresults() *procresults {
@@ -52,13 +45,13 @@ func (p *procresults) RegisterStatDownload(s ozon.StatRequest, fname string) {
 func (p *procresults) PrintSummaryTable() {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"Campaign ID", "Campaign Title", "Request UUID", "Request State", "File"})
+	tw.AppendRow(table.Row{"#", "Название", "Статус", "Файл"})
 	tw.AppendRow(table.Row{"", "", "", "", ""})
 	downloadFails := 0
 	for _, e := range p.entries {
 		tw.AppendRow(table.Row{
 			e.campaignID,
-			e.campaignTitle,
+			e.campaignTitleShorten(45),
 			e.statRequestUUID,
 			e.statRequestState,
 			e.downloadedFile,
@@ -85,4 +78,22 @@ func (p *procresults) entryByStatRequest(s ozon.StatRequest) procresultsEntry {
 	}
 
 	return entry
+}
+
+type procresultsEntry struct {
+	campaignID       string
+	campaignTitle    string
+	statRequestUUID  string
+	statRequestState string
+	downloadedFile   string
+}
+
+func (p procresultsEntry) campaignTitleShorten(maxlen int) string {
+	if utf8.RuneCountInString(p.campaignTitle) <= maxlen+3 {
+		return p.campaignTitle
+	}
+
+	r := []rune(p.campaignTitle)
+
+	return string(r[:maxlen+2]) + "..."
 }

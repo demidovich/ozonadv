@@ -34,6 +34,7 @@ type Campaign struct {
 	UpdatedAt                string `json:"updatedAt"`
 	ProductCampaignMode      string `json:"productCampaignMode"`
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
+	StorageStatRequestUUID   string `json:"storageStatRequestUUID"`
 }
 
 func (c *Campaign) NeverRun() bool {
@@ -42,8 +43,4 @@ func (c *Campaign) NeverRun() bool {
 
 func (c *Campaign) ShortState() string {
 	return strings.TrimPrefix(c.State, "CAMPAIGN_STATE_")
-}
-
-type FindCampaignsFilters struct {
-	Ids []string
 }

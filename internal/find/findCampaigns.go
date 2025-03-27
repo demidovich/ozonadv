@@ -30,7 +30,7 @@ func (f *findCampaignsUsecase) Handle() error {
 func (s *findCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"#", "State", "Type", "From", "To", "Title"})
+	tw.AppendRow(table.Row{"#", "Статус", "Тип", "Запуск", "Останов", "Название"})
 	tw.AppendRow(table.Row{"", "", "", "", "", ""})
 
 	for _, c := range campaigns {

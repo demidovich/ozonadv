@@ -8,6 +8,10 @@ type campaigns struct {
 	api *api
 }
 
+type FindCampaignsFilters struct {
+	Ids []string
+}
+
 func (c *campaigns) Find(filters FindCampaignsFilters) ([]Campaign, error) {
 	params := ""
 	if len(filters.Ids) > 0 {
