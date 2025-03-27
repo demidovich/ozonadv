@@ -6,18 +6,20 @@ import (
 )
 
 type Usecases struct {
-	storage   *storage.Storage
-	stat      statUsecase
-	statInfo  statInfoUsecase
-	statReset statResetUsecase
+	storage    *storage.Storage
+	stat       statUsecase
+	statInfo   statInfoUsecase
+	statExport statExportUsecase
+	statReset  statResetUsecase
 }
 
 func New(storage *storage.Storage, ozon *ozon.Ozon) *Usecases {
 	return &Usecases{
-		storage:   storage,
-		stat:      statUsecase{ozon: ozon, storage: storage},
-		statInfo:  statInfoUsecase{storage: storage},
-		statReset: statResetUsecase{storage: storage},
+		storage:    storage,
+		stat:       statUsecase{ozon: ozon, storage: storage},
+		statInfo:   statInfoUsecase{storage: storage},
+		statExport: statExportUsecase{storage: storage},
+		statReset:  statResetUsecase{storage: storage},
 	}
 }
 
@@ -35,6 +37,10 @@ func (u *Usecases) StatContinue() error {
 
 func (u *Usecases) StatInfo() error {
 	return u.statInfo.Handle()
+}
+
+func (u *Usecases) StatExport(options StatExportOptions) error {
+	return u.statExport.Handle(options)
 }
 
 func (u *Usecases) StatReset() error {

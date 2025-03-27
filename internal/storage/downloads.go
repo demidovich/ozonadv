@@ -31,6 +31,10 @@ func (d downloads) list() (result []string, err error) {
 	return
 }
 
+func (d downloads) AbsolutePath(fname string) string {
+	return d.dir + "/" + fname
+}
+
 func (d downloads) Write(fname string, data []byte) error {
 	return os.WriteFile(d.fpath(fname), data, 0644)
 }

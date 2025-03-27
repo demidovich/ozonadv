@@ -30,7 +30,7 @@ func (f *findCampaignsUsecase) Handle() error {
 func (s *findCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"#", "Тип", "Название", "Запуск", "Окончание", "Статус"})
+	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Статус"})
 	tw.AppendRow(table.Row{"", "", "", "", "", ""})
 
 	for _, c := range campaigns {
@@ -46,6 +46,6 @@ func (s *findCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 
 	fmt.Println("")
 	fmt.Println(tw.Render())
-	fmt.Println("Всего:", len(campaigns))
+	fmt.Println("Всего кампаний:", len(campaigns))
 	fmt.Println("")
 }

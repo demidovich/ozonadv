@@ -37,6 +37,7 @@ func main() {
 	initStatCommand(rootCmd, app)
 	initStatContinueCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
+	initStatExportCommand(rootCmd, app)
 	initStatResetCommand(rootCmd, app)
 
 	fmt.Println("")
@@ -137,6 +138,29 @@ func initStatInfoCommand(rootCmd *cobra.Command, app *app.Application) {
 		},
 	}
 
+	rootCmd.AddCommand(cmd)
+}
+
+func initStatExportCommand(rootCmd *cobra.Command, app *app.Application) {
+	cmd := &cobra.Command{
+		Use:     "stat:export",
+		Short:   "Экспорт сформированной статистики",
+		Example: "ozonadv stat:export --file ./export_file.csv",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(cmd.Short)
+			fmt.Println("")
+
+			options := stat.StatExportOptions{}
+			options.File, _ = cmd.PersistentFlags().GetString("file")
+
+			statUsecases := app.StatUsecases()
+			fmt.Println("")
+
+			return statUsecases.StatExport(options)
+		},
+	}
+
+	cmd.PersistentFlags().StringP("file", "f", "", "Файл экспорта")
 	rootCmd.AddCommand(cmd)
 }
 

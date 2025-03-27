@@ -10,7 +10,7 @@ import (
 func printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"#", "Тип", "Название", "Запуск", "Окончание", "Состояние отчета"})
+	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Состояние отчета"})
 	tw.AppendRow(table.Row{"", "", "", "", ""})
 
 	for _, c := range campaigns {
@@ -27,5 +27,5 @@ func printCampaignsTable(campaigns []ozon.Campaign) {
 	}
 
 	fmt.Println(tw.Render())
-	fmt.Println("Всего:", len(campaigns))
+	fmt.Println("Всего кампаний:", len(campaigns))
 }

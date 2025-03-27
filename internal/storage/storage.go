@@ -79,6 +79,7 @@ func (s *Storage) Downloads() downloads {
 // Reset all storage data
 func (s *Storage) Reset() error {
 	s.campaigns.RemoveAll()
+	s.downloads.RemoveAll()
 	s.statOptions = nil
 
 	return s.downloads.RemoveAll()

@@ -18,19 +18,19 @@ const (
 	downloadWaitTime = 10 * time.Second
 )
 
-type StatProcessor struct {
+type statProcessor struct {
 	storage *storage.Storage
 	ozon    *ozon.Ozon
 }
 
-func New(o *ozon.Ozon, s *storage.Storage) *StatProcessor {
-	return &StatProcessor{
+func New(o *ozon.Ozon, s *storage.Storage) *statProcessor {
+	return &statProcessor{
 		ozon:    o,
 		storage: s,
 	}
 }
 
-func (p *StatProcessor) Start(c []ozon.Campaign) {
+func (p *statProcessor) Start(c []ozon.Campaign) {
 	campaigns := make(chan ozon.Campaign)
 	go func() {
 		defer close(campaigns)
@@ -44,7 +44,7 @@ func (p *StatProcessor) Start(c []ozon.Campaign) {
 	<-p.downloadStatsStage(readyRequests)
 }
 
-func (p *StatProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan ozon.StatRequest {
+func (p *statProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan ozon.StatRequest {
 	out := make(chan ozon.StatRequest)
 
 	go func() {
@@ -76,7 +76,7 @@ func (p *StatProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan 
 	return out
 }
 
-func (p *StatProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-chan ozon.StatRequest {
+func (p *statProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-chan ozon.StatRequest {
 	out := make(chan ozon.StatRequest)
 
 	go func() {
@@ -113,7 +113,7 @@ func (p *StatProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-cha
 	return out
 }
 
-func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool {
+func (p *statProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool {
 	complete := make(chan bool)
 
 	go func() {
@@ -144,7 +144,7 @@ func (p *StatProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bo
 	return complete
 }
 
-func (p *StatProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatRequest {
+func (p *statProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatRequest {
 	options := ozon.CreateStatRequestOptions{
 		CampaignId: campaign.ID,
 		DateFrom:   p.storage.StatOptions().DateFrom,
@@ -178,7 +178,7 @@ func (p *StatProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatReque
 	return ozon.StatRequest{}
 }
 
-func (p *StatProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRequest, error) {
+func (p *statProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRequest, error) {
 	for attempt := 1; attempt <= readyAttempts; attempt++ {
 		waitTime := readyWaitTime + readyWaitTime*time.Duration(attempt-1)
 		logStatRequest(statRequest, "ожидание готовности: ждем ", waitTime.String())
@@ -207,7 +207,7 @@ func (p *StatProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.Sta
 	return ozon.StatRequest{}, errors.New("превышено количество попыток")
 }
 
-func (p *StatProcessor) downloadStat(statRequest ozon.StatRequest) (string, error) {
+func (p *statProcessor) downloadStat(statRequest ozon.StatRequest) (string, error) {
 	filename := statRequest.UUID + ".json"
 	for attempt := 1; attempt <= downloadAttempts; attempt++ {
 		logStatRequest(statRequest, "скачивание статистики: попытка ", attempt)

@@ -30,8 +30,10 @@ var/*
 # Test binary, built with `go test -c`
 *.test
 
-# Config
-config.yml
+# Config, export files
+*.yml
+*.csv
+*.json
 
 # Vendor
 vendor
