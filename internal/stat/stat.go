@@ -54,7 +54,8 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 
 	campaigns := s.selectCampaigns(options)
 	for _, c := range campaigns {
-		s.storage.Campaigns().Add(c)
+		c.Stat.Enabled = true
+		s.storage.StatCampaigns().Add(c)
 	}
 
 	statProcessor := stat_processor.New(s.ozon, s.storage)
@@ -64,7 +65,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 }
 
 func (s *statUsecase) HandleContinue() error {
-	campaigns := s.storage.Campaigns().All()
+	campaigns := s.storage.StatCampaigns().All()
 
 	fmt.Println("Есть незавершенное формирование отчета по кампаниям")
 	printCampaignsTable(campaigns)

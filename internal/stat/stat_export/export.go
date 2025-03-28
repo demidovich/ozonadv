@@ -22,7 +22,7 @@ func New(storage *storage.Storage) statExport {
 
 func (s statExport) ToFile(file string) error {
 	summaryStat := []StatRow{}
-	for _, campaign := range s.storage.Campaigns().All() {
+	for _, campaign := range s.storage.StatCampaigns().All() {
 		err := s.addCampaignStat(&summaryStat, campaign)
 		if err != nil {
 			logCampaign(campaign, err)
@@ -78,11 +78,11 @@ func (s statExport) writeCsvFile(filepath string, summaryStat *[]StatRow) error 
 }
 
 func (s statExport) addCampaignStat(summaryStat *[]StatRow, campaign ozon.Campaign) error {
-	if campaign.StorageStatFile == "" {
+	if campaign.Stat.File == "" {
 		return errors.New("пропуск, нет файла статистики")
 	}
 
-	file := s.storage.Downloads().AbsolutePath(campaign.StorageStatFile)
+	file := s.storage.Downloads().AbsolutePath(campaign.Stat.File)
 	all := Stat{}
 	err := utils.JsonFileRead(file, &all, "{}")
 	if err != nil {

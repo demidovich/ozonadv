@@ -21,7 +21,7 @@ func printCampaignsTable(campaigns []ozon.Campaign) {
 			c.TitleTruncated(45),
 			c.FromDate,
 			c.ToDate,
-			c.StatReportState(),
+			c.StatState(),
 			// c.Title,
 		})
 	}

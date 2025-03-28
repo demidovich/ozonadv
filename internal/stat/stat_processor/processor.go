@@ -56,17 +56,17 @@ func (p *statProcessor) createStatRequestsStage(in <-chan ozon.Campaign) <-chan 
 			// Если ранее отчет формировался и закончился с ошибками либо был остановлен
 			// Для некоторых кампаний уже были отправлены запросы для формирования статистики
 			// Здесь мы проверяем есть ли они и используем их, если они есть
-			if campaign.StorageStatRequestUUID != "" {
-				statRequest, err = p.ozon.StatRequests().Retrieve(campaign.StorageStatRequestUUID)
+			if campaign.Stat.RequestUUID != "" {
+				statRequest, err = p.ozon.StatRequests().Retrieve(campaign.Stat.RequestUUID)
 				if err != nil {
-					logCampaign(campaign, "уже есть сформированный запрос #", campaign.StorageStatRequestUUID)
+					logCampaign(campaign, "уже есть сформированный запрос #", campaign.Stat.RequestUUID)
 					logCampaign(campaign, "ошибка получения запроса: ", err)
 					continue
 				}
 			} else {
 				statRequest = p.createStatRequest(campaign)
-				campaign.StorageStatRequestUUID = statRequest.UUID
-				p.storage.Campaigns().Add(campaign)
+				campaign.Stat.RequestUUID = statRequest.UUID
+				p.storage.StatCampaigns().Add(campaign)
 			}
 
 			out <- statRequest
@@ -101,9 +101,9 @@ func (p *statProcessor) readyStatRequestsStage(in <-chan ozon.StatRequest) <-cha
 
 			// Привязываем к сохраненным данным кампании ссылку на скачивание
 			// Будет использована, если консольная команда будет остановлена
-			if campaign, ok := p.storage.Campaigns().ByStatRequestUUID(statRequest.UUID); ok {
-				campaign.StorageStatLink = statRequest.Link
-				p.storage.Campaigns().Add(campaign)
+			if campaign, ok := p.storage.StatCampaigns().ByStatRequestUUID(statRequest.UUID); ok {
+				campaign.Stat.Link = statRequest.Link
+				p.storage.StatCampaigns().Add(campaign)
 			}
 
 			out <- statRequest
@@ -119,21 +119,21 @@ func (p *statProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bo
 	go func() {
 		defer close(complete)
 		for statRequest := range in {
-			campaign, ok := p.storage.Campaigns().ByStatRequestUUID(statRequest.UUID)
+			campaign, ok := p.storage.StatCampaigns().ByStatRequestUUID(statRequest.UUID)
 			if !ok {
 				logStatRequest(statRequest, "не найдена кампания в storage!!! пропуск")
 				continue
 			}
 
-			if campaign.StorageStatFile != "" {
+			if campaign.Stat.File != "" {
 				logStatRequest(statRequest, "статистика скачана ранее")
 				continue
 			}
 
 			filename, err := p.downloadStat(statRequest)
 			if err == nil {
-				campaign.StorageStatFile = filename
-				p.storage.Campaigns().Add(campaign)
+				campaign.Stat.File = filename
+				p.storage.StatCampaigns().Add(campaign)
 			} else {
 				logStatRequest(statRequest, err)
 			}

@@ -10,9 +10,9 @@ type statInfoUsecase struct {
 }
 
 func (s *statInfoUsecase) Handle() error {
-	if s.storage.Campaigns().Size() > 0 {
+	if s.storage.StatCampaigns().Size() > 0 {
 		fmt.Println("Есть незавершенное формирование отчета")
-		printCampaignsTable(s.storage.Campaigns().All())
+		printCampaignsTable(s.storage.StatCampaigns().All())
 		fmt.Println("")
 		fmt.Println("ozonadv stat:continue Продолжить формирования отчета")
 		fmt.Println("ozonadv stat:reset    Удалить незавершенное формирование отчета")

@@ -24,7 +24,7 @@ func New(storage *storage.Storage, ozon *ozon.Ozon) *Usecases {
 }
 
 func (u *Usecases) HasIncompleteProcessing() bool {
-	return u.storage.Campaigns().Size() > 0
+	return u.storage.StatCampaigns().Size() > 0
 }
 
 func (u *Usecases) StatNew(options StatOptions) error {
