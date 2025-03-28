@@ -78,3 +78,18 @@ func (c *Campaign) StatState() string {
 
 	return val
 }
+
+func (c *Campaign) ObjectStatState() string {
+	var val string
+
+	switch true {
+	case c.Stat.File != "":
+		val = "Файл скачан"
+	case c.Stat.UUID != "":
+		val = "Запрос создан"
+	default:
+		val = ""
+	}
+
+	return val
+}

@@ -100,20 +100,45 @@ func (s *Storage) ObjectStatOptions() *ObjectStatOptions {
 }
 
 func (s *Storage) ObjectStatCampaigns() *campaigns {
-	return s.statCampaigns
+	return s.objectStatCampaigns
 }
 
 func (s *Storage) Downloads() downloads {
 	return s.downloads
 }
 
-// Reset all storage data
-func (s *Storage) Reset() error {
+// Reset stat storage data
+func (s *Storage) StatReset() error {
+	for _, c := range s.statCampaigns.All() {
+		if c.Stat.File == "" {
+			continue
+		}
+		if err := s.downloads.Remove(c.Stat.File); err != nil {
+			return err
+		}
+	}
+
 	s.statOptions = nil
 	s.statCampaigns.RemoveAll()
-	s.downloads.RemoveAll()
 
-	return s.downloads.RemoveAll()
+	return nil
+}
+
+// Reset object stat storage data
+func (s *Storage) ObjectStatReset() error {
+	for _, c := range s.objectStatCampaigns.All() {
+		if c.Stat.File == "" {
+			continue
+		}
+		if err := s.downloads.Remove(c.Stat.File); err != nil {
+			return err
+		}
+	}
+
+	s.objectStatOptions = nil
+	s.objectStatCampaigns.RemoveAll()
+
+	return nil
 }
 
 // Сохранить состояние хранилища

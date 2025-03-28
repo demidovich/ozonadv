@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"ozonadv/config"
 	"ozonadv/internal/find"
+	"ozonadv/internal/object_stat"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
 	"ozonadv/internal/storage"
 )
 
 type Application struct {
-	configFile    string
-	config        *config.Config
-	ozon          *ozon.Ozon
-	storage       *storage.Storage
-	findUsecases  *find.Usecases
-	statUsecases  *stat.Usecases
-	shutdownFuncs []func()
+	configFile         string
+	config             *config.Config
+	ozon               *ozon.Ozon
+	storage            *storage.Storage
+	findUsecases       *find.Usecases
+	statUsecases       *stat.Usecases
+	objectStatUsecases *object_stat.Usecases
+	shutdownFuncs      []func()
 }
 
 func New() *Application {
@@ -54,6 +56,16 @@ func (a *Application) Storage() *storage.Storage {
 	return a.storage
 }
 
+func (a *Application) FindUsecases() *find.Usecases {
+	if a.findUsecases == nil {
+		a.findUsecases = find.New(
+			a.Ozon(),
+		)
+	}
+
+	return a.findUsecases
+}
+
 func (a *Application) StatUsecases() *stat.Usecases {
 	if a.statUsecases == nil {
 		a.statUsecases = stat.New(
@@ -65,14 +77,15 @@ func (a *Application) StatUsecases() *stat.Usecases {
 	return a.statUsecases
 }
 
-func (a *Application) FindUsecases() *find.Usecases {
-	if a.findUsecases == nil {
-		a.findUsecases = find.New(
+func (a *Application) ObjectStatUsecases() *object_stat.Usecases {
+	if a.objectStatUsecases == nil {
+		a.objectStatUsecases = object_stat.New(
+			a.Storage(),
 			a.Ozon(),
 		)
 	}
 
-	return a.findUsecases
+	return a.objectStatUsecases
 }
 
 func (a *Application) RegisterShutdownFunc(f func()) {

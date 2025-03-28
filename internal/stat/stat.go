@@ -44,7 +44,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
-	if err := s.storage.Reset(); err != nil {
+	if err := s.storage.StatReset(); err != nil {
 		return err
 	}
 
@@ -64,6 +64,11 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 }
 
 func (s *statUsecase) HandleContinue() error {
+	if s.storage.StatCampaigns().Size() == 0 {
+		fmt.Println("Кампании для формирования статистики отсутствуют")
+		return nil
+	}
+
 	campaigns := s.storage.StatCampaigns().All()
 
 	fmt.Println("Есть незавершенное формирование отчета по кампаниям")

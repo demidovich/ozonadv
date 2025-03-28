@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"ozonadv/internal/object_stat/stat_processor"
 	"ozonadv/internal/ozon"
-	"ozonadv/internal/stat/stat_processor"
 	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"ozonadv/pkg/validation"
@@ -44,7 +44,7 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
-	if err := s.storage.Reset(); err != nil {
+	if err := s.storage.ObjectStatReset(); err != nil {
 		return err
 	}
 
@@ -64,10 +64,15 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 }
 
 func (s *statUsecase) HandleContinue() error {
+	if s.storage.ObjectStatCampaigns().Size() == 0 {
+		fmt.Println("Кампании для формирования статистики отсутствуют")
+		return nil
+	}
+
 	campaigns := s.storage.ObjectStatCampaigns().All()
 
 	fmt.Println("Есть незавершенное формирование отчета по рекламным объектам")
-	//printCampaignsTable(campaigns)
+	printCampaignsTable(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {
@@ -115,7 +120,7 @@ func (s *statUsecase) selectCampaigns(options StatOptions) []ozon.Campaign {
 	}
 
 	fmt.Println("")
-	//printCampaignsTable(campaigns)
+	printCampaignsTable(campaigns)
 	fmt.Println("")
 
 	if console.Ask("Продолжить?") == false {

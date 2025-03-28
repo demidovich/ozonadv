@@ -1,4 +1,4 @@
-package stat
+package object_stat
 
 import (
 	"fmt"
@@ -11,8 +11,8 @@ type statResetUsecase struct {
 }
 
 func (s *statResetUsecase) Handle() error {
-	if s.storage.StatCampaigns().Size() > 0 {
-		fmt.Println("Найдено кампаний:", s.storage.StatCampaigns().Size())
+	if s.storage.ObjectStatCampaigns().Size() > 0 {
+		fmt.Println("Найдено кампаний:", s.storage.ObjectStatCampaigns().Size())
 		fmt.Println("")
 	}
 
@@ -23,5 +23,5 @@ func (s *statResetUsecase) Handle() error {
 	fmt.Println("")
 	fmt.Println("Параметры формирования отчета удалены")
 
-	return s.storage.StatReset()
+	return s.storage.ObjectStatReset()
 }
