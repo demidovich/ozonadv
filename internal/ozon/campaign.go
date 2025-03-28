@@ -35,9 +35,11 @@ type Campaign struct {
 	UpdatedAt                string `json:"updatedAt"`
 	ProductCampaignMode      string `json:"productCampaignMode"`
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
-	StorageStatRequestUUID   string `json:"storageStatRequestUUID"`
-	StorageStatLink          string `json:"storageStatLink"`
-	StorageStatFile          string `json:"storageStatFile"`
+	Stat                     struct {
+		UUID string `json:"uuid"`
+		Link string `json:"link"`
+		File string `json:"file"`
+	} `json:"stat"`
 }
 
 func (c *Campaign) NeverRun() bool {
@@ -60,15 +62,15 @@ func (c *Campaign) TitleTruncated(length int) string {
 	return string(r[:length-suffixLength]) + suffix
 }
 
-func (c *Campaign) StatReportState() string {
+func (c *Campaign) StatState() string {
 	var val string
 
 	switch true {
-	case c.StorageStatFile != "":
+	case c.Stat.File != "":
 		val = "Файл скачан"
-	case c.StorageStatLink != "":
+	case c.Stat.Link != "":
 		val = "Готов к скачиванию"
-	case c.StorageStatRequestUUID != "":
+	case c.Stat.UUID != "":
 		val = "Запрос создан"
 	default:
 		val = ""

@@ -27,9 +27,9 @@ func (c *campaigns) Has(id string) bool {
 	return ok
 }
 
-func (c *campaigns) ByStatRequestUUID(uuid string) (ozon.Campaign, bool) {
+func (c *campaigns) ByStatUUID(uuid string) (ozon.Campaign, bool) {
 	for _, c := range c.data {
-		if c.StorageStatRequestUUID == uuid {
+		if c.Stat.UUID == uuid {
 			return c, true
 		}
 	}

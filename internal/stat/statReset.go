@@ -11,12 +11,12 @@ type statResetUsecase struct {
 }
 
 func (s *statResetUsecase) Handle() error {
-	if s.storage.Campaigns().Size() == 0 {
+	if s.storage.StatCampaigns().Size() == 0 {
 		fmt.Println("Все кампании обработаны")
 		return nil
 	}
 
-	fmt.Println("Найдено необработанных кампаний:", s.storage.Campaigns().Size())
+	fmt.Println("Найдено необработанных кампаний:", s.storage.StatCampaigns().Size())
 	fmt.Println("")
 	if console.Ask("Удалить?") == false {
 		return nil

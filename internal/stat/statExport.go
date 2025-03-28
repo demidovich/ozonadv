@@ -26,12 +26,12 @@ func (s *statExportUsecase) Handle(options StatExportOptions) error {
 		return err
 	}
 
-	if s.storage.Campaigns().Size() == 0 {
+	if s.storage.StatCampaigns().Size() == 0 {
 		fmt.Println("Обработанных кампаний нет")
 		return nil
 	}
 
-	campaigns := s.storage.Campaigns().All()
+	campaigns := s.storage.StatCampaigns().All()
 	printCampaignsTable(campaigns)
 
 	incompleted := s.incompletedCampaigns(campaigns)
@@ -58,7 +58,7 @@ func (s *statExportUsecase) Handle(options StatExportOptions) error {
 func (s *statExportUsecase) incompletedCampaigns(campaigns []ozon.Campaign) []ozon.Campaign {
 	incompleted := []ozon.Campaign{}
 	for _, c := range campaigns {
-		if c.StorageStatFile == "" {
+		if c.Stat.File == "" {
 			incompleted = append(incompleted, c)
 		}
 	}

@@ -33,22 +33,25 @@ func main() {
 		Short: "Консольное приложение выгрузки статистики рекламных кабинетов Озон",
 	}
 
-	initFindCampaignsCommand(rootCmd, app)
+	initCampaignsCommand(rootCmd, app)
+
 	initStatCommand(rootCmd, app)
 	initStatContinueCommand(rootCmd, app)
 	initStatInfoCommand(rootCmd, app)
 	initStatExportCommand(rootCmd, app)
 	initStatResetCommand(rootCmd, app)
 
+	initObjectStatCommand(rootCmd, app)
+
 	fmt.Println("")
 	rootCmd.Execute()
 }
 
-func initFindCampaignsCommand(rootCmd *cobra.Command, app *app.Application) {
+func initCampaignsCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
-		Use:     "find:campaigns",
-		Short:   "Поиск кампаний в Озон",
-		Example: "ozonadv find:campaigns",
+		Use:     "campaigns",
+		Short:   "Поиск кампаний",
+		Example: "ozonadv campaigns",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(cmd.Short)
 			fmt.Println("")
@@ -66,7 +69,7 @@ func initFindCampaignsCommand(rootCmd *cobra.Command, app *app.Application) {
 func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 	cmd := &cobra.Command{
 		Use:     "stat",
-		Short:   "Сформировать статистику по кампаниям",
+		Short:   "Сформировать общую статистику по кампаниям",
 		Example: "ozonadv stat --date-from 2025-01-01 --date-to 2025-01-02",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Формирование статистики по кампаниям")
@@ -74,9 +77,9 @@ func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 
 			statUsecases := app.StatUsecases()
 
-			if statUsecases.HasIncompleteProcessing() {
+			if statUsecases.HasProcessing() {
 				fmt.Println("")
-				fmt.Println("Найдено незавершенное формирование статистики")
+				fmt.Println("Найдено активное формирование статистики")
 				fmt.Println("")
 				if console.Ask("Продолжить ее формирование?") == true {
 					fmt.Println("")
@@ -183,6 +186,43 @@ func initStatResetCommand(rootCmd *cobra.Command, app *app.Application) {
 	rootCmd.AddCommand(cmd)
 }
 
-func Fatal(err error) {
-	log.Fatal(err)
+func initObjectStatCommand(rootCmd *cobra.Command, app *app.Application) {
+	cmd := &cobra.Command{
+		Use:     "object-stat",
+		Short:   "Сформировать статистику по рекламным объектам кампаний",
+		Example: "ozonadv object-stat --date-from 2025-01-01 --date-to 2025-01-02",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("Формирование статистики по рекламным объектам")
+			fmt.Println("")
+
+			// statUsecases := app.ObjectStatUsecases()
+
+			// if statUsecases.HasIncompleteProcessing() {
+			// 	fmt.Println("")
+			// 	fmt.Println("Найдено незавершенное формирование статистики")
+			// 	fmt.Println("")
+			// 	if console.Ask("Продолжить ее формирование?") == true {
+			// 		fmt.Println("")
+			// 		return statUsecases.StatContinue()
+			// 	}
+			// }
+
+			// fmt.Println("")
+			// options := stat.StatOptions{}
+			// options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
+			// options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
+			// options.CampaignId, _ = cmd.Flags().GetString("campaign-id")
+
+			// return statUsecases.StatNew(options)
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringP("config", "c", "", "Конфигурационный файл")
+	cmd.PersistentFlags().StringP("date-from", "f", "", "Начало периода, обязательный")
+	cmd.PersistentFlags().StringP("date-to", "t", "", "Окончание периода, обязательный")
+	cmd.Flags().StringP("campaign-id", "i", "", "ID кампании")
+
+	rootCmd.AddCommand(cmd)
 }
