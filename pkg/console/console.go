@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -29,4 +30,19 @@ func Ask(s string) bool {
 			return false
 		}
 	}
+}
+
+func InputString(prompt string) string {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print(prompt + ": ")
+	text, _ := reader.ReadString('\n')
+
+	return strings.TrimRight(text, "\n")
+}
+
+func InputInt(prompt string) int {
+	s := InputString(prompt)
+	i, _ := strconv.Atoi(s)
+
+	return i
 }

@@ -3,6 +3,8 @@ package find
 import (
 	"fmt"
 	"ozonadv/internal/ozon"
+	"ozonadv/pkg/console"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -12,19 +14,43 @@ type findCampaignsUsecase struct {
 }
 
 func (f *findCampaignsUsecase) Handle() error {
-	campaigns, err := f.ozon.Campaigns().All()
+	all, err := f.ozon.Campaigns().All()
 	if err != nil {
 		return err
 	}
 
-	if len(campaigns) == 0 {
+	if len(all) == 0 {
 		fmt.Println("Кампании не найдены.")
 		return nil
+	}
+
+	var campaigns []ozon.Campaign
+
+	fmt.Println("")
+	if console.Ask("Отфильтровать?") == true {
+		campaigns = f.filteredByTitle(all)
+	} else {
+		campaigns = all
 	}
 
 	f.printCampaignsTable(campaigns)
 
 	return nil
+}
+
+func (f *findCampaignsUsecase) filteredByTitle(all []ozon.Campaign) []ozon.Campaign {
+	title := console.InputString("Часть имени")
+
+	var filtered []ozon.Campaign
+	for _, c := range all {
+		cTitle := strings.ToLower(c.Title)
+		iTitle := strings.ToLower(title)
+		if strings.Contains(cTitle, iTitle) {
+			filtered = append(filtered, c)
+		}
+	}
+
+	return filtered
 }
 
 func (s *findCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
