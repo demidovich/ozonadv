@@ -91,6 +91,14 @@ func (s *Storage) StatCampaigns() *campaigns {
 	return s.statCampaigns
 }
 
+func (s *Storage) SetObjectStatOptions(options ObjectStatOptions) {
+	s.objectStatOptions = &options
+}
+
+func (s *Storage) ObjectStatOptions() *ObjectStatOptions {
+	return s.objectStatOptions
+}
+
 func (s *Storage) ObjectStatCampaigns() *campaigns {
 	return s.statCampaigns
 }
