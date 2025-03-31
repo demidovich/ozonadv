@@ -217,6 +217,7 @@ func initObjectStatCommand(rootCmd *cobra.Command, app *app.Application) {
 			options.DateFrom, _ = cmd.PersistentFlags().GetString("date-from")
 			options.DateTo, _ = cmd.PersistentFlags().GetString("date-to")
 			options.CampaignId, _ = cmd.Flags().GetString("campaign-id")
+			options.GroupBy = "NO_GROUP_BY"
 
 			return objectStatUsecases.StatNew(options)
 		},

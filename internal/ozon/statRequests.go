@@ -59,21 +59,35 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 		"groupBy":   options.GroupBy,
 	}
 
-	response := struct {
-		UUID   string `json:"UUID"`
-		Vendor bool   `json:"vendor"`
-	}{}
-
+	response := StatRequest{}
 	err := s.api.httpPost(url, payload, &response)
-	if err != nil {
+
+	return response, err
+}
+
+func (s *statRequests) CreateObject(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
+	if err := options.validate(); err != nil {
 		return StatRequest{}, err
 	}
 
-	statRequest := StatRequest{}
-	statRequest.UUID = response.UUID
-	statRequest.Request.CampaignId = campaign.ID
+	resource := "/statistics"
+	if campaign.AdvObjectType == "VIDEO_BANNER" {
+		resource = "/statistics/video"
+	}
+	url := urlAdvApi(resource)
 
-	return statRequest, nil
+	payload := map[string]any{
+		"campaignId":      []string{campaign.ID},
+		"dateFrom":        options.DateFrom,
+		"dateTo":          options.DateTo,
+		"groupBy":         options.GroupBy,
+		"attributionDays": "30",
+	}
+
+	response := StatRequest{}
+	err := s.api.httpPost(url, payload, &response)
+
+	return response, err
 }
 
 func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
@@ -81,11 +95,8 @@ func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
 
 	url := urlApi("/client/statistics/" + uuid)
 	err := s.api.httpGet(url, &response)
-	if err != nil {
-		return StatRequest{}, err
-	}
 
-	return response, nil
+	return response, err
 }
 
 func (s *statRequests) Download(statRequest StatRequest) ([]byte, error) {
