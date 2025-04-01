@@ -42,8 +42,16 @@ type Campaign struct {
 	} `json:"stat"`
 }
 
-func (c *Campaign) IsVideo() bool {
+func (c *Campaign) IsBanner() bool {
+	return c.AdvObjectType == "BANNER"
+}
+
+func (c *Campaign) IsVideoBanner() bool {
 	return c.AdvObjectType == "VIDEO_BANNER"
+}
+
+func (c *Campaign) IsGlobalPromo() bool {
+	return c.AdvObjectType == "GLOBAL_PROMO"
 }
 
 func (c *Campaign) NeverRun() bool {

@@ -21,27 +21,35 @@ func New(storage *storage.Storage) statExport {
 
 func (s statExport) ToFile(file string) error {
 	file = strings.TrimSuffix(file, ".csv")
-	bannersFname := file + "-banner.csv"
-	videosFname := file + "-video.csv"
+	bannersFile := file + "-banners.csv"
+	videoBannersFile := file + "-video-banners.csv"
+	globalPromoFile := file + "-global-promo.csv"
 
 	fmt.Println("")
 
-	banners, err := os.Create(bannersFname)
+	banners, err := os.Create(bannersFile)
 	if err != nil {
 		return err
 	}
 	defer banners.Close()
 
-	videos, err := os.Create(videosFname)
+	videoBanners, err := os.Create(videoBannersFile)
 	if err != nil {
 		return err
 	}
-	defer videos.Close()
+	defer videoBanners.Close()
+
+	globalPromo, err := os.Create(globalPromoFile)
+	if err != nil {
+		return err
+	}
+	defer globalPromo.Close()
 
 	campaigns := s.storage.ObjectStatCampaigns().All()
 
-	fmt.Fprintln(videos, s.csvHeaders(&campaigns, "video"))
 	fmt.Fprintln(banners, s.csvHeaders(&campaigns, "banner"))
+	fmt.Fprintln(videoBanners, s.csvHeaders(&campaigns, "video_banner"))
+	fmt.Fprintln(globalPromo, s.csvHeaders(&campaigns, "global_promo"))
 
 	for _, campaign := range campaigns {
 		logCampaign(campaign, " обработка кампании: "+campaign.Title)
@@ -59,17 +67,22 @@ func (s statExport) ToFile(file string) error {
 		s.appendCsvCampaignId(&rows, campaign)
 
 		for _, r := range rows {
-			if campaign.IsVideo() {
-				fmt.Fprintln(videos, r)
-			} else {
+			if campaign.IsBanner() {
 				fmt.Fprintln(banners, r)
+			} else if campaign.IsVideoBanner() {
+				fmt.Fprintln(videoBanners, r)
+			} else if campaign.IsGlobalPromo() {
+				fmt.Fprintln(globalPromo, r)
+			} else {
+				logCampaign(campaign, " пропуск csv строки: неизвестный тип кампании: ", campaign.AdvObjectType)
 			}
 		}
 	}
 
 	log.Println("")
-	log.Printf("Создан файл: %s\n", bannersFname)
-	log.Printf("Создан файл: %s\n", videosFname)
+	log.Printf("Создан файл: %s\n", bannersFile)
+	log.Printf("Создан файл: %s\n", videoBannersFile)
+	log.Printf("Создан файл: %s\n", globalPromoFile)
 
 	return nil
 }
@@ -78,11 +91,15 @@ func (s statExport) csvHeaders(campaigns *[]ozon.Campaign, campaignsType string)
 	var headers string
 
 	for _, c := range *campaigns {
-		if campaignsType == "video" && !c.IsVideo() {
+		if campaignsType == "banner" && !c.IsBanner() {
 			continue
 		}
 
-		if campaignsType == "banner" && c.IsVideo() {
+		if campaignsType == "video_banner" && !c.IsVideoBanner() {
+			continue
+		}
+
+		if campaignsType == "global_promo" && !c.IsGlobalPromo() {
 			continue
 		}
 
