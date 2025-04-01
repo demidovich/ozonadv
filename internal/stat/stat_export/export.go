@@ -79,19 +79,19 @@ func (s statExport) writeCsvFile(filepath string, summaryStat *[]StatRow) error 
 
 func (s statExport) addCampaignStat(summaryStat *[]StatRow, campaign ozon.Campaign) error {
 	if campaign.Stat.File == "" {
-		return errors.New("пропуск, нет файла статистики")
+		return errors.New("пропуск: нет файла статистики")
 	}
 
 	file := s.storage.Downloads().AbsolutePath(campaign.Stat.File)
 	all := Stat{}
 	err := utils.JsonFileRead(file, &all, "{}")
 	if err != nil {
-		return errors.New("пропуск, ошибка парсинга " + err.Error())
+		return errors.New("пропуск: ошибка парсинга " + err.Error())
 	}
 
 	stat, ok := all[campaign.ID]
 	if !ok {
-		return errors.New("пропуск, в файле отсутствует кампания " + campaign.ID)
+		return errors.New("пропуск: в файле отсутствует кампания " + campaign.ID)
 	}
 
 	for _, row := range stat.Report.Rows {

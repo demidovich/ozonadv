@@ -9,13 +9,13 @@ type campaigns struct {
 	data map[string]ozon.Campaign
 }
 
-func NewCampaigns(file string) *campaigns {
-	instance := &campaigns{
-		data: make(map[string]ozon.Campaign),
-	}
-	utils.JsonFileReadOrFail(file, &instance.data, "{}")
+func newCampaigns(file string) *campaigns {
+	data := make(map[string]ozon.Campaign)
+	utils.JsonFileReadOrFail(file, &data, "{}")
 
-	return instance
+	instance := campaigns{data: data}
+
+	return &instance
 }
 
 func (c *campaigns) Add(item ozon.Campaign) {

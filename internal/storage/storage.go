@@ -68,9 +68,9 @@ func New() *Storage {
 	utils.JsonFileReadOrFail(s.statOptionsFile, &s.statOptions, "{}")
 	utils.JsonFileReadOrFail(s.objectStatOptionsFile, &s.objectStatOptions, "{}")
 
-	s.statCampaigns = NewCampaigns(s.statCampanignsFile)
-	s.objectStatCampaigns = NewCampaigns(s.objectStatCampanignsFile)
-	s.downloads = NewDownloads(s.downloadsDir)
+	s.statCampaigns = newCampaigns(s.statCampanignsFile)
+	s.objectStatCampaigns = newCampaigns(s.objectStatCampanignsFile)
+	s.downloads = newDownloads(s.downloadsDir)
 
 	return &s
 }
@@ -124,18 +124,34 @@ func (s *Storage) StatReset() error {
 	return nil
 }
 
-// Reset object stat storage data
+// Очистить параметры и результаты запроса и оставить кампании
 func (s *Storage) ObjectStatReset() error {
-	for _, c := range s.objectStatCampaigns.All() {
-		if c.Stat.File == "" {
-			continue
+	for _, campaign := range s.objectStatCampaigns.Data() {
+		if campaign.Stat.File != "" {
+			if err := s.downloads.Remove(campaign.Stat.File); err != nil {
+				return err
+			}
 		}
-		if err := s.downloads.Remove(c.Stat.File); err != nil {
-			return err
-		}
+
+		campaign.Stat.UUID = ""
+		campaign.Stat.Link = ""
+		campaign.Stat.File = ""
+
+		s.objectStatCampaigns.Add(campaign)
 	}
 
 	s.objectStatOptions = nil
+
+	return nil
+}
+
+// Очистить параметры запроса, результаты запроса и кампании
+func (s *Storage) ObjectStatResetAll() error {
+	err := s.ObjectStatReset()
+	if err != nil {
+		return err
+	}
+
 	s.objectStatCampaigns.RemoveAll()
 
 	return nil

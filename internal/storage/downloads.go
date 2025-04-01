@@ -9,7 +9,7 @@ type downloads struct {
 	dir string
 }
 
-func NewDownloads(dir string) downloads {
+func newDownloads(dir string) downloads {
 	return downloads{
 		dir: dir,
 	}

@@ -11,6 +11,11 @@ import (
 
 var ErrTooManyRequests = errors.New("Ozon 429")
 
+const (
+	apiHost    = "https://api-performance.ozon.ru"
+	advApiHost = "https://performance.ozon.ru"
+)
+
 type api struct {
 	verbose       bool
 	clientId      string
@@ -187,9 +192,9 @@ func (a *api) logRequest(method, url string) {
 }
 
 func urlApi(resource string) string {
-	return fmt.Sprintf("https://api-performance.ozon.ru/api%s", resource)
+	return fmt.Sprintf("%s/api%s", apiHost, resource)
 }
 
 func urlAdvApi(resource string) string {
-	return fmt.Sprintf("https://performance.ozon.ru/api/adv-api/external/api%s", resource)
+	return fmt.Sprintf("%s/api/adv-api/external/api%s", advApiHost, resource)
 }

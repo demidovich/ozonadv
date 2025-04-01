@@ -41,16 +41,18 @@ func (s *CreateStatRequestOptions) validate() error {
 	return validation.ValidateStruct(s)
 }
 
+// Создание общей статистики кампании
 func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
 	if err := options.validate(); err != nil {
 		return StatRequest{}, err
 	}
 
-	resource := "/client/statistics/json"
+	var resource string
 	if campaign.AdvObjectType == "VIDEO_BANNER" {
 		resource = "/client/statistics/video/json"
+	} else {
+		resource = "/client/statistics/json"
 	}
-	url := urlApi(resource)
 
 	payload := map[string]any{
 		"campaigns": []string{campaign.ID},
@@ -60,32 +62,43 @@ func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOption
 	}
 
 	response := StatRequest{}
-	err := s.api.httpPost(url, payload, &response)
+	err := s.api.httpPost(urlApi(resource), payload, &response)
 
 	return response, err
 }
 
+// Создание статистики по объектам рекламной кампании
 func (s *statRequests) CreateObject(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
 	if err := options.validate(); err != nil {
 		return StatRequest{}, err
 	}
 
-	resource := "/statistics"
+	var resource string
+	var payload map[string]any
+
 	if campaign.AdvObjectType == "VIDEO_BANNER" {
 		resource = "/statistics/video"
-	}
-	url := urlAdvApi(resource)
-
-	payload := map[string]any{
-		"campaignId":      []string{campaign.ID},
-		"dateFrom":        options.DateFrom,
-		"dateTo":          options.DateTo,
-		"groupBy":         options.GroupBy,
-		"attributionDays": "30",
+		payload = map[string]any{
+			"campaigns": []string{campaign.ID},
+			"dateFrom":  options.DateFrom,
+			"dateTo":    options.DateTo,
+			"groupBy":   options.GroupBy,
+		}
+	} else {
+		resource = "/statistics"
+		payload = map[string]any{
+			// "campaignId":      campaign.ID,
+			"campaigns":       []string{campaign.ID},
+			"dateFrom":        options.DateFrom,
+			"dateTo":          options.DateTo,
+			"groupBy":         options.GroupBy,
+			"attributionDays": "30",
+		}
 	}
 
 	response := StatRequest{}
-	err := s.api.httpPost(url, payload, &response)
+	err := s.api.httpPost(urlAdvApi(resource), payload, &response)
+	response.Request.CampaignId = campaign.ID
 
 	return response, err
 }
@@ -102,7 +115,7 @@ func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
 func (s *statRequests) Download(statRequest StatRequest) ([]byte, error) {
 	url := statRequest.Link
 	if !strings.HasPrefix(url, "http") {
-		url = urlApi(url)
+		url = apiHost + url
 	}
 
 	data, err := s.api.httpGetRaw(url)

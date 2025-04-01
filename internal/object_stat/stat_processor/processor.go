@@ -121,7 +121,7 @@ func (p *statProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bo
 		for statRequest := range in {
 			campaign, ok := p.storage.ObjectStatCampaigns().ByStatUUID(statRequest.UUID)
 			if !ok {
-				logStatRequest(statRequest, "не найдена кампания в storage!!! пропуск")
+				logStatRequest(statRequest, "пропуск: не найдена кампания в storage!!!")
 				continue
 			}
 
@@ -155,7 +155,7 @@ func (p *statProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatReque
 	for attempt := 1; attempt <= createAttempts; attempt++ {
 		logCampaign(campaign, "создание запроса отчета: попытка ", attempt)
 
-		req, err := p.ozon.StatRequests().Create(campaign, options)
+		req, err := p.ozon.StatRequests().CreateObject(campaign, options)
 		if err == nil {
 			logCampaign(campaign, "создан запрос ", req.UUID)
 			return req
@@ -180,7 +180,10 @@ func (p *statProcessor) createStatRequest(campaign ozon.Campaign) ozon.StatReque
 
 func (p *statProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRequest, error) {
 	for attempt := 1; attempt <= readyAttempts; attempt++ {
-		waitTime := readyWaitTime + readyWaitTime*time.Duration(attempt-1)
+		// Пока выключим прогрессивный таймаут
+		// waitTime := readyWaitTime + readyWaitTime*time.Duration(attempt-1)
+		waitTime := readyWaitTime
+
 		logStatRequest(statRequest, "ожидание готовности: ждем ", waitTime.String())
 		time.Sleep(waitTime)
 
@@ -190,7 +193,7 @@ func (p *statProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.Sta
 
 		req, err := p.ozon.StatRequests().Retrieve(statRequest.UUID)
 		if err != nil {
-			logStatRequest(statRequest, "ожидание готовности:", err)
+			logStatRequest(statRequest, "ожидание готовности: ", err)
 			continue
 		}
 
@@ -208,7 +211,7 @@ func (p *statProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.Sta
 }
 
 func (p *statProcessor) downloadStat(statRequest ozon.StatRequest) (string, error) {
-	filename := statRequest.UUID + ".json"
+	filename := "object-stat-" + statRequest.CampaignId() + ".csv"
 	for attempt := 1; attempt <= downloadAttempts; attempt++ {
 		logStatRequest(statRequest, "скачивание статистики: попытка ", attempt)
 
@@ -226,7 +229,7 @@ func (p *statProcessor) downloadStat(statRequest ozon.StatRequest) (string, erro
 			continue
 		}
 
-		logStatRequest(statRequest, "скачан файл:", filename)
+		logStatRequest(statRequest, "скачан файл: ", filename)
 		return filename, nil
 	}
 

@@ -3,6 +3,7 @@ package find
 import (
 	"fmt"
 	"ozonadv/internal/ozon"
+	"ozonadv/internal/storage"
 	"ozonadv/pkg/console"
 	"strings"
 
@@ -10,7 +11,8 @@ import (
 )
 
 type findCampaignsUsecase struct {
-	ozon *ozon.Ozon
+	storage *storage.Storage
+	ozon    *ozon.Ozon
 }
 
 func (f *findCampaignsUsecase) Handle() error {
@@ -29,23 +31,48 @@ func (f *findCampaignsUsecase) Handle() error {
 	fmt.Println("")
 	if console.Ask("Отфильтровать?") == true {
 		campaigns = f.filteredByTitle(all)
+		campaigns = f.filteredByState(campaigns)
 	} else {
 		campaigns = all
 	}
 
 	f.printCampaignsTable(campaigns)
 
+	if console.Ask("Использовать кампании для отчета по рекламным объектам?") == false {
+		return nil
+	}
+
+	f.storage.ObjectStatResetAll()
+	for _, c := range campaigns {
+		f.storage.ObjectStatCampaigns().Add(c)
+	}
+
 	return nil
 }
 
 func (f *findCampaignsUsecase) filteredByTitle(all []ozon.Campaign) []ozon.Campaign {
-	title := console.InputString("Часть имени")
+	value := console.InputString("Часть имени")
 
 	var filtered []ozon.Campaign
 	for _, c := range all {
 		cTitle := strings.ToLower(c.Title)
-		iTitle := strings.ToLower(title)
+		iTitle := strings.ToLower(value)
 		if strings.Contains(cTitle, iTitle) {
+			filtered = append(filtered, c)
+		}
+	}
+
+	return filtered
+}
+
+func (f *findCampaignsUsecase) filteredByState(all []ozon.Campaign) []ozon.Campaign {
+	value := console.InputString("Часть статуса")
+
+	var filtered []ozon.Campaign
+	for _, c := range all {
+		cState := strings.ToLower(c.State)
+		iState := strings.ToLower(value)
+		if strings.Contains(cState, iState) {
 			filtered = append(filtered, c)
 		}
 	}

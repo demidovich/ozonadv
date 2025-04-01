@@ -59,6 +59,7 @@ func (a *Application) Storage() *storage.Storage {
 func (a *Application) FindUsecases() *find.Usecases {
 	if a.findUsecases == nil {
 		a.findUsecases = find.New(
+			a.Storage(),
 			a.Ozon(),
 		)
 	}

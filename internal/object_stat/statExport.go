@@ -14,7 +14,8 @@ type statExportUsecase struct {
 }
 
 type StatExportOptions struct {
-	File string `validate:"required,filepath"`
+	// File string `validate:"required,filepath"`
+	File string `validate:"required"`
 }
 
 func (s *StatExportOptions) Validate() error {

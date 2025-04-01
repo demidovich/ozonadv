@@ -42,6 +42,10 @@ type Campaign struct {
 	} `json:"stat"`
 }
 
+func (c *Campaign) IsVideo() bool {
+	return c.AdvObjectType == "VIDEO_BANNER"
+}
+
 func (c *Campaign) NeverRun() bool {
 	return c.State == "CAMPAIGN_STATE_PLANNED"
 }

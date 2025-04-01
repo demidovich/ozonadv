@@ -2,15 +2,16 @@ package find
 
 import (
 	"ozonadv/internal/ozon"
+	"ozonadv/internal/storage"
 )
 
 type Usecases struct {
 	findCampaigns findCampaignsUsecase
 }
 
-func New(ozon *ozon.Ozon) *Usecases {
+func New(storage *storage.Storage, ozon *ozon.Ozon) *Usecases {
 	return &Usecases{
-		findCampaigns: findCampaignsUsecase{ozon: ozon},
+		findCampaigns: findCampaignsUsecase{storage: storage, ozon: ozon},
 	}
 }
 

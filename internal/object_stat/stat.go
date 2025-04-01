@@ -52,9 +52,21 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 	options.StartedAt = time.Now().String()
 	s.storeOptions(options)
 
-	campaigns := s.selectCampaigns(options)
-	for _, c := range campaigns {
-		s.storage.ObjectStatCampaigns().Add(c)
+	// campaigns := s.selectCampaigns(options)
+	// for _, c := range campaigns {
+	// 	s.storage.ObjectStatCampaigns().Add(c)
+	// }
+
+	if s.storage.ObjectStatCampaigns().Size() == 0 {
+		log.Fatal("Нет кампаний")
+	}
+
+	campaigns := s.storage.ObjectStatCampaigns().All()
+	printCampaignsTable(campaigns)
+
+	fmt.Println("")
+	if console.Ask("Продолжить?") == false {
+		return nil
 	}
 
 	statProcessor := stat_processor.New(s.ozon, s.storage)

@@ -20,8 +20,13 @@ func (s *statResetUsecase) Handle() error {
 		return nil
 	}
 
+	err := s.storage.ObjectStatResetAll()
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("")
 	fmt.Println("Параметры формирования отчета удалены")
 
-	return s.storage.ObjectStatReset()
+	return nil
 }

@@ -121,7 +121,7 @@ func (p *statProcessor) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bo
 		for statRequest := range in {
 			campaign, ok := p.storage.StatCampaigns().ByStatUUID(statRequest.UUID)
 			if !ok {
-				logStatRequest(statRequest, "не найдена кампания в storage!!! пропуск")
+				logStatRequest(statRequest, "пропуск: не найдена кампания в storage!!!")
 				continue
 			}
 
@@ -190,7 +190,7 @@ func (p *statProcessor) readyStatRequest(statRequest ozon.StatRequest) (ozon.Sta
 
 		req, err := p.ozon.StatRequests().Retrieve(statRequest.UUID)
 		if err != nil {
-			logStatRequest(statRequest, "ожидание готовности:", err)
+			logStatRequest(statRequest, "ожидание готовности: ", err)
 			continue
 		}
 
@@ -226,7 +226,7 @@ func (p *statProcessor) downloadStat(statRequest ozon.StatRequest) (string, erro
 			continue
 		}
 
-		logStatRequest(statRequest, "скачан файл:", filename)
+		logStatRequest(statRequest, "скачан файл: ", filename)
 		return filename, nil
 	}
 
