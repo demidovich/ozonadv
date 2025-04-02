@@ -11,11 +11,13 @@ type statResetUsecase struct {
 }
 
 func (s *statResetUsecase) Handle() error {
-	if s.storage.ObjectStatCampaigns().Size() > 0 {
-		fmt.Println("Найдено кампаний:", s.storage.ObjectStatCampaigns().Size())
-		fmt.Println("")
+	if s.storage.ObjectStatCampaigns().Size() == 0 {
+		printOptionsTable(*s.storage.ObjectStatOptions())
+	} else {
+		printReportInfo(s.storage)
 	}
 
+	fmt.Println("")
 	if console.Ask("Удалить параметры формирования отчета?") == false {
 		return nil
 	}

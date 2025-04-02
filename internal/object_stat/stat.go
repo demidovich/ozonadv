@@ -44,6 +44,19 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 		return err
 	}
 
+	if s.storage.ObjectStatOptions() != nil {
+		fmt.Println("Найдено текущее формирование отчета")
+		fmt.Println("Для создания нового отчета его необходимо удалить")
+		fmt.Println("")
+
+		printReportInfo(s.storage)
+		fmt.Println("")
+
+		if console.Ask("Удалить текущий отчет?") == false {
+			return nil
+		}
+	}
+
 	if err := s.storage.ObjectStatReset(); err != nil {
 		return err
 	}
@@ -52,23 +65,18 @@ func (s *statUsecase) HandleNew(options StatOptions) error {
 	options.StartedAt = time.Now().String()
 	s.storeOptions(options)
 
-	// campaigns := s.selectCampaigns(options)
-	// for _, c := range campaigns {
-	// 	s.storage.ObjectStatCampaigns().Add(c)
-	// }
-
 	if s.storage.ObjectStatCampaigns().Size() == 0 {
-		log.Fatal("Нет кампаний")
+		log.Fatal("Кампании не заданы")
 	}
 
-	campaigns := s.storage.ObjectStatCampaigns().All()
-	printCampaignsTable(campaigns)
+	printReportInfo(s.storage)
 
 	fmt.Println("")
 	if console.Ask("Продолжить?") == false {
 		return nil
 	}
 
+	campaigns := s.storage.ObjectStatCampaigns().All()
 	statProcessor := stat_processor.New(s.ozon, s.storage)
 	statProcessor.Start(campaigns)
 
@@ -81,12 +89,12 @@ func (s *statUsecase) HandleContinue() error {
 		return nil
 	}
 
-	campaigns := s.storage.ObjectStatCampaigns().All()
-
 	fmt.Println("Есть незавершенное формирование отчета по рекламным объектам")
-	printCampaignsTable(campaigns)
 	fmt.Println("")
 
+	printReportInfo(s.storage)
+
+	fmt.Println("")
 	if console.Ask("Продолжить?") == false {
 		fmt.Println("")
 		os.Exit(0)
@@ -98,6 +106,7 @@ func (s *statUsecase) HandleContinue() error {
 	options.StartedAt = time.Now().String()
 	s.storage.SetObjectStatOptions(*options)
 
+	campaigns := s.storage.ObjectStatCampaigns().All()
 	statProcessor := stat_processor.New(s.ozon, s.storage)
 	statProcessor.Start(campaigns)
 

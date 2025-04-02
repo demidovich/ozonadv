@@ -127,9 +127,8 @@ func (s statExport) csvRows(file string) []string {
 
 	// Первая строка общие данные об отчете
 	// Вторая строка заголовки
-	// Последняя строка суммарная информация
 
-	return lines[2 : len(lines)-1]
+	return lines[2:]
 }
 
 func (s statExport) fileLines(file string) []string {

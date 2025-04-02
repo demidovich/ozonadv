@@ -28,10 +28,15 @@ func (s *statExportUsecase) Handle(options StatExportOptions) error {
 	}
 
 	if s.storage.ObjectStatCampaigns().Size() == 0 {
-		fmt.Println("Обработанных кампаний нет")
+		fmt.Println("Отчета в обработке нет")
 		return nil
 	}
 
+	fmt.Println("Параметры отчета")
+	printOptionsTable(*s.storage.ObjectStatOptions())
+
+	fmt.Println("")
+	fmt.Println("Кампании отчета")
 	campaigns := s.storage.ObjectStatCampaigns().All()
 	printCampaignsTable(campaigns)
 
