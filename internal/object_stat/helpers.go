@@ -22,7 +22,7 @@ func printOptionsTable(options storage.ObjectStatOptions) {
 
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"Интервал", options.DateFrom + " - " + options.DateFrom})
+	tw.AppendRow(table.Row{"Интервал", options.DateFrom + " - " + options.DateTo})
 	tw.AppendRow(table.Row{"Группировка", options.GroupBy})
 	tw.AppendRow(table.Row{"Создан", createdAt})
 
