@@ -7,6 +7,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.7.0
 	github.com/go-resty/resty/v2 v2.3.0
+	github.com/google/uuid v1.6.0
 	github.com/jedib0t/go-pretty/v6 v6.5.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.7.1

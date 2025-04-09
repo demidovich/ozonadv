@@ -42,7 +42,7 @@ func (s *CreateStatRequestOptions) validate() error {
 }
 
 // Создание общей статистики кампании
-func (s *statRequests) Create(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
+func (s *statRequests) CreateTotal(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
 	if err := options.validate(); err != nil {
 		return StatRequest{}, err
 	}
