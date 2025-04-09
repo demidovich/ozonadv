@@ -19,6 +19,13 @@ type Config struct {
 func NewOrFail(filename string) Config {
 	cfg, err := New(filename)
 	if err != nil {
+		fmt.Println("")
+		fmt.Println("Ошибка конфигурации: не найден файл config.yaml")
+		fmt.Println("В директории с генератором статистики ozonadv должен находиться корректный yaml-файл config.yaml")
+		fmt.Println("")
+		fmt.Println("Описание конфигурации и пример файла можно посмотреть на github проекта")
+		fmt.Println("https://github.com/demidovich/ozonadv")
+		fmt.Println("")
 		log.Fatal(err)
 	}
 
@@ -38,15 +45,15 @@ func New(filename string) (Config, error) {
 	}
 
 	if err := v.Unmarshal(&cfg); err != nil {
-		return cfg, fmt.Errorf("Ошибка парсинга конфигурационного файла, %v", err)
+		return cfg, fmt.Errorf("ошибка парсинга конфигурационного файла, %v", err)
 	}
 
 	if cfg.Ozon.ClientId == "" {
-		return cfg, errors.New("В config.yml отсутствует или пустой параметр ozon.ClientId")
+		return cfg, errors.New("в config.yml отсутствует или пустой параметр ozon.ClientId")
 	}
 
 	if cfg.Ozon.ClientSecret == "" {
-		return cfg, errors.New("В config.yml отсутствует или пустой параметр ozon.ClientSecret")
+		return cfg, errors.New("в config.yml отсутствует или пустой параметр ozon.ClientSecret")
 	}
 
 	return cfg, nil

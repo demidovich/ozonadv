@@ -1,4 +1,4 @@
-package find
+package campaigns
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-type findCampaignsUsecase struct {
+type selectCampaignsUsecase struct {
 	storage *storage.Storage
 	ozon    *ozon.Ozon
 }
 
-func (f *findCampaignsUsecase) Handle() error {
+func (f *selectCampaignsUsecase) Handle() error {
 	all, err := f.ozon.Campaigns().All()
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (f *findCampaignsUsecase) Handle() error {
 	return nil
 }
 
-func (f *findCampaignsUsecase) filteredByTitle(all []ozon.Campaign) []ozon.Campaign {
+func (f *selectCampaignsUsecase) filteredByTitle(all []ozon.Campaign) []ozon.Campaign {
 	value := console.InputString("Часть имени")
 
 	var filtered []ozon.Campaign
@@ -65,7 +65,7 @@ func (f *findCampaignsUsecase) filteredByTitle(all []ozon.Campaign) []ozon.Campa
 	return filtered
 }
 
-func (f *findCampaignsUsecase) filteredByState(all []ozon.Campaign) []ozon.Campaign {
+func (f *selectCampaignsUsecase) filteredByState(all []ozon.Campaign) []ozon.Campaign {
 	value := console.InputString("Часть статуса")
 
 	var filtered []ozon.Campaign
@@ -80,7 +80,7 @@ func (f *findCampaignsUsecase) filteredByState(all []ozon.Campaign) []ozon.Campa
 	return filtered
 }
 
-func (s *findCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
+func (s *selectCampaignsUsecase) printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Статус"})

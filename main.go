@@ -8,7 +8,6 @@ import (
 	"ozonadv/internal/app"
 	"ozonadv/internal/object_stat"
 	"ozonadv/internal/stat"
-	"ozonadv/pkg/console"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -61,10 +60,10 @@ func initCampaignsCommand(rootCmd *cobra.Command, app *app.Application) {
 			fmt.Println(cmd.Short)
 			fmt.Println("")
 
-			findUsecases := app.FindUsecases()
+			campaignsUsecases := app.CampaignsUsecases()
 			fmt.Println("")
 
-			return findUsecases.Campaigns()
+			return campaignsUsecases.Select()
 		},
 	}
 
@@ -81,16 +80,6 @@ func initStatCommand(rootCmd *cobra.Command, app *app.Application) {
 			fmt.Println("")
 
 			statUsecases := app.StatUsecases()
-
-			if statUsecases.HasProcessing() {
-				fmt.Println("")
-				fmt.Println("Найдено активное формирование статистики")
-				fmt.Println("")
-				if console.Ask("Продолжить ее формирование?") == true {
-					fmt.Println("")
-					return statUsecases.StatContinue()
-				}
-			}
 
 			fmt.Println("")
 			options := stat.StatOptions{}
@@ -201,16 +190,6 @@ func initObjectStatCommand(rootCmd *cobra.Command, app *app.Application) {
 			fmt.Println("")
 
 			objectStatUsecases := app.ObjectStatUsecases()
-
-			if objectStatUsecases.HasProcessing() {
-				fmt.Println("")
-				fmt.Println("Найдено незавершенное формирование статистики")
-				fmt.Println("")
-				if console.Ask("Продолжить ее формирование?") == true {
-					fmt.Println("")
-					return objectStatUsecases.StatContinue()
-				}
-			}
 
 			fmt.Println("")
 			options := object_stat.StatOptions{}

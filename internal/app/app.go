@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 	"ozonadv/config"
-	"ozonadv/internal/find"
+	"ozonadv/internal/campaigns"
 	"ozonadv/internal/object_stat"
 	"ozonadv/internal/ozon"
 	"ozonadv/internal/stat"
@@ -15,7 +15,7 @@ type Application struct {
 	config             *config.Config
 	ozon               *ozon.Ozon
 	storage            *storage.Storage
-	findUsecases       *find.Usecases
+	campaignsUsecases  *campaigns.Usecases
 	statUsecases       *stat.Usecases
 	objectStatUsecases *object_stat.Usecases
 	shutdownFuncs      []func()
@@ -56,15 +56,15 @@ func (a *Application) Storage() *storage.Storage {
 	return a.storage
 }
 
-func (a *Application) FindUsecases() *find.Usecases {
-	if a.findUsecases == nil {
-		a.findUsecases = find.New(
+func (a *Application) CampaignsUsecases() *campaigns.Usecases {
+	if a.campaignsUsecases == nil {
+		a.campaignsUsecases = campaigns.New(
 			a.Storage(),
 			a.Ozon(),
 		)
 	}
 
-	return a.findUsecases
+	return a.campaignsUsecases
 }
 
 func (a *Application) StatUsecases() *stat.Usecases {
