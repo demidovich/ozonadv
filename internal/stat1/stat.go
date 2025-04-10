@@ -1,6 +1,7 @@
 package stat1
 
 import (
+	"encoding/json"
 	"io"
 	"ozonadv/internal/ozon"
 	"ozonadv/pkg/validation"
@@ -37,13 +38,20 @@ func New(options StatOptions) (*Stat, error) {
 		return nil, err
 	}
 
-	instance := &Stat{
+	self := &Stat{
 		UUID:      uuid.NewString(),
 		Options:   options,
 		CreatedAt: time.Now().String(),
 	}
 
-	return instance, nil
+	return self, nil
+}
+
+func FromJson(j string) (*Stat, error) {
+	self := &Stat{}
+	err := json.Unmarshal([]byte(j), self)
+
+	return self, err
 }
 
 func (s *Stat) AddCampaign(campaign ozon.Campaign) {
@@ -77,6 +85,12 @@ func (s *Stat) Start(out io.Writer) {
 
 	proc := newProcessor(out, s, o, nil)
 	proc.Start()
+}
+
+func (s *Stat) ToJson() (string, error) {
+	j, err := json.Marshal(s)
+
+	return string(j), err
 }
 
 // func (s *stat) ExportToFile(file string) error {
