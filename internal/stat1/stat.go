@@ -25,7 +25,7 @@ func (s StatOptions) Validate() error {
 	return validation.ValidateStruct(s)
 }
 
-type Stat struct {
+type stat struct {
 	UUID             string      `json:"uuid"`
 	Options          StatOptions `json:"options"`
 	Items            []statItem  `json:"items"`
@@ -33,12 +33,12 @@ type Stat struct {
 	ApiRequestsCount int         `json:"apiRequestsCount"`
 }
 
-func New(options StatOptions) (*Stat, error) {
+func New(options StatOptions) (*stat, error) {
 	if err := options.Validate(); err != nil {
 		return nil, err
 	}
 
-	self := &Stat{
+	self := &stat{
 		UUID:      uuid.NewString(),
 		Options:   options,
 		CreatedAt: time.Now().String(),
@@ -47,14 +47,14 @@ func New(options StatOptions) (*Stat, error) {
 	return self, nil
 }
 
-func FromJson(j string) (*Stat, error) {
-	self := &Stat{}
+func FromJson(j string) (*stat, error) {
+	self := &stat{}
 	err := json.Unmarshal([]byte(j), self)
 
 	return self, err
 }
 
-func (s *Stat) AddCampaign(campaign ozon.Campaign) {
+func (s *stat) AddCampaign(campaign ozon.Campaign) {
 	for _, i := range s.Items {
 		if i.Campaign.ID == campaign.ID {
 			return
@@ -64,7 +64,7 @@ func (s *Stat) AddCampaign(campaign ozon.Campaign) {
 	s.Items = append(s.Items, statItem{Campaign: campaign})
 }
 
-func (s *Stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
+func (s *stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
 	for _, i := range s.Items {
 		if i.Request.UUID == uuid {
 			return &i, true
@@ -74,7 +74,7 @@ func (s *Stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
 	return nil, false
 }
 
-func (s *Stat) Start(out io.Writer) {
+func (s *stat) Start(out io.Writer) {
 	o := ozon.New(
 		ozon.Config{
 			ClientId:     s.Options.CabinetClientId,
@@ -87,16 +87,8 @@ func (s *Stat) Start(out io.Writer) {
 	proc.Start()
 }
 
-func (s *Stat) ToJson() (string, error) {
+func (s *stat) ToJson() (string, error) {
 	j, err := json.Marshal(s)
 
 	return string(j), err
 }
-
-// func (s *stat) ExportToFile(file string) error {
-// 	return nil
-// }
-
-// func (s *stat) ExportToGoogleSheet() error {
-// 	return nil
-// }

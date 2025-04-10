@@ -20,13 +20,13 @@ const (
 )
 
 type processor struct {
-	stat    *Stat
+	stat    *stat
 	storage *storage.Storage
 	ozon    *ozon.Ozon
 	out     io.Writer
 }
 
-func newProcessor(out io.Writer, stat *Stat, o *ozon.Ozon, s *storage.Storage) *processor {
+func newProcessor(out io.Writer, stat *stat, o *ozon.Ozon, s *storage.Storage) *processor {
 	return &processor{
 		stat:    stat,
 		ozon:    o,
