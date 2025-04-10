@@ -1,8 +1,7 @@
-package stat1
+package stats
 
 import (
 	"encoding/json"
-	"io"
 	"ozonadv/internal/ozon"
 	"ozonadv/pkg/validation"
 	"time"
@@ -25,7 +24,7 @@ func (s StatOptions) Validate() error {
 	return validation.ValidateStruct(s)
 }
 
-type stat struct {
+type Stat struct {
 	UUID             string      `json:"uuid"`
 	Options          StatOptions `json:"options"`
 	Items            []statItem  `json:"items"`
@@ -33,12 +32,12 @@ type stat struct {
 	ApiRequestsCount int         `json:"apiRequestsCount"`
 }
 
-func New(options StatOptions) (*stat, error) {
+func newStat(options StatOptions) (*Stat, error) {
 	if err := options.Validate(); err != nil {
 		return nil, err
 	}
 
-	self := &stat{
+	self := &Stat{
 		UUID:      uuid.NewString(),
 		Options:   options,
 		CreatedAt: time.Now().String(),
@@ -47,14 +46,14 @@ func New(options StatOptions) (*stat, error) {
 	return self, nil
 }
 
-func FromJson(j string) (*stat, error) {
-	self := &stat{}
+func StatFromJson(j string) (*Stat, error) {
+	self := &Stat{}
 	err := json.Unmarshal([]byte(j), self)
 
 	return self, err
 }
 
-func (s *stat) AddCampaign(campaign ozon.Campaign) {
+func (s *Stat) AddCampaign(campaign ozon.Campaign) {
 	for _, i := range s.Items {
 		if i.Campaign.ID == campaign.ID {
 			return
@@ -64,7 +63,7 @@ func (s *stat) AddCampaign(campaign ozon.Campaign) {
 	s.Items = append(s.Items, statItem{Campaign: campaign})
 }
 
-func (s *stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
+func (s *Stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
 	for _, i := range s.Items {
 		if i.Request.UUID == uuid {
 			return &i, true
@@ -74,20 +73,7 @@ func (s *stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
 	return nil, false
 }
 
-func (s *stat) Start(out io.Writer) {
-	o := ozon.New(
-		ozon.Config{
-			ClientId:     s.Options.CabinetClientId,
-			ClientSecret: s.Options.CabinetClientSecret,
-		},
-		false,
-	)
-
-	proc := newProcessor(out, s, o, nil)
-	proc.Start()
-}
-
-func (s *stat) ToJson() (string, error) {
+func (s *Stat) ToJson() (string, error) {
 	j, err := json.Marshal(s)
 
 	return string(j), err

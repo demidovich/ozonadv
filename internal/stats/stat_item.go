@@ -1,4 +1,4 @@
-package stat1
+package stats
 
 import (
 	"ozonadv/internal/ozon"

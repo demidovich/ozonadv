@@ -63,6 +63,32 @@ func DirInitOrFail(path string) {
 	}
 }
 
+func DirList(path string) ([]string, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return []string{}, err
+	}
+
+	result := []string{}
+	for _, e := range entries {
+		if e.Name() == "." || e.Name() == ".." {
+			continue
+		}
+		result = append(result, e.Name())
+	}
+
+	return result, nil
+}
+
+func DirListOrFail(path string) []string {
+	list, err := DirList(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return list
+}
+
 func FileInit(path string) error {
 	f, err := os.Open(path)
 	if err == nil {
@@ -86,4 +112,12 @@ func FileInitOrFail(path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func FileRemoveOrFail(path string) {
+	err := os.Remove(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
