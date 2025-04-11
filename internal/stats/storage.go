@@ -6,4 +6,6 @@ type storage interface {
 	Save(stat *Stat)
 
 	Remove(stat *Stat)
+
+	SaveDownloadedFile(stat *Stat, filename string, data []byte)
 }

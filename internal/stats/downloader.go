@@ -234,14 +234,9 @@ func (d *downloader) downloadStat(statRequest ozon.StatRequest) (string, error) 
 			continue
 		}
 
-		err = d.storage.Downloads().Write(filename, data)
-		if err != nil {
-			d.logStatRequest(statRequest, "скачивание статистики: ", err)
-			time.Sleep(downloadStatWaitTime)
-			continue
-		}
-
+		d.storage.SaveDownloadedFile(d.stat, filename, data)
 		d.logStatRequest(statRequest, "скачан файл: ", filename)
+
 		return filename, nil
 	}
 

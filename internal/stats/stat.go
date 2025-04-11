@@ -46,7 +46,7 @@ func newStat(options StatOptions) (*Stat, error) {
 	return self, nil
 }
 
-func StatFromJson(j string) (*Stat, error) {
+func statFromJson(j string) (*Stat, error) {
 	self := &Stat{}
 	err := json.Unmarshal([]byte(j), self)
 

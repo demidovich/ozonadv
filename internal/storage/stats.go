@@ -3,6 +3,7 @@ package storage
 import (
 	"cmp"
 	"log"
+	"os"
 	"ozonadv/internal/stats"
 	"ozonadv/pkg/utils"
 	"slices"
@@ -10,14 +11,16 @@ import (
 )
 
 type storageStats struct {
-	dir string
-	mu  *sync.Mutex
+	dir          string
+	downloadsDir string
+	mu           *sync.Mutex
 }
 
 func newStorageStats(dir string) *storageStats {
 	s := storageStats{
-		dir: dir,
-		mu:  &sync.Mutex{},
+		dir:          dir,
+		downloadsDir: dir + "/downloads",
+		mu:           &sync.Mutex{},
 	}
 
 	return &s
@@ -56,14 +59,35 @@ func (s *storageStats) Save(st *stats.Stat) {
 	utils.JsonFileWriteOrFail(file, st)
 }
 
+func (s *storageStats) SaveDownloadedFile(stat *stats.Stat, filename string, data []byte) {
+	utils.DirInit(s.downloadsDir)
+	file := s.downloadedFile(filename)
+
+	err := os.WriteFile(file, data, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func (s *storageStats) Remove(st *stats.Stat) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	for _, f := range utils.DirListOrFail(s.downloadsDir) {
+		file := s.downloadedFile(f)
+		utils.FileRemoveOrFail(file)
+	}
+
 	file := s.statFile(st)
 	utils.FileRemoveOrFail(file)
+
+	os.Remove(s.dir)
 }
 
 func (s *storageStats) statFile(st *stats.Stat) string {
 	return s.dir + "/" + st.UUID + ".json"
+}
+
+func (s *storageStats) downloadedFile(fname string) string {
+	return s.downloadsDir + "/" + fname
 }
