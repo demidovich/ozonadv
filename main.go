@@ -6,13 +6,12 @@ import (
 	"os"
 	"os/signal"
 	"ozonadv/internal/app"
-	"ozonadv/pkg/prompts"
+	"ozonadv/internal/ui"
 	"syscall"
 )
 
 func main() {
 	log.SetFlags(0)
-	defer fmt.Println("")
 
 	app := app.New(os.Stdout)
 	defer app.Shutdown()
@@ -25,19 +24,10 @@ func main() {
 		os.Exit(1)
 	}()
 
-	action := mainMenuAction()
-
-	fmt.Println(action)
-}
-
-func mainMenuAction() string {
-	options := map[string]string{
-		"Кабинеты":   "cabinets",
-		"Статистика": "stats",
-		"Выход":      "quit",
+	err := ui.Run(app)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	value, _ := prompts.List("---", options)
-
-	return value
+	fmt.Println("")
 }

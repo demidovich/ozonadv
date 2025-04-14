@@ -35,11 +35,6 @@ type Campaign struct {
 	UpdatedAt                string `json:"updatedAt"`
 	ProductCampaignMode      string `json:"productCampaignMode"`
 	ProductAutopilotStrategy string `json:"productAutopilotStrategy"`
-	Stat                     struct {
-		UUID string `json:"uuid"`
-		Link string `json:"link"`
-		File string `json:"file"`
-	} `json:"stat"`
 }
 
 func (c *Campaign) IsBanner() bool {
@@ -74,34 +69,34 @@ func (c *Campaign) TitleTruncated(length int) string {
 	return string(r[:length-suffixLength]) + suffix
 }
 
-func (c *Campaign) StatState() string {
-	var val string
+// func (c *Campaign) StatState() string {
+// 	var val string
 
-	switch true {
-	case c.Stat.File != "":
-		val = "Файл скачан"
-	case c.Stat.Link != "":
-		val = "Готов к скачиванию"
-	case c.Stat.UUID != "":
-		val = "Запрос создан"
-	default:
-		val = ""
-	}
+// 	switch true {
+// 	case c.Stat.File != "":
+// 		val = "Файл скачан"
+// 	case c.Stat.Link != "":
+// 		val = "Готов к скачиванию"
+// 	case c.Stat.UUID != "":
+// 		val = "Запрос создан"
+// 	default:
+// 		val = ""
+// 	}
 
-	return val
-}
+// 	return val
+// }
 
-func (c *Campaign) ObjectStatState() string {
-	var val string
+// func (c *Campaign) ObjectStatState() string {
+// 	var val string
 
-	switch true {
-	case c.Stat.File != "":
-		val = "Файл скачан"
-	case c.Stat.UUID != "":
-		val = "Запрос создан"
-	default:
-		val = ""
-	}
+// 	switch true {
+// 	case c.Stat.File != "":
+// 		val = "Файл скачан"
+// 	case c.Stat.UUID != "":
+// 		val = "Запрос создан"
+// 	default:
+// 		val = ""
+// 	}
 
-	return val
-}
+// 	return val
+// }

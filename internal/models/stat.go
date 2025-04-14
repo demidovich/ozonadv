@@ -1,12 +1,9 @@
-package stats
+package models
 
 import (
 	"encoding/json"
 	"ozonadv/internal/ozon"
 	"ozonadv/pkg/validation"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 type StatOptions struct {
@@ -27,30 +24,9 @@ func (s StatOptions) Validate() error {
 type Stat struct {
 	UUID             string      `json:"uuid"`
 	Options          StatOptions `json:"options"`
-	Items            []statItem  `json:"items"`
+	Items            []StatItem  `json:"items"`
 	CreatedAt        string      `json:"createdAt"`
 	ApiRequestsCount int         `json:"apiRequestsCount"`
-}
-
-func newStat(options StatOptions) (*Stat, error) {
-	if err := options.Validate(); err != nil {
-		return nil, err
-	}
-
-	self := &Stat{
-		UUID:      uuid.NewString(),
-		Options:   options,
-		CreatedAt: time.Now().String(),
-	}
-
-	return self, nil
-}
-
-func statFromJson(j string) (*Stat, error) {
-	self := &Stat{}
-	err := json.Unmarshal([]byte(j), self)
-
-	return self, err
 }
 
 func (s *Stat) AddCampaign(campaign ozon.Campaign) {
@@ -60,10 +36,10 @@ func (s *Stat) AddCampaign(campaign ozon.Campaign) {
 		}
 	}
 
-	s.Items = append(s.Items, statItem{Campaign: campaign})
+	s.Items = append(s.Items, StatItem{Campaign: campaign})
 }
 
-func (s *Stat) ItemByRequestUUID(uuid string) (*statItem, bool) {
+func (s *Stat) ItemByRequestUUID(uuid string) (*StatItem, bool) {
 	for _, i := range s.Items {
 		if i.Request.UUID == uuid {
 			return &i, true

@@ -1,9 +1,13 @@
 package cabinets
 
+import "ozonadv/internal/models"
+
 type storage interface {
-	All() []Cabinet
+	All() []models.Cabinet
 
-	Save(cabinet Cabinet)
+	Has(cabinet models.Cabinet) bool
 
-	Remove(cabinet Cabinet)
+	Add(cabinet models.Cabinet)
+
+	Remove(cabinet models.Cabinet)
 }

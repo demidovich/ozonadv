@@ -4,12 +4,17 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
-func List(title string, options map[string]string) (string, error) {
+type ListOption struct {
+	Key   string
+	Value string
+}
+
+func List(title string, options ...ListOption) (string, error) {
 	var value string
 
 	o := make([]huh.Option[string], 0, len(options))
-	for k, v := range options {
-		o = append(o, huh.NewOption(k, v))
+	for _, v := range options {
+		o = append(o, huh.NewOption(v.Key, v.Value))
 	}
 
 	form := huh.NewForm(

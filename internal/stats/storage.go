@@ -1,11 +1,13 @@
 package stats
 
+import "ozonadv/internal/models"
+
 type storage interface {
-	All() []Stat
+	All() []models.Stat
 
-	Save(stat *Stat)
+	Add(stat *models.Stat)
 
-	Remove(stat *Stat)
+	Remove(stat *models.Stat)
 
-	SaveDownloadedFile(stat *Stat, filename string, data []byte)
+	SaveDownloadedFile(stat *models.Stat, filename string, data []byte)
 }

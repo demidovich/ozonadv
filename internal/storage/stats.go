@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"log"
 	"os"
-	"ozonadv/internal/stats"
+	"ozonadv/internal/models"
 	"ozonadv/pkg/utils"
 	"slices"
 	"sync"
@@ -26,13 +26,13 @@ func newStorageStats(dir string) *storageStats {
 	return &s
 }
 
-func (s *storageStats) All() []stats.Stat {
+func (s *storageStats) All() []models.Stat {
 	fnames := utils.DirListOrFail(s.dir)
-	result := make([]stats.Stat, 0, len(fnames))
+	result := make([]models.Stat, 0, len(fnames))
 
 	for _, fname := range fnames {
 		path := s.dir + "/" + fname
-		stat := stats.Stat{}
+		stat := models.Stat{}
 		utils.JsonFileReadOrFail(path, &stat, "{}")
 		if stat.UUID == "" {
 			log.Fatal("некорректные данные в файле " + path)
@@ -40,7 +40,7 @@ func (s *storageStats) All() []stats.Stat {
 		result = append(result, stat)
 	}
 
-	slices.SortFunc(result, func(i, j stats.Stat) int {
+	slices.SortFunc(result, func(i, j models.Stat) int {
 		return cmp.Compare(i.CreatedAt, j.CreatedAt)
 	})
 
@@ -51,7 +51,7 @@ func (s *storageStats) All() []stats.Stat {
 	return result
 }
 
-func (s *storageStats) Save(st *stats.Stat) {
+func (s *storageStats) Add(st *models.Stat) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -59,7 +59,7 @@ func (s *storageStats) Save(st *stats.Stat) {
 	utils.JsonFileWriteOrFail(file, st)
 }
 
-func (s *storageStats) SaveDownloadedFile(stat *stats.Stat, filename string, data []byte) {
+func (s *storageStats) SaveDownloadedFile(stat *models.Stat, filename string, data []byte) {
 	utils.DirInit(s.downloadsDir)
 	file := s.downloadedFile(filename)
 
@@ -69,7 +69,7 @@ func (s *storageStats) SaveDownloadedFile(stat *stats.Stat, filename string, dat
 	}
 }
 
-func (s *storageStats) Remove(st *stats.Stat) {
+func (s *storageStats) Remove(st *models.Stat) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -84,7 +84,7 @@ func (s *storageStats) Remove(st *stats.Stat) {
 	os.Remove(s.dir)
 }
 
-func (s *storageStats) statFile(st *stats.Stat) string {
+func (s *storageStats) statFile(st *models.Stat) string {
 	return s.dir + "/" + st.UUID + ".json"
 }
 

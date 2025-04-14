@@ -1,10 +1,10 @@
-package stats
+package models
 
 import (
 	"ozonadv/internal/ozon"
 )
 
-type statItem struct {
+type StatItem struct {
 	Campaign ozon.Campaign `json:"campaign"`
 	Request  struct {
 		UUID string `json:"uuid"`
@@ -13,7 +13,7 @@ type statItem struct {
 	} `json:"request"`
 }
 
-func (s *statItem) State() string {
+func (s *StatItem) State() string {
 	var val string
 
 	switch true {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"ozonadv/internal/models"
 	"ozonadv/internal/ozon"
 	"time"
 )
@@ -20,12 +21,12 @@ const (
 
 type downloader struct {
 	out     io.Writer
-	stat    *Stat
+	stat    *models.Stat
 	storage storage
 	ozon    *ozon.Ozon
 }
 
-func newDownloader(out io.Writer, stat *Stat, o *ozon.Ozon, s storage) *downloader {
+func newDownloader(out io.Writer, stat *models.Stat, o *ozon.Ozon, s storage) *downloader {
 	return &downloader{
 		out:     out,
 		stat:    stat,
@@ -35,7 +36,7 @@ func newDownloader(out io.Writer, stat *Stat, o *ozon.Ozon, s storage) *download
 }
 
 func (d *downloader) Start() {
-	items := make(chan statItem)
+	items := make(chan models.StatItem)
 
 	go func() {
 		defer close(items)
@@ -49,7 +50,7 @@ func (d *downloader) Start() {
 	<-d.downloadStatsStage(readyRequests)
 }
 
-func (d *downloader) createStatRequestsStage(in <-chan statItem) <-chan ozon.StatRequest {
+func (d *downloader) createStatRequestsStage(in <-chan models.StatItem) <-chan ozon.StatRequest {
 	out := make(chan ozon.StatRequest)
 
 	go func() {
