@@ -4,6 +4,7 @@ import (
 	"io"
 	"ozonadv/internal/models"
 	"ozonadv/internal/ozon"
+	"slices"
 	"strings"
 	"time"
 )
@@ -51,8 +52,8 @@ func (s *Service) Remove(c models.Cabinet) {
 }
 
 type CampaignFilters struct {
-	Title string
-	State string
+	Title  string
+	States []string
 }
 
 func (s *Service) Campaigns(cabinet models.Cabinet) ([]ozon.Campaign, error) {
@@ -82,10 +83,10 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 		result = filtered
 	}
 
-	if filters.State != "" {
+	if len(filters.States) > 0 {
 		filtered := []ozon.Campaign{}
 		for _, campaign := range result {
-			if strings.Contains(strings.ToLower(campaign.State), strings.ToLower(filters.State)) {
+			if slices.Contains(filters.States, campaign.State) {
 				filtered = append(filtered, campaign)
 			}
 		}

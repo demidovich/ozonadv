@@ -7,7 +7,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-func PrintCabinetInfo(cabinet models.Cabinet) {
+func PrintCabinet(cabinet models.Cabinet) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"Кабинет", cabinet.Name})
@@ -16,4 +16,5 @@ func PrintCabinetInfo(cabinet models.Cabinet) {
 
 	fmt.Println("")
 	fmt.Println(tw.Render())
+	fmt.Println("")
 }

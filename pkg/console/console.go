@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Ask(s string) bool {
+func Confirm(s string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {

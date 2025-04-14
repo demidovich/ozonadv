@@ -7,6 +7,7 @@ import (
 	"ozonadv/internal/models"
 	"ozonadv/internal/stats"
 	"ozonadv/internal/ui/helpers"
+	"ozonadv/pkg/console"
 
 	"github.com/charmbracelet/huh"
 	"github.com/google/uuid"
@@ -33,12 +34,13 @@ func (c cabinetsPage) Run() error {
 		})
 	}
 
-	options = append(options, helpers.ListOption{
-		Key:   "Новый кабинет",
-		Value: "new",
-	})
+	options = append(
+		options,
+		helpers.ListOption{Key: "Новый кабинет", Value: "create_cabinet"},
+		helpers.ListOption{Key: "Назад", Value: "back"},
+	)
 
-	cabinetUUID, err := helpers.List("---", options...)
+	action, err := helpers.List("---", options...)
 	if err != nil {
 		return err
 	}
@@ -46,9 +48,12 @@ func (c cabinetsPage) Run() error {
 	var cabinet models.Cabinet
 	var ok bool
 
-	if cabinetUUID == "new" {
+	if action == "create_cabinet" {
 		cabinet, err = c.createCabinet()
+	} else if action == "back" {
+		return ErrMainMenu
 	} else {
+		cabinetUUID := action
 		if cabinet, ok = c.cabsService.Find(cabinetUUID); !ok {
 			err = errors.New("кабинет не найден")
 		}
@@ -62,14 +67,14 @@ func (c cabinetsPage) Run() error {
 }
 
 func (c cabinetsPage) showCabinet(cabinet models.Cabinet) error {
-	helpers.PrintCabinetInfo(cabinet)
+	helpers.PrintCabinet(cabinet)
 
 	options := []helpers.ListOption{
 		{Key: "Кампании", Value: "campaigns_list"},
 		{Key: "Отчеты", Value: "stats_list"},
-		{Key: "Создать отчет", Value: "create_stat"},
+		{Key: "Новый отчет", Value: "create_stat"},
 		{Key: "Удалить кабинет", Value: "remove_cabinet"},
-		{Key: "Главное меню", Value: "main_menu"},
+		{Key: "Назад", Value: "back"},
 	}
 
 	action, err := helpers.List("---", options...)
@@ -80,22 +85,28 @@ func (c cabinetsPage) showCabinet(cabinet models.Cabinet) error {
 	switch action {
 	case "campaigns_list":
 		campaigns, err := c.cabsService.Campaigns(cabinet)
-		if err != nil {
-			return err
+		if err == nil {
+			helpers.PrintCampaigns(campaigns)
 		}
-		helpers.PrintCampaignsTable(campaigns)
 	case "create_stat":
-		fmt.Println("create stat")
+		_, err = c.createStat(cabinet)
 	case "remove_cabinet":
-		c.cabsService.Remove(cabinet)
-	case "main_menu":
-		err = ViewMainMenu
+		if console.Confirm("Удалить кабинет \"" + cabinet.Name + "\"?") {
+			c.cabsService.Remove(cabinet)
+		} else {
+			err = c.Run()
+		}
+	case "back":
+		err = c.Run()
 	}
 
 	return err
 }
 
 func (c cabinetsPage) createCabinet() (models.Cabinet, error) {
+	fmt.Println("")
+	fmt.Println("Создание нового кабинета")
+
 	cabinet := models.Cabinet{
 		UUID: uuid.New().String(),
 	}
@@ -103,7 +114,7 @@ func (c cabinetsPage) createCabinet() (models.Cabinet, error) {
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
-				Title("Название").
+				Title("Название кабинета").
 				CharLimit(100).
 				Value(&cabinet.Name),
 			huh.NewInput().
@@ -124,4 +135,40 @@ func (c cabinetsPage) createCabinet() (models.Cabinet, error) {
 	err := c.cabsService.Add(cabinet)
 
 	return cabinet, err
+}
+
+func (c cabinetsPage) createStat(cabinet models.Cabinet) (*models.Stat, error) {
+	fmt.Println("Создание нового отчета")
+
+	options := models.StatOptions{}
+	if err := helpers.StatOptionsForm(&options); err != nil {
+		return nil, err
+	}
+
+	options.CabinetName = cabinet.Name
+	options.CabinetClientId = cabinet.ClientID
+	options.CabinetClientSecret = cabinet.ClientSecret
+
+	campaigns, err := helpers.ChooseCampaigns(*c.cabsService, cabinet)
+	if err != nil {
+		return nil, err
+	}
+
+	helpers.PrintCampaigns(campaigns)
+
+	fmt.Println("")
+	if !console.Confirm("Создать отчет?") {
+		return nil, errors.New("cancel")
+	}
+
+	stat, err := c.statsService.Create(options, campaigns)
+	if err != nil {
+		return stat, err
+	}
+
+	fmt.Println("")
+	fmt.Println("Отчет создан")
+	helpers.PrintStat(*stat)
+
+	return stat, err
 }

@@ -29,6 +29,22 @@ type Stat struct {
 	ApiRequestsCount int         `json:"apiRequestsCount"`
 }
 
+func (s *Stat) State() string {
+	completed := true
+	for _, i := range s.Items {
+		if i.Request.Link == "" {
+			completed = false
+			break
+		}
+	}
+
+	if completed {
+		return "Готов"
+	} else {
+		return "Не готов"
+	}
+}
+
 func (s *Stat) AddCampaign(campaign ozon.Campaign) {
 	for _, i := range s.Items {
 		if i.Campaign.ID == campaign.ID {
@@ -37,6 +53,15 @@ func (s *Stat) AddCampaign(campaign ozon.Campaign) {
 	}
 
 	s.Items = append(s.Items, StatItem{Campaign: campaign})
+}
+
+func (s *Stat) Campaigns() []ozon.Campaign {
+	result := make([]ozon.Campaign, 0, len(s.Items))
+	for _, i := range s.Items {
+		result = append(result, i.Campaign)
+	}
+
+	return result
 }
 
 func (s *Stat) ItemByRequestUUID(uuid string) (*StatItem, bool) {

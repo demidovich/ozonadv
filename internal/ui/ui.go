@@ -7,7 +7,7 @@ import (
 	"ozonadv/internal/ui/helpers"
 )
 
-var ViewMainMenu = errors.New("main menu")
+var ErrMainMenu = errors.New("main menu")
 
 func Run(a *app.Application) error {
 	options := []helpers.ListOption{
@@ -30,7 +30,7 @@ func Run(a *app.Application) error {
 		os.Exit(0)
 	}
 
-	if err != nil && errors.Is(err, ViewMainMenu) {
+	if err != nil && errors.Is(err, ErrMainMenu) {
 		return Run(a)
 	}
 

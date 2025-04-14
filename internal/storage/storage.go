@@ -23,6 +23,7 @@ func New(rootDir string) *Storage {
 	statsDir := rootDir + "/stats"
 
 	utils.DirInit(rootDir)
+	utils.DirInit(statsDir)
 
 	return &Storage{
 		rootDir:      rootDir,
