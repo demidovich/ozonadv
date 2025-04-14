@@ -45,7 +45,7 @@ func (a *Application) CabinetsService() *cabinets.Service {
 func (a *Application) StatsService() *stats.Service {
 	if a.statsService == nil {
 		a.println("[app init] сервис статистики")
-		a.statsService = stats.NewService(a.out, a.Storage().Stats())
+		a.statsService = stats.NewService(a.Storage().Stats())
 	}
 
 	return a.statsService

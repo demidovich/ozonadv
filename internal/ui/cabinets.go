@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"ozonadv/internal/cabinets"
 	"ozonadv/internal/models"
+	"ozonadv/internal/stats"
 	"ozonadv/internal/ui/helpers"
 
 	"github.com/charmbracelet/huh"
@@ -12,11 +13,15 @@ import (
 )
 
 type cabinetsPage struct {
-	cabsService *cabinets.Service
+	cabsService  *cabinets.Service
+	statsService *stats.Service
 }
 
-func newCabinets(cabsService *cabinets.Service) cabinetsPage {
-	return cabinetsPage{cabsService: cabsService}
+func newCabinets(cabsService *cabinets.Service, statsService *stats.Service) cabinetsPage {
+	return cabinetsPage{
+		cabsService:  cabsService,
+		statsService: statsService,
+	}
 }
 
 func (c cabinetsPage) Run() error {

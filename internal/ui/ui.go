@@ -23,7 +23,7 @@ func Run(a *app.Application) error {
 
 	switch action {
 	case "cabinets":
-		err = newCabinets(a.CabinetsService()).Run()
+		err = newCabinets(a.CabinetsService(), a.StatsService()).Run()
 	case "stats":
 		err = newStats(a.StatsService()).Run()
 	case "quit":
