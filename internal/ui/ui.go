@@ -12,7 +12,7 @@ var ViewMainMenu = errors.New("main menu")
 func Run(a *app.Application) error {
 	options := []helpers.ListOption{
 		{Key: "Кабинеты", Value: "cabinets"},
-		{Key: "Статистика", Value: "stats"},
+		{Key: "Отчеты", Value: "stats"},
 		{Key: "Выход", Value: "quit"},
 	}
 

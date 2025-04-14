@@ -60,8 +60,9 @@ func (c cabinetsPage) showCabinet(cabinet models.Cabinet) error {
 	helpers.PrintCabinetInfo(cabinet)
 
 	options := []helpers.ListOption{
-		{Key: "Рекламные кампании", Value: "campaigns_list"},
-		{Key: "Создать отчет", Value: "create_report"},
+		{Key: "Кампании", Value: "campaigns_list"},
+		{Key: "Отчеты", Value: "stats_list"},
+		{Key: "Создать отчет", Value: "create_stat"},
 		{Key: "Удалить кабинет", Value: "remove_cabinet"},
 		{Key: "Главное меню", Value: "main_menu"},
 	}
@@ -78,8 +79,8 @@ func (c cabinetsPage) showCabinet(cabinet models.Cabinet) error {
 			return err
 		}
 		helpers.PrintCampaignsTable(campaigns)
-	case "create_report":
-		fmt.Println("create report")
+	case "create_stat":
+		fmt.Println("create stat")
 	case "remove_cabinet":
 		c.cabsService.Remove(cabinet)
 	case "main_menu":

@@ -1,8 +1,8 @@
 package models
 
 import (
+	"ozonadv/pkg/utils"
 	"ozonadv/pkg/validation"
-	"unicode/utf8"
 )
 
 type Cabinet struct {
@@ -18,13 +18,7 @@ func (c *Cabinet) Validate() error {
 }
 
 func (c *Cabinet) ClientSecretMasked(length int) string {
-	if utf8.RuneCountInString(c.ClientSecret) <= length {
-		return c.ClientSecret
-	}
-
-	r := []rune(c.ClientSecret)
-
-	return string(r[:length:length]) + "***"
+	return utils.StringMasked(c.ClientSecret, length)
 }
 
 // func (c *Cabinet) EqualTo(other *Cabinet) bool {

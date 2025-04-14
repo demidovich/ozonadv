@@ -10,7 +10,7 @@ import (
 func PrintCabinetInfo(cabinet models.Cabinet) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"Название", cabinet.Name})
+	tw.AppendRow(table.Row{"Кабинет", cabinet.Name})
 	tw.AppendRow(table.Row{"Клиент ID", cabinet.ClientID})
 	tw.AppendRow(table.Row{"Клиент Secret", cabinet.ClientSecretMasked(25)})
 
