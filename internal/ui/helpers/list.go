@@ -1,8 +1,6 @@
-package prompts
+package helpers
 
-import (
-	"github.com/charmbracelet/huh"
-)
+import "github.com/charmbracelet/huh"
 
 type ListOption struct {
 	Key   string

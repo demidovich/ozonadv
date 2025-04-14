@@ -1,7 +1,17 @@
 package ui
 
-import "ozonadv/internal/app"
+import (
+	"ozonadv/internal/stats"
+)
 
-func stats(a *app.Application) error {
+type statsPage struct {
+	statsService *stats.Service
+}
+
+func newStats(statsService *stats.Service) statsPage {
+	return statsPage{statsService: statsService}
+}
+
+func (c statsPage) Run() error {
 	return nil
 }

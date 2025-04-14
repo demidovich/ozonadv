@@ -2,6 +2,7 @@ package models
 
 import (
 	"ozonadv/pkg/validation"
+	"unicode/utf8"
 )
 
 type Cabinet struct {
@@ -14,6 +15,16 @@ type Cabinet struct {
 
 func (c *Cabinet) Validate() error {
 	return validation.ValidateStruct(c)
+}
+
+func (c *Cabinet) ClientSecretMasked(length int) string {
+	if utf8.RuneCountInString(c.ClientSecret) <= length {
+		return c.ClientSecret
+	}
+
+	r := []rune(c.ClientSecret)
+
+	return string(r[:length:length]) + "***"
 }
 
 // func (c *Cabinet) EqualTo(other *Cabinet) bool {

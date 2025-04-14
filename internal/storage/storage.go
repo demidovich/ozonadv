@@ -2,6 +2,7 @@ package storage
 
 import (
 	"os"
+	"ozonadv/pkg/utils"
 )
 
 type Storage struct {
@@ -20,6 +21,8 @@ func New(rootDir string) *Storage {
 	rootDir = rootDir + "/ozonadv"
 	cabinetsFile := rootDir + "/cabinets.json"
 	statsDir := rootDir + "/stats"
+
+	utils.DirInit(rootDir)
 
 	return &Storage{
 		rootDir:      rootDir,

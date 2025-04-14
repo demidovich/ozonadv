@@ -27,5 +27,4 @@ func PrintCampaignsTable(campaigns []ozon.Campaign) {
 	fmt.Println("")
 	fmt.Println(tw.Render())
 	fmt.Println("Всего кампаний:", len(campaigns))
-	fmt.Println("")
 }

@@ -23,6 +23,15 @@ func (s *Service) All() []models.Cabinet {
 	return s.storage.All()
 }
 
+func (s *Service) Find(uuid string) (models.Cabinet, bool) {
+	for _, c := range s.storage.All() {
+		if c.UUID == uuid {
+			return c, true
+		}
+	}
+	return models.Cabinet{}, false
+}
+
 func (s *Service) Add(c models.Cabinet) error {
 	if err := c.Validate(); err != nil {
 		return err
