@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"fmt"
 	"ozonadv/internal/models"
 
 	"github.com/charmbracelet/huh"
@@ -12,14 +11,13 @@ func StatOptionsForm(options *models.StatOptions) error {
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Название отчета").
-				Description("Чтобы было проще понимать что за статистика").
 				CharLimit(100).
 				Value(&options.Name),
 			huh.NewSelect[string]().
 				Title("Тип статистики").
 				Options(
-					huh.NewOption("По рекламным объектам", "OBJECT"),
-					huh.NewOption("По рекламным кампаниями", "TOTAL"),
+					huh.NewOption("Рекламные объекты", "OBJECT"),
+					huh.NewOption("Рекламные кампании", "TOTAL"),
 				).
 				Value(&options.Type),
 			huh.NewInput().
@@ -43,9 +41,6 @@ func StatOptionsForm(options *models.StatOptions) error {
 				Value(&options.GroupBy),
 		),
 	)
-
-	fmt.Println("")
-	fmt.Println("Параметры отчета")
 
 	return form.Run()
 }

@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"io"
 	"ozonadv/internal/models"
 	"ozonadv/internal/ozon"
 	"time"
@@ -10,17 +9,42 @@ import (
 )
 
 type Service struct {
-	out     io.Writer
+	debug   Debug
 	storage storage
 }
 
 type CreateOptions struct {
 }
 
-func NewService(s storage) *Service {
+func NewService(s storage, d Debug) *Service {
 	return &Service{
+		debug:   d,
 		storage: s,
 	}
+}
+
+func (s *Service) All() []models.Stat {
+	return s.storage.All()
+}
+
+func (s *Service) CabinetAll(cabinet models.Cabinet) []models.Stat {
+	result := []models.Stat{}
+	for _, s := range s.storage.All() {
+		if cabinet.UUID == s.Options.CabinetUUID {
+			result = append(result, s)
+		}
+	}
+
+	return result
+}
+
+func (s *Service) Find(uuid string) (*models.Stat, bool) {
+	for _, c := range s.storage.All() {
+		if c.UUID == uuid {
+			return &c, true
+		}
+	}
+	return nil, false
 }
 
 func (s *Service) Create(options models.StatOptions, campaigns []ozon.Campaign) (*models.Stat, error) {
@@ -44,7 +68,7 @@ func (s *Service) Create(options models.StatOptions, campaigns []ozon.Campaign) 
 
 func (s *Service) Download(st *models.Stat) {
 	ozonApi := s.ozonApi(st)
-	downloader := newDownloader(s.out, st, ozonApi, s.storage)
+	downloader := newDownloader(st, ozonApi, s.storage, s.debug)
 	downloader.Start()
 }
 
@@ -54,6 +78,6 @@ func (s *Service) ozonApi(st *models.Stat) *ozon.Ozon {
 			ClientId:     st.Options.CabinetClientId,
 			ClientSecret: st.Options.CabinetClientSecret,
 		},
-		false,
+		s.debug,
 	)
 }

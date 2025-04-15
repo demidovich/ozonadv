@@ -16,7 +16,7 @@ func PrintStat(stat models.Stat) {
 	tw.AppendRow(table.Row{"Конец интервала, дата", stat.Options.DateTo})
 	tw.AppendRow(table.Row{"Группировка", stat.Options.GroupBy})
 	tw.AppendRow(table.Row{"Кампаний", len(stat.Items)})
+	tw.AppendRow(table.Row{"Состояние", stat.StateHuman()})
 
-	fmt.Println("")
 	fmt.Println(tw.Render())
 }

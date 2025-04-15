@@ -7,9 +7,10 @@ import (
 	"ozonadv/internal/ui/helpers"
 )
 
-var ErrMainMenu = errors.New("main menu")
+var ErrGoHome = errors.New("go home")
+var ErrGoBack = errors.New("go back")
 
-func Run(a *app.Application) error {
+func Home(a *app.Application) error {
 	options := []helpers.ListOption{
 		{Key: "Кабинеты", Value: "cabinets"},
 		{Key: "Отчеты", Value: "stats"},
@@ -21,17 +22,20 @@ func Run(a *app.Application) error {
 		return err
 	}
 
+	statsPage := newStats(a.StatsService())
+	cabinetsPage := newCabinets(a.CabinetsService(), a.StatsService(), statsPage)
+
 	switch action {
 	case "cabinets":
-		err = newCabinets(a.CabinetsService(), a.StatsService()).Run()
+		err = cabinetsPage.Home()
 	case "stats":
-		err = newStats(a.StatsService()).Run()
+		err = statsPage.Home()
 	case "quit":
 		os.Exit(0)
 	}
 
-	if err != nil && errors.Is(err, ErrMainMenu) {
-		return Run(a)
+	if err != nil && errors.Is(err, ErrGoHome) {
+		return Home(a)
 	}
 
 	return err

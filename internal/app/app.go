@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"io"
 	"ozonadv/internal/cabinets"
 	"ozonadv/internal/stats"
@@ -14,20 +13,26 @@ type Application struct {
 	cabinetsService *cabinets.Service
 	statsService    *stats.Service
 	shutdownFuncs   []func()
+	debug           Debug
 }
 
 func New(out io.Writer) *Application {
 	return &Application{
-		out: out,
+		out:   out,
+		debug: newDebug(out),
 	}
+}
+
+func (a *Application) Debug() Debug {
+	return a.debug
 }
 
 func (a *Application) Storage() *storage.Storage {
 	if a.storage == nil {
-		a.println("[app init] локальное хранилище")
-		a.storage = storage.NewTemp()
+		a.debug.Println("[app init] локальное хранилище")
+		a.storage = storage.NewDefault()
 		// a.RegisterShutdownFunc(a.storage.SaveState)
-		a.println("[app init] директория локального хранилища", a.storage.RootDir())
+		a.debug.Println("[app init] директория локального хранилища", a.storage.RootDir())
 	}
 
 	return a.storage
@@ -35,8 +40,8 @@ func (a *Application) Storage() *storage.Storage {
 
 func (a *Application) CabinetsService() *cabinets.Service {
 	if a.cabinetsService == nil {
-		a.println("[app init] сервис рекламных кабинетов")
-		a.cabinetsService = cabinets.NewService(a.out, a.Storage().Cabinets())
+		a.debug.Println("[app init] сервис рекламных кабинетов")
+		a.cabinetsService = cabinets.NewService(a.out, a.Storage().Cabinets(), a.debug)
 	}
 
 	return a.cabinetsService
@@ -44,8 +49,8 @@ func (a *Application) CabinetsService() *cabinets.Service {
 
 func (a *Application) StatsService() *stats.Service {
 	if a.statsService == nil {
-		a.println("[app init] сервис статистики")
-		a.statsService = stats.NewService(a.Storage().Stats())
+		a.debug.Println("[app init] сервис статистики")
+		a.statsService = stats.NewService(a.Storage().Stats(), a.debug)
 	}
 
 	return a.statsService
@@ -56,16 +61,8 @@ func (a *Application) RegisterShutdownFunc(f func()) {
 }
 
 func (a *Application) Shutdown() {
-	a.println("[app down]")
+	a.debug.Println("[app down]")
 	for _, f := range a.shutdownFuncs {
 		f()
 	}
-}
-
-func (a *Application) println(m ...any) {
-	fmt.Fprintln(a.out, m...)
-}
-
-func (a *Application) printf(format string, m ...any) {
-	fmt.Fprintf(a.out, format, m...)
 }

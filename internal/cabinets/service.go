@@ -12,11 +12,13 @@ import (
 type Service struct {
 	storage        storage
 	campaignsCache []ozon.Campaign
+	debug          Debug
 }
 
-func NewService(out io.Writer, s storage) *Service {
+func NewService(out io.Writer, storage storage, debug Debug) *Service {
 	return &Service{
-		storage: s,
+		storage: storage,
+		debug:   debug,
 	}
 }
 
@@ -24,13 +26,13 @@ func (s *Service) All() []models.Cabinet {
 	return s.storage.All()
 }
 
-func (s *Service) Find(uuid string) (models.Cabinet, bool) {
+func (s *Service) Find(uuid string) (*models.Cabinet, bool) {
 	for _, c := range s.storage.All() {
 		if c.UUID == uuid {
-			return c, true
+			return &c, true
 		}
 	}
-	return models.Cabinet{}, false
+	return nil, false
 }
 
 func (s *Service) Add(c models.Cabinet) error {
@@ -102,6 +104,6 @@ func (s *Service) ozon(c models.Cabinet) *ozon.Ozon {
 			ClientId:     c.ClientID,
 			ClientSecret: c.ClientSecret,
 		},
-		false,
+		s.debug,
 	)
 }

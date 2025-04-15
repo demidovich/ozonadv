@@ -3,7 +3,6 @@ package stats
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"ozonadv/internal/models"
 	"ozonadv/internal/ozon"
@@ -20,18 +19,18 @@ const (
 )
 
 type downloader struct {
-	out     io.Writer
 	stat    *models.Stat
 	storage storage
 	ozon    *ozon.Ozon
+	debug   Debug
 }
 
-func newDownloader(out io.Writer, stat *models.Stat, o *ozon.Ozon, s storage) *downloader {
+func newDownloader(stat *models.Stat, ozon *ozon.Ozon, storage storage, debug Debug) *downloader {
 	return &downloader{
-		out:     out,
 		stat:    stat,
-		ozon:    o,
-		storage: s,
+		ozon:    ozon,
+		storage: storage,
+		debug:   debug,
 	}
 }
 
@@ -67,8 +66,8 @@ func (d *downloader) createStatRequestsStage(in <-chan models.StatItem) <-chan o
 			if item.Request.UUID != "" {
 				statRequest, err = d.ozon.StatRequests().Retrieve(item.Request.UUID)
 				if err != nil {
-					d.logCampaign(campaign, "уже есть сформированный запрос #", item.Request.UUID)
-					d.logCampaign(campaign, "ошибка получения запроса: ", err)
+					d.debugCampaign(campaign, "уже есть сформированный запрос #", item.Request.UUID)
+					d.debugCampaign(campaign, "ошибка получения запроса: ", err)
 					continue
 				}
 			} else {
@@ -101,14 +100,14 @@ func (d *downloader) readyStatRequestsStage(in <-chan ozon.StatRequest) <-chan o
 			} else {
 				statRequest, err = d.readyStatRequest(r)
 				if err != nil {
-					d.logStatRequest(r, err)
+					d.debugStatRequest(r, err)
 					continue
 				}
 			}
 
 			item, ok := d.stat.ItemByRequestUUID(statRequest.UUID)
 			if !ok {
-				d.logStatRequest(r, "не найдена кампания для запроса статистики")
+				d.debugStatRequest(r, "не найдена кампания для запроса статистики")
 				continue
 			}
 
@@ -128,12 +127,12 @@ func (d *downloader) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool 
 		for statRequest := range in {
 			item, ok := d.stat.ItemByRequestUUID(statRequest.UUID)
 			if !ok {
-				d.logStatRequest(statRequest, "пропуск: не найдена кампания!!!")
+				d.debugStatRequest(statRequest, "пропуск: не найдена кампания!!!")
 				continue
 			}
 
 			if item.Request.File != "" {
-				d.logStatRequest(statRequest, "статистика скачана ранее")
+				d.debugStatRequest(statRequest, "статистика скачана ранее")
 				continue
 			}
 
@@ -141,7 +140,7 @@ func (d *downloader) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool 
 			if err == nil {
 				item.Request.File = filename
 			} else {
-				d.logStatRequest(statRequest, err)
+				d.debugStatRequest(statRequest, err)
 			}
 		}
 		complete <- true
@@ -159,7 +158,7 @@ func (d *downloader) createStatRequest(campaign ozon.Campaign) ozon.StatRequest 
 	}
 
 	for attempt := 1; attempt <= createStatRequestAttempts; attempt++ {
-		d.logCampaign(campaign, "создание запроса отчета: попытка ", attempt)
+		d.debugCampaign(campaign, "создание запроса отчета: попытка ", attempt)
 
 		var err error
 		var req ozon.StatRequest
@@ -171,23 +170,23 @@ func (d *downloader) createStatRequest(campaign ozon.Campaign) ozon.StatRequest 
 		}
 
 		if err == nil {
-			d.logCampaign(campaign, "создан запрос ", req.UUID)
+			d.debugCampaign(campaign, "создан запрос ", req.UUID)
 			return req
 		}
 
-		d.logCampaign(campaign, err)
+		d.debugCampaign(campaign, err)
 
 		waitTime := createStatRequestWaitTime
 		waitTime = waitTime + waitTime*time.Duration(attempt-1)
-		d.logCampaign(campaign, "создание запроса отчета: ждем ", waitTime.String())
+		d.debugCampaign(campaign, "создание запроса отчета: ждем ", waitTime.String())
 		time.Sleep(waitTime)
 	}
 
-	d.logString("Превышено количество количество попыток создания запроса.\n")
-	d.logString("Возможно существует тяжелый несформированый запрос.\n")
-	d.logString("Пока Озон не закончит его формирование создать новый не получится.\n")
-	d.logString("Выдержите паузу и запустите ozonadv stat:continue.\n")
-	d.logString("")
+	d.debug.Println("Превышено количество количество попыток создания запроса.")
+	d.debug.Println("Возможно существует тяжелый несформированый запрос.")
+	d.debug.Println("Пока Озон не закончит его формирование создать новый не получится.")
+	d.debug.Println("Выдержите паузу и запустите ozonadv stat:continue.")
+	d.debug.Println("")
 	os.Exit(1)
 
 	return ozon.StatRequest{}
@@ -197,25 +196,25 @@ func (d *downloader) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRe
 	for attempt := 1; attempt <= readyStatRequestAttempts; attempt++ {
 		waitTime := readyStatRequestWaitTime
 
-		d.logStatRequest(statRequest, "ожидание готовности: ждем ", waitTime.String())
+		d.debugStatRequest(statRequest, "ожидание готовности: ждем ", waitTime.String())
 		time.Sleep(waitTime)
 
-		d.logStatRequest(statRequest, "ожидание готовности: попытка ", attempt)
+		d.debugStatRequest(statRequest, "ожидание готовности: попытка ", attempt)
 
 		// Сначала ждем, так как после создания запрос будет собираться
 
 		req, err := d.ozon.StatRequests().Retrieve(statRequest.UUID)
 		if err != nil {
-			d.logStatRequest(statRequest, "ожидание готовности: ", err)
+			d.debugStatRequest(statRequest, "ожидание готовности: ", err)
 			continue
 		}
 
 		if !req.IsReadyToDownload() {
-			d.logStatRequest(statRequest, "ожидание готовности: состояние ", req.State)
+			d.debugStatRequest(statRequest, "ожидание готовности: состояние ", req.State)
 			continue
 		}
 
-		d.logStatRequest(statRequest, "готов к скачиванию")
+		d.debugStatRequest(statRequest, "готов к скачиванию")
 
 		return req, nil
 	}
@@ -226,17 +225,17 @@ func (d *downloader) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRe
 func (d *downloader) downloadStat(statRequest ozon.StatRequest) (string, error) {
 	filename := "object-stat-" + statRequest.CampaignId() + ".csv"
 	for attempt := 1; attempt <= downloadStatAttempts; attempt++ {
-		d.logStatRequest(statRequest, "скачивание статистики: попытка ", attempt)
+		d.debugStatRequest(statRequest, "скачивание статистики: попытка ", attempt)
 
 		data, err := d.ozon.StatRequests().Download(statRequest)
 		if err != nil {
-			d.logStatRequest(statRequest, "скачивание статистики: ", err)
+			d.debugStatRequest(statRequest, "скачивание статистики: ", err)
 			time.Sleep(downloadStatWaitTime)
 			continue
 		}
 
 		d.storage.SaveDownloadedFile(d.stat, filename, data)
-		d.logStatRequest(statRequest, "скачан файл: ", filename)
+		d.debugStatRequest(statRequest, "скачан файл: ", filename)
 
 		return filename, nil
 	}
@@ -244,18 +243,10 @@ func (d *downloader) downloadStat(statRequest ozon.StatRequest) (string, error) 
 	return "", errors.New("превышено количество попыток скачивания")
 }
 
-func (d *downloader) logCampaign(c ozon.Campaign, msg ...any) {
-	d.logString(
-		fmt.Sprintf("[%s] %s\n", c.ID, fmt.Sprint(msg...)),
-	)
+func (d *downloader) debugCampaign(c ozon.Campaign, msg ...any) {
+	d.debug.Printf("[%s] %s\n", c.ID, fmt.Sprint(msg...))
 }
 
-func (d *downloader) logStatRequest(r ozon.StatRequest, msg ...any) {
-	d.logString(
-		fmt.Sprintf("[%s] %s\n", r.CampaignId(), fmt.Sprint(msg...)),
-	)
-}
-
-func (d *downloader) logString(msg string) {
-	d.out.Write([]byte(msg))
+func (d *downloader) debugStatRequest(r ozon.StatRequest, msg ...any) {
+	d.debug.Printf("[%s] %s\n", r.CampaignId(), fmt.Sprint(msg...))
 }

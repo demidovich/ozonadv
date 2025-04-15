@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"log"
 	"os"
 	"ozonadv/pkg/utils"
 )
@@ -13,12 +14,17 @@ type Storage struct {
 	stats        *storageStats
 }
 
-func NewTemp() *Storage {
-	return New(os.TempDir())
+func NewDefault() *Storage {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return New(homedir)
 }
 
 func New(rootDir string) *Storage {
-	rootDir = rootDir + "/ozonadv"
+	rootDir = rootDir + "/.ozonadv"
 	cabinetsFile := rootDir + "/cabinets.json"
 	statsDir := rootDir + "/stats"
 

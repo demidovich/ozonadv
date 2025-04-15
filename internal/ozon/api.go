@@ -17,7 +17,7 @@ const (
 )
 
 type api struct {
-	verbose       bool
+	debug         Debug
 	clientId      string
 	clientSecret  string
 	accessToken   *accessToken
@@ -38,9 +38,9 @@ func (a *accessToken) Valid() bool {
 	return lifetime < (time.Duration(120) * time.Second)
 }
 
-func newApi(cfg Config, verbose bool) *api {
+func newApi(cfg Config, debug Debug) *api {
 	a := &api{
-		verbose:      verbose,
+		debug:        debug,
 		resty:        resty.New(),
 		clientId:     cfg.ClientId,
 		clientSecret: cfg.ClientSecret,
@@ -50,11 +50,6 @@ func newApi(cfg Config, verbose bool) *api {
 	a.resty.SetHeader("Accept", "application/json")
 
 	return a
-}
-
-// Enable verbose logging
-func (a *api) SetVerbose(value bool) {
-	a.verbose = value
 }
 
 // HTTP Get Request
@@ -174,7 +169,7 @@ func (a *api) validAccessToken() (string, error) {
 
 	a.accessToken.CreatedAt = time.Now()
 
-	fmt.Println("[ozon api] получен токен доступа")
+	a.debug.Println("[ozon api] получен токен доступа")
 
 	return a.accessToken.AccessToken, nil
 }
@@ -184,11 +179,7 @@ func (a *api) RequestsCount() int {
 }
 
 func (a *api) logRequest(method, url string) {
-	if !a.verbose {
-		return
-	}
-
-	fmt.Printf("[ozon api] %s %s\n", method, url)
+	a.debug.Printf("[ozon api] %s %s\n", method, url)
 }
 
 func urlApi(resource string) string {

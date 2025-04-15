@@ -24,7 +24,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	err := ui.Run(app)
+	err := ui.Home(app)
 	if err != nil {
 		log.Fatal(err)
 	}

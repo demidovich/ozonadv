@@ -14,7 +14,6 @@ func PrintCabinet(cabinet models.Cabinet) {
 	tw.AppendRow(table.Row{"Клиент ID", cabinet.ClientID})
 	tw.AppendRow(table.Row{"Клиент Secret", cabinet.ClientSecretMasked(25)})
 
-	fmt.Println("")
 	fmt.Println(tw.Render())
 	fmt.Println("")
 }

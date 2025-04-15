@@ -8,6 +8,7 @@ import (
 
 type StatOptions struct {
 	Name                string `validate:"omitempty" json:"name"`
+	CabinetUUID         string `validate:"required" json:"cabinetUUID"`
 	CabinetName         string `validate:"required" json:"cabinetName"`
 	CabinetClientId     string `validate:"required" json:"cabinetClientID"`
 	CabinetClientSecret string `validate:"required" json:"cabinetClientSecret"`
@@ -29,7 +30,7 @@ type Stat struct {
 	ApiRequestsCount int         `json:"apiRequestsCount"`
 }
 
-func (s *Stat) State() string {
+func (s *Stat) StateHuman() string {
 	completed := true
 	for _, i := range s.Items {
 		if i.Request.Link == "" {
@@ -39,9 +40,9 @@ func (s *Stat) State() string {
 	}
 
 	if completed {
-		return "Готов"
+		return "Загружен"
 	} else {
-		return "Не готов"
+		return "В процессе"
 	}
 }
 

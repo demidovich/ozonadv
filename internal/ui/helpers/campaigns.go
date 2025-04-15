@@ -34,6 +34,7 @@ func PrintCampaigns(campaigns []ozon.Campaign) {
 }
 
 func ChooseCampaigns(cabsService cabinets.Service, cabinet models.Cabinet) ([]ozon.Campaign, error) {
+	fmt.Println("")
 	fmt.Println("Выбор рекламных кампаний")
 
 	filters := cabinets.CampaignFilters{}
