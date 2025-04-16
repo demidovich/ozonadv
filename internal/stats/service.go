@@ -1,8 +1,8 @@
 package stats
 
 import (
+	"ozonadv/internal/infra/ozon"
 	"ozonadv/internal/models"
-	"ozonadv/internal/ozon"
 	"time"
 
 	"github.com/google/uuid"

@@ -3,8 +3,8 @@ package ui
 import (
 	"fmt"
 	"ozonadv/internal/cabinets"
+	"ozonadv/internal/infra/ozon"
 	"ozonadv/internal/models"
-	"ozonadv/internal/ozon"
 	"ozonadv/internal/ui/colors"
 
 	"github.com/charmbracelet/huh"

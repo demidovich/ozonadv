@@ -3,8 +3,8 @@ package cabinets
 import (
 	"io"
 	"log"
+	"ozonadv/internal/infra/ozon"
 	"ozonadv/internal/models"
-	"ozonadv/internal/ozon"
 	"regexp"
 	"slices"
 	"strings"

@@ -2,7 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"ozonadv/internal/ozon"
+	"ozonadv/internal/infra/ozon"
 	"ozonadv/pkg/validation"
 )
 

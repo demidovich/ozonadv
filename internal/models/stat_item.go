@@ -1,8 +1,6 @@
 package models
 
-import (
-	"ozonadv/internal/ozon"
-)
+import "ozonadv/internal/infra/ozon"
 
 type StatItem struct {
 	Campaign ozon.Campaign `json:"campaign"`

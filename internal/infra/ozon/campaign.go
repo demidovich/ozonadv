@@ -68,35 +68,3 @@ func (c *Campaign) TitleTruncated(length int) string {
 	r := []rune(c.Title)
 	return string(r[:length-suffixLength]) + suffix
 }
-
-// func (c *Campaign) StatState() string {
-// 	var val string
-
-// 	switch true {
-// 	case c.Stat.File != "":
-// 		val = "Файл скачан"
-// 	case c.Stat.Link != "":
-// 		val = "Готов к скачиванию"
-// 	case c.Stat.UUID != "":
-// 		val = "Запрос создан"
-// 	default:
-// 		val = ""
-// 	}
-
-// 	return val
-// }
-
-// func (c *Campaign) ObjectStatState() string {
-// 	var val string
-
-// 	switch true {
-// 	case c.Stat.File != "":
-// 		val = "Файл скачан"
-// 	case c.Stat.UUID != "":
-// 		val = "Запрос создан"
-// 	default:
-// 		val = ""
-// 	}
-
-// 	return val
-// }

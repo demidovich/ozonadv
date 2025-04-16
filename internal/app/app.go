@@ -3,8 +3,8 @@ package app
 import (
 	"io"
 	"ozonadv/internal/cabinets"
+	"ozonadv/internal/infra/storage"
 	"ozonadv/internal/stats"
-	"ozonadv/internal/storage"
 )
 
 type Application struct {
