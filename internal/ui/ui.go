@@ -7,8 +7,26 @@ import (
 	"ozonadv/internal/ui/helpers"
 )
 
-var ErrGoHome = errors.New("go home")
-var ErrGoBack = errors.New("go back")
+var (
+	ErrGoBack     = errors.New("go back")
+	ErrFormCancel = errors.New("form cancel")
+)
+
+func isGoBack(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return errors.Is(err, ErrGoBack)
+}
+
+func isFormCancel(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return errors.Is(err, ErrFormCancel)
+}
 
 func Home(a *app.Application) error {
 	options := []helpers.ListOption{
@@ -34,7 +52,7 @@ func Home(a *app.Application) error {
 		os.Exit(0)
 	}
 
-	if err != nil && errors.Is(err, ErrGoHome) {
+	if err != nil && errors.Is(err, ErrGoBack) {
 		return Home(a)
 	}
 
