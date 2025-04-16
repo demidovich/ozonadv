@@ -13,7 +13,7 @@ import (
 
 type Service struct {
 	storage        storage
-	campaignsCache []ozon.Campaign
+	campaignsCache []models.Campaign
 	debug          Debug
 }
 
@@ -81,7 +81,7 @@ func (f *CampaignFilters) ids() map[string]bool {
 	return v
 }
 
-func (s *Service) Campaigns(cabinet models.Cabinet) ([]ozon.Campaign, error) {
+func (s *Service) Campaigns(cabinet models.Cabinet) ([]models.Campaign, error) {
 	if len(s.campaignsCache) == 0 {
 		var err error
 		if s.campaignsCache, err = s.ozon(cabinet).Campaigns().All(); err != nil {
@@ -92,7 +92,7 @@ func (s *Service) Campaigns(cabinet models.Cabinet) ([]ozon.Campaign, error) {
 	return s.campaignsCache, nil
 }
 
-func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilters) ([]ozon.Campaign, error) {
+func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilters) ([]models.Campaign, error) {
 	result, err := s.ozon(cabinet).Campaigns().All()
 	if err != nil {
 		return result, err
@@ -100,7 +100,7 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 
 	ids := filters.ids()
 	if len(ids) > 0 {
-		filtered := []ozon.Campaign{}
+		filtered := []models.Campaign{}
 		for _, campaign := range result {
 			if _, ok := ids[campaign.ID]; ok {
 				filtered = append(filtered, campaign)
@@ -108,7 +108,7 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 		}
 		result = filtered
 	} else if filters.Title != "" {
-		filtered := []ozon.Campaign{}
+		filtered := []models.Campaign{}
 		for _, campaign := range result {
 			if strings.Contains(strings.ToLower(campaign.Title), strings.ToLower(filters.Title)) {
 				filtered = append(filtered, campaign)
@@ -118,7 +118,7 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 	}
 
 	if len(filters.States) > 0 {
-		filtered := []ozon.Campaign{}
+		filtered := []models.Campaign{}
 		for _, campaign := range result {
 			if slices.Contains(filters.States, campaign.State) {
 				filtered = append(filtered, campaign)

@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"ozonadv/internal/infra/ozon"
 	"ozonadv/pkg/validation"
 )
 
@@ -51,7 +50,7 @@ func (s *Stat) StateHuman() string {
 	}
 }
 
-func (s *Stat) AddCampaign(campaign ozon.Campaign) {
+func (s *Stat) AddCampaign(campaign Campaign) {
 	for _, i := range s.Items {
 		if i.Campaign.ID == campaign.ID {
 			return
@@ -61,8 +60,8 @@ func (s *Stat) AddCampaign(campaign ozon.Campaign) {
 	s.Items = append(s.Items, StatItem{Campaign: campaign})
 }
 
-func (s *Stat) Campaigns() []ozon.Campaign {
-	result := make([]ozon.Campaign, 0, len(s.Items))
+func (s *Stat) Campaigns() []Campaign {
+	result := make([]Campaign, 0, len(s.Items))
 	for _, i := range s.Items {
 		result = append(result, i.Campaign)
 	}

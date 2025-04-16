@@ -1,4 +1,4 @@
-package ozon
+package models
 
 // StatRequest State
 //

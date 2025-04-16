@@ -1,6 +1,7 @@
 package ozon
 
 import (
+	"ozonadv/internal/models"
 	"ozonadv/pkg/validation"
 	"strings"
 )
@@ -9,9 +10,9 @@ type statRequests struct {
 	api *api
 }
 
-func (s *statRequests) All() ([]StatRequest, error) {
+func (s *statRequests) All() ([]models.StatRequest, error) {
 	type item struct {
-		Meta StatRequest `json:"meta"`
+		Meta models.StatRequest `json:"meta"`
 	}
 
 	response := struct {
@@ -22,7 +23,7 @@ func (s *statRequests) All() ([]StatRequest, error) {
 	url := urlApi("/client/statistics/externallist")
 	err := s.api.httpGet(url, &response)
 
-	result := []StatRequest{}
+	result := []models.StatRequest{}
 	for _, item := range response.Items {
 		result = append(result, item.Meta)
 	}
@@ -42,9 +43,9 @@ func (s *CreateStatRequestOptions) validate() error {
 }
 
 // Создание общей статистики кампании
-func (s *statRequests) CreateTotal(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
+func (s *statRequests) CreateTotal(campaign models.Campaign, options CreateStatRequestOptions) (models.StatRequest, error) {
 	if err := options.validate(); err != nil {
-		return StatRequest{}, err
+		return models.StatRequest{}, err
 	}
 
 	var resource string
@@ -61,16 +62,16 @@ func (s *statRequests) CreateTotal(campaign Campaign, options CreateStatRequestO
 		"groupBy":   options.GroupBy,
 	}
 
-	response := StatRequest{}
+	response := models.StatRequest{}
 	err := s.api.httpPost(urlApi(resource), payload, &response)
 
 	return response, err
 }
 
 // Создание статистики по объектам рекламной кампании
-func (s *statRequests) CreateObject(campaign Campaign, options CreateStatRequestOptions) (StatRequest, error) {
+func (s *statRequests) CreateObject(campaign models.Campaign, options CreateStatRequestOptions) (models.StatRequest, error) {
 	if err := options.validate(); err != nil {
-		return StatRequest{}, err
+		return models.StatRequest{}, err
 	}
 
 	var resource string
@@ -96,15 +97,15 @@ func (s *statRequests) CreateObject(campaign Campaign, options CreateStatRequest
 		}
 	}
 
-	response := StatRequest{}
+	response := models.StatRequest{}
 	err := s.api.httpPost(urlAdvApi(resource), payload, &response)
 	response.Request.CampaignId = campaign.ID
 
 	return response, err
 }
 
-func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
-	response := StatRequest{}
+func (s *statRequests) Retrieve(uuid string) (models.StatRequest, error) {
+	response := models.StatRequest{}
 
 	url := urlApi("/client/statistics/" + uuid)
 	err := s.api.httpGet(url, &response)
@@ -112,7 +113,7 @@ func (s *statRequests) Retrieve(uuid string) (StatRequest, error) {
 	return response, err
 }
 
-func (s *statRequests) Download(statRequest StatRequest) ([]byte, error) {
+func (s *statRequests) Download(statRequest models.StatRequest) ([]byte, error) {
 	url := statRequest.Link
 	if !strings.HasPrefix(url, "http") {
 		url = apiHost + url

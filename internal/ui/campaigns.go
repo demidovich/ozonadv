@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"ozonadv/internal/cabinets"
-	"ozonadv/internal/infra/ozon"
 	"ozonadv/internal/models"
 	"ozonadv/internal/ui/colors"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-func printCampaignsTable(campaigns []ozon.Campaign) {
+func printCampaignsTable(campaigns []models.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Статус"})
@@ -34,7 +33,7 @@ func printCampaignsTable(campaigns []ozon.Campaign) {
 	fmt.Println("Всего кампаний:", len(campaigns))
 }
 
-func chooseCampaignsForm(cabsService cabinets.Service, cabinet models.Cabinet) ([]ozon.Campaign, error) {
+func chooseCampaignsForm(cabsService cabinets.Service, cabinet models.Cabinet) ([]models.Campaign, error) {
 	fmt.Println("")
 	fmt.Println("Выбор рекламных кампаний")
 
@@ -72,11 +71,11 @@ func chooseCampaignsForm(cabsService cabinets.Service, cabinet models.Cabinet) (
 	)
 
 	if err := form.Run(); err != nil {
-		return []ozon.Campaign{}, err
+		return []models.Campaign{}, err
 	}
 
 	if !confirm {
-		return []ozon.Campaign{}, ErrFormCancel
+		return []models.Campaign{}, ErrFormCancel
 	}
 
 	campaigns, err := cabsService.CampaignsFiltered(cabinet, filters)

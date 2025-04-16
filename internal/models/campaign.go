@@ -1,4 +1,4 @@
-package ozon
+package models
 
 import (
 	"strings"

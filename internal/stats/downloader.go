@@ -52,15 +52,15 @@ func (d *downloader) Start() {
 	<-d.downloadStatsStage(readyRequests)
 }
 
-func (d *downloader) createStatRequestsStage(in <-chan models.StatItem) <-chan ozon.StatRequest {
-	out := make(chan ozon.StatRequest)
+func (d *downloader) createStatRequestsStage(in <-chan models.StatItem) <-chan models.StatRequest {
+	out := make(chan models.StatRequest)
 
 	go func() {
 		defer close(out)
 		for item := range in {
-			var statRequest ozon.StatRequest
+			var statRequest models.StatRequest
 			var err error
-			var campaign ozon.Campaign = item.Campaign
+			var campaign models.Campaign = item.Campaign
 
 			// Если ранее отчет формировался и закончился с ошибками либо был остановлен
 			// Для некоторых кампаний уже были отправлены запросы для формирования статистики
@@ -85,13 +85,13 @@ func (d *downloader) createStatRequestsStage(in <-chan models.StatItem) <-chan o
 	return out
 }
 
-func (d *downloader) readyStatRequestsStage(in <-chan ozon.StatRequest) <-chan ozon.StatRequest {
-	out := make(chan ozon.StatRequest)
+func (d *downloader) readyStatRequestsStage(in <-chan models.StatRequest) <-chan models.StatRequest {
+	out := make(chan models.StatRequest)
 
 	go func() {
 		defer close(out)
 		for r := range in {
-			var statRequest ozon.StatRequest
+			var statRequest models.StatRequest
 			var err error
 
 			// Если ранее отчет формировался и закончился с ошибками либо был остановлен
@@ -122,7 +122,7 @@ func (d *downloader) readyStatRequestsStage(in <-chan ozon.StatRequest) <-chan o
 	return out
 }
 
-func (d *downloader) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool {
+func (d *downloader) downloadStatsStage(in <-chan models.StatRequest) <-chan bool {
 	complete := make(chan bool)
 
 	go func() {
@@ -152,7 +152,7 @@ func (d *downloader) downloadStatsStage(in <-chan ozon.StatRequest) <-chan bool 
 	return complete
 }
 
-func (d *downloader) createStatRequest(campaign ozon.Campaign) ozon.StatRequest {
+func (d *downloader) createStatRequest(campaign models.Campaign) models.StatRequest {
 	options := ozon.CreateStatRequestOptions{
 		CampaignId: campaign.ID,
 		DateFrom:   d.stat.Options.DateFrom,
@@ -164,7 +164,7 @@ func (d *downloader) createStatRequest(campaign ozon.Campaign) ozon.StatRequest 
 		d.debugCampaign(campaign, "создание запроса отчета: попытка ", attempt)
 
 		var err error
-		var req ozon.StatRequest
+		var req models.StatRequest
 
 		if d.stat.Options.Type == "TOTAL" {
 			req, err = d.ozon.StatRequests().CreateTotal(campaign, options)
@@ -192,10 +192,10 @@ func (d *downloader) createStatRequest(campaign ozon.Campaign) ozon.StatRequest 
 	d.debug.Println("")
 	os.Exit(1)
 
-	return ozon.StatRequest{}
+	return models.StatRequest{}
 }
 
-func (d *downloader) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRequest, error) {
+func (d *downloader) readyStatRequest(statRequest models.StatRequest) (models.StatRequest, error) {
 	for attempt := 1; attempt <= readyStatRequestAttempts; attempt++ {
 		waitTime := readyStatRequestWaitTime
 
@@ -222,10 +222,10 @@ func (d *downloader) readyStatRequest(statRequest ozon.StatRequest) (ozon.StatRe
 		return req, nil
 	}
 
-	return ozon.StatRequest{}, errors.New("превышено количество попыток")
+	return models.StatRequest{}, errors.New("превышено количество попыток")
 }
 
-func (d *downloader) downloadStat(statRequest ozon.StatRequest) (string, error) {
+func (d *downloader) downloadStat(statRequest models.StatRequest) (string, error) {
 	filename := "object-stat-" + statRequest.CampaignId() + ".csv"
 	for attempt := 1; attempt <= downloadStatAttempts; attempt++ {
 		d.debugStatRequest(statRequest, "скачивание статистики: попытка ", attempt)
@@ -246,10 +246,10 @@ func (d *downloader) downloadStat(statRequest ozon.StatRequest) (string, error) 
 	return "", errors.New("превышено количество попыток скачивания")
 }
 
-func (d *downloader) debugCampaign(c ozon.Campaign, msg ...any) {
+func (d *downloader) debugCampaign(c models.Campaign, msg ...any) {
 	d.debug.Printf("[%s] %s\n", c.ID, fmt.Sprint(msg...))
 }
 
-func (d *downloader) debugStatRequest(r ozon.StatRequest, msg ...any) {
+func (d *downloader) debugStatRequest(r models.StatRequest, msg ...any) {
 	d.debug.Printf("[%s] %s\n", r.CampaignId(), fmt.Sprint(msg...))
 }

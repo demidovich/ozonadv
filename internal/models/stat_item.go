@@ -1,9 +1,7 @@
 package models
 
-import "ozonadv/internal/infra/ozon"
-
 type StatItem struct {
-	Campaign ozon.Campaign `json:"campaign"`
+	Campaign Campaign `json:"campaign"`
 	Request  struct {
 		UUID string `json:"uuid"`
 		Link string `json:"link"`

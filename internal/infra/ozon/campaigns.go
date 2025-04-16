@@ -1,6 +1,7 @@
 package ozon
 
 import (
+	"ozonadv/internal/models"
 	"strings"
 )
 
@@ -12,15 +13,15 @@ type FindCampaignsFilters struct {
 	Ids []string
 }
 
-func (c *campaigns) Find(filters FindCampaignsFilters) ([]Campaign, error) {
+func (c *campaigns) Find(filters FindCampaignsFilters) ([]models.Campaign, error) {
 	params := ""
 	if len(filters.Ids) > 0 {
 		params = "?campaignIds=" + strings.Join(filters.Ids, ",")
 	}
 
 	response := struct {
-		List  []Campaign `json:"list"`
-		Total string     `json:"total"`
+		List  []models.Campaign `json:"list"`
+		Total string            `json:"total"`
 	}{}
 
 	url := urlApi("/client/campaign") + params
@@ -29,6 +30,6 @@ func (c *campaigns) Find(filters FindCampaignsFilters) ([]Campaign, error) {
 	return response.List, err
 }
 
-func (c *campaigns) All() ([]Campaign, error) {
+func (c *campaigns) All() ([]models.Campaign, error) {
 	return c.Find(FindCampaignsFilters{})
 }

@@ -47,7 +47,7 @@ func (s *Service) Find(uuid string) (*models.Stat, bool) {
 	return nil, false
 }
 
-func (s *Service) Create(options models.StatOptions, campaigns []ozon.Campaign) (*models.Stat, error) {
+func (s *Service) Create(options models.StatOptions, campaigns []models.Campaign) (*models.Stat, error) {
 	st := &models.Stat{}
 	if err := options.Validate(); err != nil {
 		return st, err
