@@ -1,7 +1,7 @@
 package forms
 
-import "ozonadv/internal/ui/helpers"
+import "ozonadv/internal/ui/colors"
 
 func RequiredTitle(title string) string {
-	return title + helpers.TextGray(", обязательное")
+	return title + colors.Gray(", обязательное")
 }

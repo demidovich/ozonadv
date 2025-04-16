@@ -6,6 +6,7 @@ import (
 	"ozonadv/internal/cabinets"
 	"ozonadv/internal/models"
 	"ozonadv/internal/stats"
+	"ozonadv/internal/ui/colors"
 	"ozonadv/internal/ui/forms"
 	"ozonadv/internal/ui/forms/validators"
 	"ozonadv/internal/ui/helpers"
@@ -14,19 +15,20 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/google/uuid"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 type cabinetsPage struct {
 	cabsService  *cabinets.Service
 	statsService *stats.Service
-	statsPage    statsPage
+	ui           *ui
 }
 
-func newCabinets(cabsService *cabinets.Service, statsService *stats.Service, statsPage statsPage) cabinetsPage {
+func newCabinets(cabsService *cabinets.Service, statsService *stats.Service, ui *ui) cabinetsPage {
 	return cabinetsPage{
 		cabsService:  cabsService,
 		statsService: statsService,
-		statsPage:    statsPage,
+		ui:           ui,
 	}
 }
 
@@ -34,7 +36,7 @@ func (c cabinetsPage) Home() error {
 	options := []helpers.ListOption{}
 	for _, cabinet := range c.cabsService.All() {
 		options = append(options, helpers.ListOption{
-			Key:   cabinet.Name + " " + helpers.TextGray("(", cabinet.ClientID, ")"),
+			Key:   cabinet.Name + " " + colors.Gray("(%s)", cabinet.ClientID),
 			Value: cabinet.UUID,
 		})
 	}
@@ -56,7 +58,7 @@ func (c cabinetsPage) Home() error {
 
 	if action == "create_cabinet" {
 		cabinet, err = c.createCabinet()
-		if isFormCancel(err) {
+		if err == nil || isFormCanceled(err) {
 			return c.Home()
 		}
 	} else if action == "back" {
@@ -76,7 +78,7 @@ func (c cabinetsPage) Home() error {
 }
 
 func (c cabinetsPage) cabinet(cabinet models.Cabinet) error {
-	helpers.PrintCabinet(cabinet)
+	c.printCabinetTable(cabinet)
 
 	options := []helpers.ListOption{
 		{Key: "Кампании", Value: "campaigns_list"},
@@ -95,14 +97,15 @@ func (c cabinetsPage) cabinet(cabinet models.Cabinet) error {
 	case "campaigns_list":
 		campaigns, err := c.cabsService.Campaigns(cabinet)
 		if err == nil {
-			helpers.PrintCampaigns(campaigns)
+			printCampaignsTable(campaigns)
+			fmt.Println("")
 			return c.cabinet(cabinet)
 		}
 	case "stats_list":
-		err = c.CabinetStats(cabinet)
+		err = c.ui.statsPage.CabinetStats(cabinet)
 	case "update_cabinet":
 		err = c.updateCabinet(&cabinet)
-		if err == nil || isFormCancel(err) {
+		if err == nil || isFormCanceled(err) {
 			return c.cabinet(cabinet)
 		}
 	case "remove_cabinet":
@@ -120,20 +123,39 @@ func (c cabinetsPage) cabinet(cabinet models.Cabinet) error {
 }
 
 func (c cabinetsPage) createCabinet() (*models.Cabinet, error) {
-	cabinet := models.Cabinet{
+	fmt.Println("Кабинеты > Новый кабинет")
+
+	cabinet := &models.Cabinet{
 		UUID:      uuid.New().String(),
-		Name:      "Новый кабинет",
 		CreatedAt: time.Now().String(),
 	}
 
-	err := c.updateCabinet(&cabinet)
+	if err := c.editCabinetForm(cabinet); err != nil {
+		return nil, err
+	}
 
-	return &cabinet, err
+	if err := c.cabsService.Add(*cabinet); err != nil {
+		return nil, err
+	}
+
+	return cabinet, nil
 }
 
 func (c cabinetsPage) updateCabinet(cabinet *models.Cabinet) error {
 	fmt.Println("Кабинеты > " + cabinet.Name)
 
+	if err := c.editCabinetForm(cabinet); err != nil {
+		return err
+	}
+
+	if err := c.cabsService.Add(*cabinet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c cabinetsPage) editCabinetForm(cabinet *models.Cabinet) error {
 	confirm := false
 	form := huh.NewForm(
 		huh.NewGroup(
@@ -169,5 +191,16 @@ func (c cabinetsPage) updateCabinet(cabinet *models.Cabinet) error {
 		return ErrFormCancel
 	}
 
-	return c.cabsService.Add(*cabinet)
+	return nil
+}
+
+func (c cabinetsPage) printCabinetTable(cabinet models.Cabinet) {
+	tw := table.NewWriter()
+	tw.SetStyle(table.StyleRounded)
+	tw.AppendRow(table.Row{"Кабинет", cabinet.Name})
+	tw.AppendRow(table.Row{"Клиент ID", cabinet.ClientID})
+	tw.AppendRow(table.Row{"Клиент Secret", cabinet.ClientSecretMasked(25)})
+
+	fmt.Println(tw.Render())
+	fmt.Println("")
 }

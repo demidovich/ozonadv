@@ -2,8 +2,10 @@ package cabinets
 
 import (
 	"io"
+	"log"
 	"ozonadv/internal/models"
 	"ozonadv/internal/ozon"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -58,6 +60,27 @@ type CampaignFilters struct {
 	States []string
 }
 
+func (f *CampaignFilters) ids() map[string]bool {
+	v := map[string]bool{}
+	matched, err := regexp.MatchString(`^\s*\d+\s*(\s*,\s*\d+\s*)*$`, f.Title)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !matched {
+		return v
+	}
+
+	s := strings.Replace(f.Title, " ", "", -1)
+	s = strings.Trim(s, ",")
+
+	for _, id := range strings.Split(s, ",") {
+		v[id] = true
+	}
+
+	return v
+}
+
 func (s *Service) Campaigns(cabinet models.Cabinet) ([]ozon.Campaign, error) {
 	if len(s.campaignsCache) == 0 {
 		var err error
@@ -75,7 +98,16 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 		return result, err
 	}
 
-	if filters.Title != "" {
+	ids := filters.ids()
+	if len(ids) > 0 {
+		filtered := []ozon.Campaign{}
+		for _, campaign := range result {
+			if _, ok := ids[campaign.ID]; ok {
+				filtered = append(filtered, campaign)
+			}
+		}
+		result = filtered
+	} else if filters.Title != "" {
 		filtered := []ozon.Campaign{}
 		for _, campaign := range result {
 			if strings.Contains(strings.ToLower(campaign.Title), strings.ToLower(filters.Title)) {

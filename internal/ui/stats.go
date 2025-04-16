@@ -3,18 +3,28 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"ozonadv/internal/cabinets"
 	"ozonadv/internal/models"
 	"ozonadv/internal/stats"
+	"ozonadv/internal/ui/forms"
+	"ozonadv/internal/ui/forms/validators"
 	"ozonadv/internal/ui/helpers"
 	"ozonadv/pkg/console"
+
+	"github.com/charmbracelet/huh"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 type statsPage struct {
+	cabsService  *cabinets.Service
 	statsService *stats.Service
 }
 
-func newStats(statsService *stats.Service) statsPage {
-	return statsPage{statsService: statsService}
+func newStats(cabsService *cabinets.Service, statsService *stats.Service) statsPage {
+	return statsPage{
+		cabsService:  cabsService,
+		statsService: statsService,
+	}
 }
 
 func (c statsPage) Home() error {
@@ -22,7 +32,7 @@ func (c statsPage) Home() error {
 }
 
 func (c statsPage) Stat(stat *models.Stat) error {
-	helpers.PrintStat(*stat)
+	c.printStatTable(*stat)
 	fmt.Println("")
 
 	options := []helpers.ListOption{
@@ -45,7 +55,7 @@ func (c statsPage) Stat(stat *models.Stat) error {
 	return nil
 }
 
-func (c cabinetsPage) CabinetStats(cabinet models.Cabinet) error {
+func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
 	options := []helpers.ListOption{}
 	for _, stat := range c.statsService.CabinetAll(cabinet) {
 		options = append(options, helpers.ListOption{
@@ -70,6 +80,10 @@ func (c cabinetsPage) CabinetStats(cabinet models.Cabinet) error {
 
 	if action == "create_stat" {
 		stat, err = c.CreateStat(cabinet)
+		if isFormCanceled(err) {
+			fmt.Println("")
+			return c.CabinetStats(cabinet)
+		}
 	} else if action == "back" {
 		return ErrGoBack
 	} else {
@@ -83,7 +97,7 @@ func (c cabinetsPage) CabinetStats(cabinet models.Cabinet) error {
 		return err
 	}
 
-	err = c.statsPage.Stat(stat)
+	err = c.Stat(stat)
 	if errors.Is(err, ErrGoBack) {
 		return c.CabinetStats(cabinet)
 	}
@@ -91,11 +105,11 @@ func (c cabinetsPage) CabinetStats(cabinet models.Cabinet) error {
 	return nil
 }
 
-func (c cabinetsPage) CreateStat(cabinet models.Cabinet) (*models.Stat, error) {
+func (c statsPage) CreateStat(cabinet models.Cabinet) (*models.Stat, error) {
 	fmt.Println(cabinet.Name + " > Новый отчет")
 
 	options := models.StatOptions{}
-	if err := helpers.StatOptionsForm(&options); err != nil {
+	if err := c.statOptionsForm(&options); err != nil {
 		return nil, err
 	}
 
@@ -104,16 +118,21 @@ func (c cabinetsPage) CreateStat(cabinet models.Cabinet) (*models.Stat, error) {
 	options.CabinetClientId = cabinet.ClientID
 	options.CabinetClientSecret = cabinet.ClientSecret
 
-	campaigns, err := helpers.ChooseCampaigns(*c.cabsService, cabinet)
+	campaigns, err := chooseCampaignsForm(*c.cabsService, cabinet)
+
+	if isFormCanceled(err) {
+		return nil, ErrFormCancel
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	helpers.PrintCampaigns(campaigns)
+	printCampaignsTable(campaigns)
 
 	fmt.Println("")
 	if !console.Confirm("Создать отчет?") {
-		return nil, errors.New("cancel")
+		return nil, ErrFormCancel
 	}
 
 	stat, err := c.statsService.Create(options, campaigns)
@@ -126,4 +145,77 @@ func (c cabinetsPage) CreateStat(cabinet models.Cabinet) (*models.Stat, error) {
 	fmt.Println("")
 
 	return stat, err
+}
+
+func (c statsPage) statOptionsForm(options *models.StatOptions) error {
+	confirm := false
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title(forms.RequiredTitle("Название отчета")).
+				CharLimit(100).
+				Validate(validators.Required).
+				Value(&options.Name),
+			huh.NewSelect[string]().
+				Title(forms.RequiredTitle("Тип статистики")).
+				Options(
+					huh.NewOption("Рекламные объекты", "OBJECT"),
+					huh.NewOption("Рекламные кампании", "TOTAL"),
+				).
+				Validate(validators.Required).
+				Value(&options.Type),
+			huh.NewInput().
+				Title(forms.RequiredTitle("Начало интервала, дата")).
+				Placeholder("ГГГГ-ДД-ММ").
+				CharLimit(10).
+				Validate(validators.DateRequiured).
+				Value(&options.DateFrom),
+			huh.NewInput().
+				Title(forms.RequiredTitle("Конец интервала, дата")).
+				Placeholder("ГГГГ-ДД-ММ").
+				CharLimit(10).
+				Validate(validators.DateRequiured).
+				Value(&options.DateTo),
+			huh.NewSelect[string]().
+				Title(forms.RequiredTitle("Группировка")).
+				Options(
+					huh.NewOption("Не группировать", "NO_GROUP_BY"),
+					huh.NewOption("День", "DATE"),
+					huh.NewOption("Неделя", "START_OF_WEEK"),
+					huh.NewOption("Месяц", "START_OF_MONTH"),
+				).
+				Validate(validators.Required).
+				Value(&options.GroupBy),
+			huh.NewConfirm().
+				Key("done").
+				Value(&confirm).
+				Inline(true).
+				Negative("Отмена").
+				Affirmative("Далее"),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return err
+	}
+
+	if !confirm {
+		return ErrFormCancel
+	}
+
+	return nil
+}
+
+func (c statsPage) printStatTable(stat models.Stat) {
+	tw := table.NewWriter()
+	tw.SetStyle(table.StyleRounded)
+	tw.AppendRow(table.Row{"Отчет", stat.Options.Name})
+	tw.AppendRow(table.Row{"Кабинет", stat.Options.CabinetName})
+	tw.AppendRow(table.Row{"Начало интервала, дата", stat.Options.DateFrom})
+	tw.AppendRow(table.Row{"Конец интервала, дата", stat.Options.DateTo})
+	tw.AppendRow(table.Row{"Группировка", stat.Options.GroupBy})
+	tw.AppendRow(table.Row{"Кампаний", len(stat.Items)})
+	tw.AppendRow(table.Row{"Состояние", stat.StateHuman()})
+
+	fmt.Println(tw.Render())
 }

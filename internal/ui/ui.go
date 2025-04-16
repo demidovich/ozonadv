@@ -7,25 +7,9 @@ import (
 	"ozonadv/internal/ui/helpers"
 )
 
-var (
-	ErrGoBack     = errors.New("go back")
-	ErrFormCancel = errors.New("form cancel")
-)
-
-func isGoBack(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	return errors.Is(err, ErrGoBack)
-}
-
-func isFormCancel(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	return errors.Is(err, ErrFormCancel)
+type ui struct {
+	statsPage    statsPage
+	cabinetsPage cabinetsPage
 }
 
 func Home(a *app.Application) error {
@@ -40,14 +24,16 @@ func Home(a *app.Application) error {
 		return err
 	}
 
-	statsPage := newStats(a.StatsService())
-	cabinetsPage := newCabinets(a.CabinetsService(), a.StatsService(), statsPage)
+	ui := &ui{}
+
+	ui.statsPage = newStats(a.CabinetsService(), a.StatsService())
+	ui.cabinetsPage = newCabinets(a.CabinetsService(), a.StatsService(), ui)
 
 	switch action {
 	case "cabinets":
-		err = cabinetsPage.Home()
+		err = ui.cabinetsPage.Home()
 	case "stats":
-		err = statsPage.Home()
+		err = ui.statsPage.Home()
 	case "quit":
 		os.Exit(0)
 	}

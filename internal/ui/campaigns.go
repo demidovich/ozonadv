@@ -1,16 +1,17 @@
-package helpers
+package ui
 
 import (
 	"fmt"
 	"ozonadv/internal/cabinets"
 	"ozonadv/internal/models"
 	"ozonadv/internal/ozon"
+	"ozonadv/internal/ui/colors"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-func PrintCampaigns(campaigns []ozon.Campaign) {
+func printCampaignsTable(campaigns []ozon.Campaign) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Статус"})
@@ -33,17 +34,18 @@ func PrintCampaigns(campaigns []ozon.Campaign) {
 	fmt.Println("Всего кампаний:", len(campaigns))
 }
 
-func ChooseCampaigns(cabsService cabinets.Service, cabinet models.Cabinet) ([]ozon.Campaign, error) {
+func chooseCampaignsForm(cabsService cabinets.Service, cabinet models.Cabinet) ([]ozon.Campaign, error) {
 	fmt.Println("")
 	fmt.Println("Выбор рекламных кампаний")
 
 	filters := cabinets.CampaignFilters{}
+	confirm := false
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
-				Title("Часть названия кампании").
+				Title("Часть названия кампании или ее ID").
 				Description("Можно не заполнять").
-				CharLimit(100).
+				CharLimit(500).
 				Value(&filters.Title),
 			huh.NewMultiSelect[string]().
 				Title("Статусы").
@@ -60,11 +62,21 @@ func ChooseCampaigns(cabsService cabinets.Service, cabinet models.Cabinet) ([]oz
 					huh.NewOption("FINISHED", "CAMPAIGN_STATE_FINISHED"),
 				).
 				Value(&filters.States),
+			huh.NewConfirm().
+				Key("done").
+				Value(&confirm).
+				Inline(true).
+				Affirmative("Ок").
+				Negative("Отмена"),
 		),
 	)
 
 	if err := form.Run(); err != nil {
 		return []ozon.Campaign{}, err
+	}
+
+	if !confirm {
+		return []ozon.Campaign{}, ErrFormCancel
 	}
 
 	campaigns, err := cabsService.CampaignsFiltered(cabinet, filters)
@@ -74,9 +86,8 @@ func ChooseCampaigns(cabsService cabinets.Service, cabinet models.Cabinet) ([]oz
 
 	if len(campaigns) == 0 {
 		fmt.Println("")
-		fmt.Println("Кампании с такими параметрами не найдены")
-		fmt.Println("")
-		return ChooseCampaigns(cabsService, cabinet)
+		fmt.Println(colors.Warning("Кампании с такими параметрами не найдены"))
+		return chooseCampaignsForm(cabsService, cabinet)
 	}
 
 	return campaigns, nil
