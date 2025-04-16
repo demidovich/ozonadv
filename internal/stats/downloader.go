@@ -35,6 +35,9 @@ func newDownloader(stat *models.Stat, ozon *ozon.Ozon, storage storage, debug De
 }
 
 func (d *downloader) Start() {
+	d.stat.RunnedAt = time.Now().String()
+	d.storage.Add(d.stat)
+
 	items := make(chan models.StatItem)
 
 	go func() {

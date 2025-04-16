@@ -26,11 +26,16 @@ type Stat struct {
 	UUID             string      `json:"uuid"`
 	Options          StatOptions `json:"options"`
 	Items            []StatItem  `json:"items"`
+	RunnedAt         string      `json:"runnedAt"`
 	CreatedAt        string      `json:"createdAt"`
 	ApiRequestsCount int         `json:"apiRequestsCount"`
 }
 
 func (s *Stat) StateHuman() string {
+	if s.RunnedAt == "" {
+		return "Не запускался"
+	}
+
 	completed := true
 	for _, i := range s.Items {
 		if i.Request.Link == "" {
