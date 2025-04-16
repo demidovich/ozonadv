@@ -1,8 +1,0 @@
-verbose: false
-
-ozon:
-  ClientId:
-  ClientSecret:
-
-google:
-  SheetId:
