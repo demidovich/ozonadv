@@ -10,7 +10,6 @@ import (
 	"ozonadv/internal/ui/forms"
 	"ozonadv/internal/ui/forms/validators"
 	"ozonadv/internal/ui/helpers"
-	"ozonadv/pkg/console"
 	"time"
 
 	"github.com/charmbracelet/huh"
@@ -109,7 +108,7 @@ func (c cabinetsPage) cabinet(cabinet models.Cabinet) error {
 			return c.cabinet(cabinet)
 		}
 	case "remove_cabinet":
-		if console.Confirm("Удалить кабинет \"" + cabinet.Name + "\"?") {
+		if helpers.Confirm("Удалить кабинет \"" + cabinet.Name + "\"?") {
 			c.cabsService.Remove(cabinet)
 			err = ErrGoBack
 		} else {

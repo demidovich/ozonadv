@@ -9,7 +9,6 @@ import (
 	"ozonadv/internal/ui/forms"
 	"ozonadv/internal/ui/forms/validators"
 	"ozonadv/internal/ui/helpers"
-	"ozonadv/pkg/console"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -131,7 +130,7 @@ func (c statsPage) CreateStat(cabinet models.Cabinet) (*models.Stat, error) {
 	printCampaignsTable(campaigns)
 
 	fmt.Println("")
-	if !console.Confirm("Создать отчет?") {
+	if !helpers.Confirm("Создать отчет?") {
 		return nil, ErrFormCancel
 	}
 
