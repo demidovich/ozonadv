@@ -6,6 +6,7 @@ import (
 	"os"
 	"ozonadv/internal/infra/ozon"
 	"ozonadv/internal/models"
+	"sync"
 	"time"
 )
 
@@ -23,6 +24,7 @@ type downloader struct {
 	storage storage
 	ozon    *ozon.Ozon
 	debug   Debug
+	saveMu  *sync.Mutex
 }
 
 func newDownloader(stat *models.Stat, ozon *ozon.Ozon, storage storage, debug Debug) *downloader {
@@ -31,12 +33,15 @@ func newDownloader(stat *models.Stat, ozon *ozon.Ozon, storage storage, debug De
 		ozon:    ozon,
 		storage: storage,
 		debug:   debug,
+		saveMu:  &sync.Mutex{},
 	}
 }
 
 func (d *downloader) Start() {
 	d.stat.RunnedAt = time.Now().String()
+
 	d.storage.Add(d.stat)
+	defer d.storage.Add(d.stat)
 
 	items := make(chan models.StatItem)
 
@@ -78,6 +83,7 @@ func (d *downloader) createStatRequestsStage(in <-chan models.StatItem) <-chan m
 				item.Request.UUID = statRequest.UUID
 			}
 
+			d.saveStatRequest(statRequest)
 			out <- statRequest
 		}
 	}()
@@ -115,6 +121,7 @@ func (d *downloader) readyStatRequestsStage(in <-chan models.StatRequest) <-chan
 			}
 
 			item.Request.Link = statRequest.Link
+			d.saveStatRequest(statRequest)
 			out <- statRequest
 		}
 	}()
@@ -142,6 +149,7 @@ func (d *downloader) downloadStatsStage(in <-chan models.StatRequest) <-chan boo
 			filename, err := d.downloadStat(statRequest)
 			if err == nil {
 				item.Request.File = filename
+				d.saveStatRequestFile(statRequest, filename)
 			} else {
 				d.debugStatRequest(statRequest, err)
 			}
@@ -153,6 +161,8 @@ func (d *downloader) downloadStatsStage(in <-chan models.StatRequest) <-chan boo
 }
 
 func (d *downloader) createStatRequest(campaign models.Campaign) models.StatRequest {
+	startedAt := time.Now()
+
 	options := ozon.CreateStatRequestOptions{
 		CampaignId: campaign.ID,
 		DateFrom:   d.stat.Options.DateFrom,
@@ -161,7 +171,12 @@ func (d *downloader) createStatRequest(campaign models.Campaign) models.StatRequ
 	}
 
 	for attempt := 1; attempt <= createStatRequestAttempts; attempt++ {
-		d.debugCampaign(campaign, "создание запроса отчета: попытка ", attempt)
+		d.debugCampaignTime(
+			campaign,
+			time.Since(startedAt),
+			"создание запроса отчета: попытка ",
+			attempt,
+		)
 
 		var err error
 		var req models.StatRequest
@@ -188,7 +203,7 @@ func (d *downloader) createStatRequest(campaign models.Campaign) models.StatRequ
 	d.debug.Println("Превышено количество количество попыток создания запроса.")
 	d.debug.Println("Возможно существует тяжелый несформированый запрос.")
 	d.debug.Println("Пока Озон не закончит его формирование создать новый не получится.")
-	d.debug.Println("Выдержите паузу и запустите ozonadv stat:continue.")
+	d.debug.Println("Выдержите паузу и повторно запустите формирование этого отчета.")
 	d.debug.Println("")
 	os.Exit(1)
 
@@ -196,13 +211,20 @@ func (d *downloader) createStatRequest(campaign models.Campaign) models.StatRequ
 }
 
 func (d *downloader) readyStatRequest(statRequest models.StatRequest) (models.StatRequest, error) {
+	startedAt := time.Now()
+
 	for attempt := 1; attempt <= readyStatRequestAttempts; attempt++ {
 		waitTime := readyStatRequestWaitTime
 
 		d.debugStatRequest(statRequest, "ожидание готовности: ждем ", waitTime.String())
 		time.Sleep(waitTime)
 
-		d.debugStatRequest(statRequest, "ожидание готовности: попытка ", attempt)
+		d.debugStatRequestTime(
+			statRequest,
+			time.Since(startedAt),
+			"ожидание готовности: попытка ",
+			attempt,
+		)
 
 		// Сначала ждем, так как после создания запрос будет собираться
 
@@ -217,7 +239,11 @@ func (d *downloader) readyStatRequest(statRequest models.StatRequest) (models.St
 			continue
 		}
 
-		d.debugStatRequest(statRequest, "готов к скачиванию")
+		d.debugStatRequestTime(
+			statRequest,
+			time.Since(startedAt),
+			"готов к скачиванию, время ",
+		)
 
 		return req, nil
 	}
@@ -246,10 +272,51 @@ func (d *downloader) downloadStat(statRequest models.StatRequest) (string, error
 	return "", errors.New("превышено количество попыток скачивания")
 }
 
+func (d *downloader) saveStatRequest(statRequest models.StatRequest) {
+	d.saveMu.Lock()
+	defer d.saveMu.Unlock()
+
+	campaignID := statRequest.CampaignId()
+	for i, item := range d.stat.Items {
+		if item.Campaign.ID != campaignID {
+			continue
+		}
+		d.stat.Items[i].Request.UUID = statRequest.UUID
+		d.stat.Items[i].Request.Link = statRequest.Link
+	}
+
+	d.storage.Add(d.stat)
+}
+
+func (d *downloader) saveStatRequestFile(statRequest models.StatRequest, file string) {
+	d.saveMu.Lock()
+	defer d.saveMu.Unlock()
+
+	campaignID := statRequest.CampaignId()
+	for i, item := range d.stat.Items {
+		if item.Campaign.ID != campaignID {
+			continue
+		}
+		d.stat.Items[i].Request.File = file
+	}
+
+	d.storage.Add(d.stat)
+}
+
 func (d *downloader) debugCampaign(c models.Campaign, msg ...any) {
 	d.debug.Printf("[%s] %s\n", c.ID, fmt.Sprint(msg...))
 }
 
+func (d *downloader) debugCampaignTime(c models.Campaign, t time.Duration, msg ...any) {
+	tString, _ := time.Parse(time.TimeOnly, t.String())
+	d.debug.Printf("[%s] %s, время %s\n", c.ID, fmt.Sprint(msg...), tString)
+}
+
 func (d *downloader) debugStatRequest(r models.StatRequest, msg ...any) {
 	d.debug.Printf("[%s] %s\n", r.CampaignId(), fmt.Sprint(msg...))
+}
+
+func (d *downloader) debugStatRequestTime(r models.StatRequest, t time.Duration, msg ...any) {
+	tString, _ := time.Parse(time.TimeOnly, t.String())
+	d.debug.Printf("[%s] %s, время %s\n", r.CampaignId(), fmt.Sprint(msg...), tString)
 }

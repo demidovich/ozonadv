@@ -7,20 +7,17 @@ import (
 	"ozonadv/internal/models"
 	"ozonadv/pkg/utils"
 	"slices"
-	"sync"
 )
 
 type storageStats struct {
 	dir          string
 	downloadsDir string
-	mu           *sync.Mutex
 }
 
 func newStorageStats(dir string) *storageStats {
 	s := storageStats{
 		dir:          dir,
 		downloadsDir: dir + "/downloads",
-		mu:           &sync.Mutex{},
 	}
 
 	return &s
@@ -31,6 +28,10 @@ func (s *storageStats) All() []models.Stat {
 	result := make([]models.Stat, 0, len(fnames))
 
 	for _, fname := range fnames {
+		if fname == "downloads" {
+			continue
+		}
+
 		path := s.dir + "/" + fname
 		stat := models.Stat{}
 		utils.JsonFileReadOrFail(path, &stat, "{}")
@@ -52,9 +53,6 @@ func (s *storageStats) All() []models.Stat {
 }
 
 func (s *storageStats) Add(st *models.Stat) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	file := s.statFile(st)
 	utils.JsonFileWriteOrFail(file, st)
 }
@@ -70,9 +68,6 @@ func (s *storageStats) SaveDownloadedFile(stat *models.Stat, filename string, da
 }
 
 func (s *storageStats) Remove(st *models.Stat) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	if utils.DirExists(s.downloadsDir) {
 		for _, f := range utils.DirListOrFail(s.downloadsDir) {
 			file := s.downloadedFile(f)

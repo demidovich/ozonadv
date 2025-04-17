@@ -111,7 +111,7 @@ func (c statsPage) stat(stat *models.Stat) error {
 		if helpers.Confirm("Запустить загрузку отчета?") {
 			c.statsService.Download(stat)
 		}
-		err = c.stat(stat)
+		return c.stat(stat)
 	} else if action == "remove" {
 		if helpers.Confirm("Удалить отчет \"" + stat.Options.Name + "\"?") {
 			c.statsService.Remove(stat)
