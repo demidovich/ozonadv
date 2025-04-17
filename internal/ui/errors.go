@@ -1,6 +1,10 @@
 package ui
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"ozonadv/internal/ui/colors"
+)
 
 var (
 	ErrGoBack     = errors.New("go back")
@@ -21,4 +25,12 @@ func isFormCanceled(err error) bool {
 	}
 
 	return errors.Is(err, ErrFormCancel)
+}
+
+func printError(err error) {
+	fmt.Println(colors.Warning(err.Error()))
+}
+
+func printErrorString(str string) {
+	fmt.Println(colors.Warning(str))
 }

@@ -6,6 +6,7 @@ import (
 	"ozonadv/internal/cabinets"
 	"ozonadv/internal/models"
 	"ozonadv/internal/stats"
+	"ozonadv/internal/ui/colors"
 	"ozonadv/internal/ui/forms"
 	"ozonadv/internal/ui/forms/validators"
 	"ozonadv/internal/ui/helpers"
@@ -27,10 +28,66 @@ func newStats(cabsService *cabinets.Service, statsService *stats.Service) statsP
 }
 
 func (c statsPage) Home() error {
-	return nil
+	options := []helpers.ListOption{}
+	for _, stat := range c.statsService.All() {
+		options = append(options, helpers.ListOption{
+			Key:   stat.Options.Name + " " + colors.Gray("(%s)", stat.Options.CabinetName),
+			Value: stat.UUID,
+		})
+	}
+
+	options = append(
+		options,
+		helpers.ListOption{Key: "Добавить отчет", Value: "create_stat"},
+		helpers.ListOption{Key: "Назад", Value: "back"},
+	)
+
+	fmt.Println("")
+	action, err := helpers.List("Отчеты", options...)
+	if err != nil {
+		return err
+	}
+
+	var stat *models.Stat
+	var ok bool
+
+	if action == "create_stat" {
+		cabinet, err := c.chooseCabinetForm()
+		if isFormCanceled(err) {
+			return c.Home()
+		}
+		if err != nil {
+			printError(err)
+			return c.Home()
+		}
+		fmt.Println("")
+		stat, err = c.createStat(*cabinet)
+		if err == nil || isFormCanceled(err) {
+			return c.Home()
+		}
+	} else if action == "back" {
+		return ErrGoBack
+	} else {
+		statUUID := action
+		if stat, ok = c.statsService.Find(statUUID); !ok {
+			err = errors.New("отчет не найден")
+		}
+	}
+
+	if err != nil {
+		printError(err)
+		return c.Home()
+	}
+
+	err = c.stat(stat)
+	if isGoBack(err) {
+		return c.Home()
+	}
+
+	return err
 }
 
-func (c statsPage) Stat(stat *models.Stat) error {
+func (c statsPage) stat(stat *models.Stat) error {
 	c.printStatTable(*stat)
 	fmt.Println("")
 
@@ -40,7 +97,7 @@ func (c statsPage) Stat(stat *models.Stat) error {
 		{Key: "Назад", Value: "back"},
 	}
 
-	action, err := helpers.List("Кабинеты > "+stat.Options.CabinetName+" > Отчеты > "+stat.Options.Name, options...)
+	action, err := helpers.List("Отчеты > "+stat.Options.Name, options...)
 	if err != nil {
 		return err
 	}
@@ -78,7 +135,7 @@ func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
 	var ok bool
 
 	if action == "create_stat" {
-		stat, err = c.CreateStat(cabinet)
+		stat, err = c.createStat(cabinet)
 		if isFormCanceled(err) {
 			fmt.Println("")
 			return c.CabinetStats(cabinet)
@@ -96,7 +153,7 @@ func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
 		return err
 	}
 
-	err = c.Stat(stat)
+	err = c.stat(stat)
 	if errors.Is(err, ErrGoBack) {
 		return c.CabinetStats(cabinet)
 	}
@@ -104,7 +161,59 @@ func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
 	return nil
 }
 
-func (c statsPage) CreateStat(cabinet models.Cabinet) (*models.Stat, error) {
+func (c statsPage) chooseCabinetForm() (*models.Cabinet, error) {
+	if len(c.cabsService.All()) == 0 {
+		return nil, errors.New(
+			"Нет рекламных кабинетов.\n" +
+				"Для создания отчета необходимо создать рекламный кабинет.",
+		)
+	}
+
+	fmt.Println("Выбор кабинета")
+
+	options := []huh.Option[string]{}
+	for _, cabinet := range c.cabsService.All() {
+		options = append(options, huh.NewOption(
+			cabinet.Name+colors.Gray(" (%s)", cabinet.ClientID),
+			cabinet.UUID,
+		))
+	}
+
+	var cabinetUUID string
+	confirm := false
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Кабинет").
+				Options(options...).
+				Validate(validators.Required).
+				Value(&cabinetUUID),
+			huh.NewConfirm().
+				Key("done").
+				Value(&confirm).
+				Inline(true).
+				Affirmative("Ок").
+				Negative("Отмена"),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return nil, err
+	}
+
+	if !confirm {
+		return nil, ErrFormCancel
+	}
+
+	cabinet, ok := c.cabsService.Find(cabinetUUID)
+	if !ok {
+		return nil, errors.New("кабинет не найден")
+	}
+
+	return cabinet, nil
+}
+
+func (c statsPage) createStat(cabinet models.Cabinet) (*models.Stat, error) {
 	fmt.Println(cabinet.Name + " > Новый отчет")
 
 	options := models.StatOptions{}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"ozonadv/internal/cabinets"
 	"ozonadv/internal/models"
-	"ozonadv/internal/ui/colors"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -85,7 +84,7 @@ func chooseCampaignsForm(cabsService cabinets.Service, cabinet models.Cabinet) (
 
 	if len(campaigns) == 0 {
 		fmt.Println("")
-		fmt.Println(colors.Warning("Кампании с такими параметрами не найдены"))
+		printErrorString("Кампании с такими параметрами не найдены")
 		return chooseCampaignsForm(cabsService, cabinet)
 	}
 
