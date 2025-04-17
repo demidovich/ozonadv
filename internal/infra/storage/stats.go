@@ -73,9 +73,11 @@ func (s *storageStats) Remove(st *models.Stat) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for _, f := range utils.DirListOrFail(s.downloadsDir) {
-		file := s.downloadedFile(f)
-		utils.FileRemoveOrFail(file)
+	if utils.DirExists(s.downloadsDir) {
+		for _, f := range utils.DirListOrFail(s.downloadsDir) {
+			file := s.downloadedFile(f)
+			utils.FileRemoveOrFail(file)
+		}
 	}
 
 	file := s.statFile(st)

@@ -66,6 +66,10 @@ func (s *Service) Create(options models.StatOptions, campaigns []models.Campaign
 	return st, nil
 }
 
+func (s *Service) Remove(stat *models.Stat) {
+	s.storage.Remove(stat)
+}
+
 func (s *Service) Download(st *models.Stat) {
 	ozonApi := s.ozonApi(st)
 	downloader := newDownloader(st, ozonApi, s.storage, s.debug)

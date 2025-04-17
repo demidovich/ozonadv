@@ -88,12 +88,17 @@ func (c statsPage) Home() error {
 }
 
 func (c statsPage) stat(stat *models.Stat) error {
+	fmt.Println("Параметры отчета")
 	c.printStatTable(*stat)
+	fmt.Println("")
+	fmt.Println("Кампании отчета")
+	c.printStatCampaignsTable(*stat)
 	fmt.Println("")
 
 	options := []helpers.ListOption{
 		{Key: "Загрузка", Value: "download"},
 		{Key: "Экспорт", Value: "export"},
+		{Key: "Удалить", Value: "remove"},
 		{Key: "Назад", Value: "back"},
 	}
 
@@ -103,7 +108,18 @@ func (c statsPage) stat(stat *models.Stat) error {
 	}
 
 	if action == "download" {
-		c.statsService.Download(stat)
+		if helpers.Confirm("Запустить загрузку отчета?") {
+			c.statsService.Download(stat)
+		}
+		err = c.stat(stat)
+	} else if action == "remove" {
+		if helpers.Confirm("Удалить отчет \"" + stat.Options.Name + "\"?") {
+			c.statsService.Remove(stat)
+			err = ErrGoBack
+			fmt.Println("Отчет \"" + stat.Options.Name + "\" удален.")
+		} else {
+			err = c.stat(stat)
+		}
 	} else if action == "back" {
 		return ErrGoBack
 	}
@@ -248,9 +264,7 @@ func (c statsPage) createStat(cabinet models.Cabinet) (*models.Stat, error) {
 		return stat, err
 	}
 
-	fmt.Println("")
 	fmt.Println("Отчет создан")
-	fmt.Println("")
 
 	return stat, err
 }
@@ -326,4 +340,27 @@ func (c statsPage) printStatTable(stat models.Stat) {
 	tw.AppendRow(table.Row{"Состояние", stat.StateHuman()})
 
 	fmt.Println(tw.Render())
+}
+
+func (c statsPage) printStatCampaignsTable(stat models.Stat) {
+	tw := table.NewWriter()
+	tw.SetStyle(table.StyleRounded)
+	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Состояние отчета"})
+	tw.AppendRow(table.Row{"", "", "", "", ""})
+
+	for _, item := range stat.Items {
+		tw.AppendRow(table.Row{
+			item.Campaign.ID,
+			item.Campaign.AdvObjectType,
+			// c.StateShort(),
+			item.Campaign.TitleTruncated(45),
+			item.Campaign.FromDate,
+			item.Campaign.ToDate,
+			item.State(),
+			// c.Title,
+		})
+	}
+
+	fmt.Println(tw.Render())
+	fmt.Println("Всего кампаний:", len(stat.Items))
 }

@@ -63,6 +63,12 @@ func DirInitOrFail(path string) {
 	}
 }
 
+func DirExists(path string) bool {
+	_, err := os.Stat(path)
+
+	return err == nil
+}
+
 func DirList(path string) ([]string, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
