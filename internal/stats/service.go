@@ -10,13 +10,13 @@ import (
 
 type Service struct {
 	debug   Debug
-	storage storage
+	storage Storage
 }
 
 type CreateOptions struct {
 }
 
-func NewService(s storage, d Debug) *Service {
+func NewService(s Storage, d Debug) *Service {
 	return &Service{
 		debug:   d,
 		storage: s,

@@ -21,13 +21,13 @@ const (
 
 type downloader struct {
 	stat    *models.Stat
-	storage storage
+	storage Storage
 	ozon    *ozon.Ozon
 	debug   Debug
 	saveMu  *sync.Mutex
 }
 
-func newDownloader(stat *models.Stat, ozon *ozon.Ozon, storage storage, debug Debug) *downloader {
+func newDownloader(stat *models.Stat, ozon *ozon.Ozon, storage Storage, debug Debug) *downloader {
 	return &downloader{
 		stat:    stat,
 		ozon:    ozon,

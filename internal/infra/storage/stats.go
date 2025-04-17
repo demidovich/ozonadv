@@ -67,6 +67,17 @@ func (s *storageStats) SaveDownloadedFile(stat *models.Stat, filename string, da
 	}
 }
 
+func (s *storageStats) ReadDownloadedFile(stat *models.Stat, filename string) []byte {
+	file := s.downloadedFile(filename)
+
+	content, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return content
+}
+
 func (s *storageStats) Remove(st *models.Stat) {
 	if utils.DirExists(s.downloadsDir) {
 		for _, f := range utils.DirListOrFail(s.downloadsDir) {
