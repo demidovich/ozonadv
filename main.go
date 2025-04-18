@@ -16,10 +16,10 @@ func main() {
 	app := app.New(os.Stdout)
 	defer app.Shutdown()
 
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		<-sig
+		<-sigs
 		app.Shutdown()
 		os.Exit(1)
 	}()

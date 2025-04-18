@@ -10,6 +10,9 @@ vendor: ## Go mod vendor
 	sleep 3
 	go mod vendor
 
+lint: ## Run static tests
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run ./...
+
 # ---------------------------------------------------------------------------------------------------------------------
 
 build-linux: ## Build Linux

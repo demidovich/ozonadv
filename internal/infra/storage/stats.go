@@ -58,7 +58,7 @@ func (s *storageStats) Add(st *models.Stat) {
 }
 
 func (s *storageStats) SaveDownloadedFile(stat *models.Stat, filename string, data []byte) {
-	utils.DirInit(s.downloadsDir)
+	utils.DirInitOrFail(s.downloadsDir)
 	file := s.downloadedFile(filename)
 
 	err := os.WriteFile(file, data, 0644)

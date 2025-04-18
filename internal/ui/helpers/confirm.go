@@ -1,10 +1,15 @@
 package helpers
 
-import "github.com/charmbracelet/huh"
+import (
+	"log"
+
+	"github.com/charmbracelet/huh"
+)
 
 func Confirm(title string) bool {
 	value := false
-	huh.NewForm(
+
+	err := huh.NewForm(
 		huh.NewGroup(
 			huh.NewConfirm().
 				Title(title).
@@ -13,6 +18,10 @@ func Confirm(title string) bool {
 				Value(&value),
 		),
 	).Run()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return value
 }

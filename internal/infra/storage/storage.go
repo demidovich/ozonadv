@@ -28,8 +28,8 @@ func New(rootDir string) *Storage {
 	cabinetsFile := rootDir + "/cabinets.json"
 	statsDir := rootDir + "/stats"
 
-	utils.DirInit(rootDir)
-	utils.DirInit(statsDir)
+	utils.DirInitOrFail(rootDir)
+	utils.DirInitOrFail(statsDir)
 
 	return &Storage{
 		rootDir:      rootDir,
