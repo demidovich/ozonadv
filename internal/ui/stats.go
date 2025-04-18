@@ -112,6 +112,12 @@ func (c statsPage) stat(stat *models.Stat) error {
 			c.statsService.Download(stat)
 		}
 		return c.stat(stat)
+	} else if action == "export" {
+		var file string
+		file, err = c.statExportForm()
+		if err == nil {
+			err = c.statsService.ExportToFile(stat, file)
+		}
 	} else if action == "remove" {
 		if helpers.Confirm("Удалить отчет \"" + stat.Options.Name + "\"?") {
 			c.statsService.Remove(stat)
@@ -121,10 +127,10 @@ func (c statsPage) stat(stat *models.Stat) error {
 			err = c.stat(stat)
 		}
 	} else if action == "back" {
-		return ErrGoBack
+		err = ErrGoBack
 	}
 
-	return nil
+	return err
 }
 
 func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
@@ -326,6 +332,37 @@ func (c statsPage) statOptionsForm(options *models.StatOptions) error {
 	}
 
 	return nil
+}
+
+func (c statsPage) statExportForm() (string, error) {
+	file := ""
+
+	confirm := false
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title(forms.RequiredTitle("Файл")).
+				Description("Название файла или путь").
+				CharLimit(1000).
+				Value(&file),
+			huh.NewConfirm().
+				Key("done").
+				Value(&confirm).
+				Inline(true).
+				Negative("Отмена").
+				Affirmative("Экспортировать"),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return file, err
+	}
+
+	if !confirm {
+		return file, ErrFormCancel
+	}
+
+	return file, nil
 }
 
 func (c statsPage) printStatTable(stat models.Stat) {

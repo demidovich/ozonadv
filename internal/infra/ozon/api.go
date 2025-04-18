@@ -32,7 +32,7 @@ type accessToken struct {
 }
 
 func (a *accessToken) Valid() bool {
-	lifetime := time.Now().Sub(a.CreatedAt)
+	lifetime := time.Since(a.CreatedAt)
 	// Токен быстро протухает, возможно это какой-то баг
 	// return lifetime < (time.Duration(a.ExpiresIn-500) * time.Second)
 	return lifetime < (time.Duration(120) * time.Second)
@@ -72,9 +72,7 @@ func (a *api) httpGet(url string, result any) error {
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return errors.New(
-			fmt.Sprintf("response: %s %s", resp.Status(), resp.Body()),
-		)
+		return fmt.Errorf("response: %s %s", resp.Status(), resp.Body())
 	}
 
 	return nil

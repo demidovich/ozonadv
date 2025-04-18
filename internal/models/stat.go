@@ -84,3 +84,11 @@ func (s *Stat) ToJson() (string, error) {
 
 	return string(j), err
 }
+
+func (s *Stat) IsTypeObject() bool {
+	return s.Options.Type == "OBJECT"
+}
+
+func (s *Stat) IsTypeTotal() bool {
+	return s.Options.Type == "TOTAL"
+}
