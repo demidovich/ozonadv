@@ -32,8 +32,12 @@ var/*
 
 # Config, export files
 *.yml
+*.yaml
 *.csv
 *.json
+
+# Previous version config example
+*.example
 
 # Vendor
 vendor
