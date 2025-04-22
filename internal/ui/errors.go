@@ -28,9 +28,9 @@ func isFormCanceled(err error) bool {
 }
 
 func printError(err error) {
-	fmt.Println(colors.Warning(err.Error()))
+	fmt.Println(colors.Warning().Sprintf("%s", err.Error()))
 }
 
 func printErrorString(str string) {
-	fmt.Println(colors.Warning(str))
+	fmt.Println(colors.Warning().Sprintf("%s", str))
 }

@@ -31,7 +31,7 @@ func (c statsPage) Home() error {
 	options := []helpers.ListOption{}
 	for _, stat := range c.statsService.All() {
 		options = append(options, helpers.ListOption{
-			Key:   stat.Options.Name + " " + colors.Gray("(%s)", stat.Options.CabinetName),
+			Key:   stat.Options.Name + " " + colors.Gray().Sprintf("(%s)", stat.Options.CabinetName),
 			Value: stat.UUID,
 		})
 	}
@@ -196,7 +196,7 @@ func (c statsPage) chooseCabinetForm() (*models.Cabinet, error) {
 	options := []huh.Option[string]{}
 	for _, cabinet := range c.cabsService.All() {
 		options = append(options, huh.NewOption(
-			cabinet.Name+colors.Gray(" (%s)", cabinet.ClientID),
+			cabinet.Name+colors.Gray().Sprintf(" (%s)", cabinet.ClientID),
 			cabinet.UUID,
 		))
 	}

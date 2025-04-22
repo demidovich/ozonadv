@@ -35,7 +35,7 @@ func (c cabinetsPage) Home() error {
 	options := []helpers.ListOption{}
 	for _, cabinet := range c.cabsService.All() {
 		options = append(options, helpers.ListOption{
-			Key:   cabinet.Name + " " + colors.Gray("(%s)", cabinet.ClientID),
+			Key:   cabinet.Name + " " + colors.Gray().Sprintf("(%s)", cabinet.ClientID),
 			Value: cabinet.UUID,
 		})
 	}
