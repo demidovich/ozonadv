@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/go-playground/locales/ru"
@@ -20,7 +21,10 @@ func init() {
 	uni := ut.New(rus, rus)
 
 	translatorInstance, _ = uni.GetTranslator("ru")
-	ru_translations.RegisterDefaultTranslations(validatorInstance, translatorInstance)
+	err := ru_translations.RegisterDefaultTranslations(validatorInstance, translatorInstance)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func ValidateStruct(s any) error {

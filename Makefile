@@ -1,31 +1,38 @@
-.PHONY: vendor
-
+APP_NAME = ozonadv
 GIT_TAG ?= $(shell git tag)
+
+.PHONY: vendor clean
 
 help: ## This help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 vendor: ## Go mod vendor
 	go mod tidy
+	sleep 1
 	go mod vendor
+
+lint: ## Run static tests
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run ./...
 
 # ---------------------------------------------------------------------------------------------------------------------
 
 build-linux: ## Build Linux
-	GOOS=linux GOARCH=amd64 go build -o build/ozonadv-linux main.go
+	GOOS=linux GOARCH=amd64 go build -o build/${APP_NAME}_Linux main.go
 
-build-mac: ## Build Mac
-	GOOS=darwin GOARCH=amd64 go build -o build/ozonadv-mac main.go
+build-darwin: ## Build Mac
+	GOOS=darwin GOARCH=amd64 go build -o build/${APP_NAME}_Darwin main.go
 
-build-win: ## Build Windows
-	GOOS=windows GOARCH=amd64 go build -o build/ozonadv.exe main.go
+build-windows: ## Build Windows
+	GOOS=windows GOARCH=amd64 go build -o build/${APP_NAME}_Windows.exe main.go
 
 build-ci-linux: ## Build CI Mac
-	GOOS=darwin GOARCH=amd64 go build -o build/ozonadv-linux-$(GIT_TAG) main.go
+	GOOS=darwin GOARCH=amd64 go build -o build/${APP_NAME}_${GIT_TAG}_Linux_x86_64 main.go
 
-build-ci-mac: ## Build CI Mac
-	GOOS=darwin GOARCH=amd64 go build -o build/ozonadv-mac-$(GIT_TAG) main.go
+build-ci-darwin: ## Build CI Mac
+	GOOS=darwin GOARCH=amd64 go build -o build/${APP_NAME}_${GIT_TAG}_Darwin_x86_64 main.go
 
-build-ci-win: ## Build CI Windows
-	GOOS=windows GOARCH=amd64 go build -o build/ozonadv-win-$(GIT_TAG).exe main.go
+build-ci-windows: ## Build CI Windows
+	GOOS=windows GOARCH=amd64 go build -o build/${APP_NAME}_${GIT_TAG}_Windows_x86_64}.exe main.go
 
+clean: ## Clean build directory.
+	rm -f ./build/*

@@ -1,92 +1,59 @@
 package app
 
 import (
-	"fmt"
-	"ozonadv/config"
-	"ozonadv/internal/campaigns"
-	"ozonadv/internal/object_stat"
-	"ozonadv/internal/ozon"
-	"ozonadv/internal/stat"
-	"ozonadv/internal/storage"
+	"io"
+	"ozonadv/internal/cabinets"
+	"ozonadv/internal/infra/storage"
+	"ozonadv/internal/stats"
 )
 
 type Application struct {
-	configFile         string
-	config             *config.Config
-	ozon               *ozon.Ozon
-	storage            *storage.Storage
-	campaignsUsecases  *campaigns.Usecases
-	statUsecases       *stat.Usecases
-	objectStatUsecases *object_stat.Usecases
-	shutdownFuncs      []func()
+	out             io.Writer
+	storage         *storage.Storage
+	cabinetsService *cabinets.Service
+	statsService    *stats.Service
+	shutdownFuncs   []func()
+	debug           Debug
 }
 
-func New() *Application {
-	return &Application{}
-}
-
-func (a *Application) Config() *config.Config {
-	if a.config == nil {
-		fmt.Println("[app init] конфигурация")
-		instance := config.NewOrFail("config.yml")
-		a.config = &instance
+func New(out io.Writer) *Application {
+	return &Application{
+		out:   out,
+		debug: newDebug(out),
 	}
-
-	return a.config
 }
 
-func (a *Application) Ozon() *ozon.Ozon {
-	if a.ozon == nil {
-		fmt.Println("[app init] клиент ozon")
-		a.ozon = ozon.New(a.Config().Ozon, a.Config().Verbose)
-		a.RegisterShutdownFunc(a.ozon.ApiUsageInfo)
-	}
-
-	return a.ozon
+func (a *Application) Debug() Debug {
+	return a.debug
 }
 
 func (a *Application) Storage() *storage.Storage {
 	if a.storage == nil {
-		fmt.Println("[app init] локальное хранилище")
-		a.storage = storage.New()
-		a.RegisterShutdownFunc(a.storage.SaveState)
-		fmt.Println("[app init] директория локального хранилища", a.storage.RootDir())
+		a.debug.Println("[app init] локальное хранилище")
+		a.storage = storage.NewDefault()
+		// a.RegisterShutdownFunc(a.storage.SaveState)
+		a.debug.Println("[app init] директория локального хранилища", a.storage.RootDir())
 	}
 
 	return a.storage
 }
 
-func (a *Application) CampaignsUsecases() *campaigns.Usecases {
-	if a.campaignsUsecases == nil {
-		a.campaignsUsecases = campaigns.New(
-			a.Storage(),
-			a.Ozon(),
-		)
+func (a *Application) CabinetsService() *cabinets.Service {
+	if a.cabinetsService == nil {
+		a.debug.Println("[app init] сервис рекламных кабинетов")
+		a.cabinetsService = cabinets.NewService(a.out, a.Storage().Cabinets(), a.debug)
 	}
 
-	return a.campaignsUsecases
+	return a.cabinetsService
 }
 
-func (a *Application) StatUsecases() *stat.Usecases {
-	if a.statUsecases == nil {
-		a.statUsecases = stat.New(
-			a.Storage(),
-			a.Ozon(),
-		)
+func (a *Application) StatsService() *stats.Service {
+	if a.statsService == nil {
+		a.debug.Println("[app init] сервис статистики")
+		a.statsService = stats.NewService(a.Storage().Stats(), a.debug)
 	}
 
-	return a.statUsecases
-}
-
-func (a *Application) ObjectStatUsecases() *object_stat.Usecases {
-	if a.objectStatUsecases == nil {
-		a.objectStatUsecases = object_stat.New(
-			a.Storage(),
-			a.Ozon(),
-		)
-	}
-
-	return a.objectStatUsecases
+	return a.statsService
 }
 
 func (a *Application) RegisterShutdownFunc(f func()) {
@@ -94,6 +61,7 @@ func (a *Application) RegisterShutdownFunc(f func()) {
 }
 
 func (a *Application) Shutdown() {
+	a.debug.Println("[app down]")
 	for _, f := range a.shutdownFuncs {
 		f()
 	}
