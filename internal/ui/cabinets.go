@@ -55,14 +55,15 @@ func (c cabinetsPage) Home() error {
 	var cabinet *models.Cabinet
 	var ok bool
 
-	if action == "create_cabinet" {
+	switch action {
+	case "create_cabinet":
 		cabinet, err = c.createCabinet()
 		if err == nil || isFormCanceled(err) {
 			return c.Home()
 		}
-	} else if action == "back" {
+	case "back":
 		return ErrGoBack
-	} else {
+	default:
 		cabinetUUID := action
 		if cabinet, ok = c.cabsService.Find(cabinetUUID); !ok {
 			err = errors.New("кабинет не найден")

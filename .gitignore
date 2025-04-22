@@ -24,17 +24,18 @@ build/*
 *.so
 *.dylib
 
-# Temporary
-var/*
-
 # Test binary, built with `go test -c`
 *.test
 
 # Config, export files
-*.yml
-*.yaml
-*.csv
-*.json
+/*.yml
+/*.yaml
+/*.csv
+/*.json
+!.golangci.yml
+!.golangci.yaml
+!.goreleaser.yml
+!.goreleaser.yaml
 
 # Previous version config example
 *.example

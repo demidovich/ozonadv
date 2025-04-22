@@ -9,7 +9,7 @@ type StatOptions struct {
 	Name                string `validate:"omitempty" json:"name"`
 	CabinetUUID         string `validate:"required" json:"cabinetUUID"`
 	CabinetName         string `validate:"required" json:"cabinetName"`
-	CabinetClientId     string `validate:"required" json:"cabinetClientID"`
+	CabinetClientID     string `validate:"required" json:"cabinetClientID"`
 	CabinetClientSecret string `validate:"required" json:"cabinetClientSecret"`
 	Type                string `validate:"required,oneof=TOTAL OBJECT" json:"type"`
 	DateFrom            string `validate:"required,datetime=2006-01-02" json:"dateFrom"`
@@ -27,7 +27,7 @@ type Stat struct {
 	Items            []StatItem  `json:"items"`
 	RunnedAt         string      `json:"runnedAt"`
 	CreatedAt        string      `json:"createdAt"`
-	ApiRequestsCount int         `json:"apiRequestsCount"`
+	APIRequestsCount int         `json:"apiRequestsCount"`
 }
 
 func (s *Stat) StateHuman() string {
@@ -79,7 +79,7 @@ func (s *Stat) ItemByRequestUUID(uuid string) (*StatItem, bool) {
 	return nil, false
 }
 
-func (s *Stat) ToJson() (string, error) {
+func (s *Stat) ToJSON() (string, error) {
 	j, err := json.Marshal(s)
 
 	return string(j), err

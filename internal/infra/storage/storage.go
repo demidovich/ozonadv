@@ -24,7 +24,7 @@ func NewDefault() *Storage {
 }
 
 func New(rootDir string) *Storage {
-	rootDir = rootDir + "/.ozonadv"
+	rootDir += "/.ozonadv"
 	cabinetsFile := rootDir + "/cabinets.json"
 	statsDir := rootDir + "/stats"
 

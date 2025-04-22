@@ -13,20 +13,20 @@ import (
 func main() {
 	log.SetFlags(0)
 
-	app := app.New(os.Stdout)
-	defer app.Shutdown()
+	appInstance := app.New(os.Stdout)
+	defer appInstance.Shutdown()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigs
-		app.Shutdown()
+		appInstance.Shutdown()
 		os.Exit(1)
 	}()
 
-	err := ui.Home(app)
+	err := ui.Home(appInstance)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	fmt.Println("")

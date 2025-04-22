@@ -15,7 +15,8 @@ func printCampaignsTable(campaigns []models.Campaign) {
 	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Статус"})
 	tw.AppendRow(table.Row{"", "", "", "", "", ""})
 
-	for _, c := range campaigns {
+	for i := range campaigns {
+		c := &campaigns[i]
 		tw.AppendRow(table.Row{
 			c.ID,
 			c.AdvObjectType,

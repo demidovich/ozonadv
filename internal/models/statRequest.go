@@ -22,7 +22,7 @@ type StatRequest struct {
 	Error     string `json:"error"`
 	Link      string `json:"link"`
 	Request   struct {
-		CampaignId string   `json:"campaignId"`
+		CampaignID string   `json:"campaignId"`
 		Campaigns  []string `json:"campaigns"`
 		DateFrom   string   `json:"dateFrom"`
 		DateTo     string   `json:"dateTo"`
@@ -32,19 +32,19 @@ type StatRequest struct {
 	} `json:"request"`
 }
 
-func (s *StatRequest) CampaignId() (value string) {
-	switch true {
+func (s *StatRequest) CampaignID() (value string) {
+	switch {
 	case len(s.Request.Campaigns) > 0:
 		value = s.Request.Campaigns[0]
-	case s.Request.CampaignId != "":
-		value = s.Request.CampaignId
+	case s.Request.CampaignID != "":
+		value = s.Request.CampaignID
 	}
 
 	return
 }
 
 func (s *StatRequest) DateFrom() (value string) {
-	switch true {
+	switch {
 	case s.Request.DateFrom != "":
 		value = s.Request.DateFrom
 	case s.Request.From != "":
@@ -55,7 +55,7 @@ func (s *StatRequest) DateFrom() (value string) {
 }
 
 func (s *StatRequest) DateTo() (value string) {
-	switch true {
+	switch {
 	case s.Request.DateTo != "":
 		value = s.Request.DateTo
 	case s.Request.To != "":

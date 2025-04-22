@@ -5,13 +5,7 @@ import (
 	"regexp"
 )
 
-var (
-	regexpDate *regexp.Regexp
-)
-
-func init() {
-	regexpDate = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
-}
+var regexpDate = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 func Required(s string) error {
 	if s == "" {

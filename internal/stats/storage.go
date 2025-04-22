@@ -3,7 +3,7 @@ package stats
 import "ozonadv/internal/models"
 
 type Storage interface {
-	All() []models.Stat
+	All() []*models.Stat
 
 	Add(stat *models.Stat)
 

@@ -51,7 +51,8 @@ func (c statsPage) Home() error {
 	var stat *models.Stat
 	var ok bool
 
-	if action == "create_stat" {
+	switch action {
+	case "create_stat":
 		cabinet, err := c.chooseCabinetForm()
 		if isFormCanceled(err) {
 			return c.Home()
@@ -65,9 +66,9 @@ func (c statsPage) Home() error {
 		if err == nil || isFormCanceled(err) {
 			return c.Home()
 		}
-	} else if action == "back" {
+	case "back":
 		return ErrGoBack
-	} else {
+	default:
 		statUUID := action
 		if stat, ok = c.statsService.Find(statUUID); !ok {
 			err = errors.New("отчет не найден")
@@ -89,10 +90,10 @@ func (c statsPage) Home() error {
 
 func (c statsPage) stat(stat *models.Stat) error {
 	fmt.Println("Параметры отчета")
-	c.printStatTable(*stat)
+	c.printStatTable(stat)
 	fmt.Println("")
 	fmt.Println("Кампании отчета")
-	c.printStatCampaignsTable(*stat)
+	c.printStatCampaignsTable(stat)
 	fmt.Println("")
 
 	options := []helpers.ListOption{
@@ -107,18 +108,19 @@ func (c statsPage) stat(stat *models.Stat) error {
 		return err
 	}
 
-	if action == "download" {
+	switch action {
+	case "download":
 		if helpers.Confirm("Запустить загрузку отчета?") {
 			c.statsService.Download(stat)
 		}
 		return c.stat(stat)
-	} else if action == "export" {
+	case "export":
 		var file string
 		file, err = c.statExportForm()
 		if err == nil {
 			err = c.statsService.ExportToFile(stat, file)
 		}
-	} else if action == "remove" {
+	case "remove":
 		if helpers.Confirm("Удалить отчет \"" + stat.Options.Name + "\"?") {
 			c.statsService.Remove(stat)
 			err = ErrGoBack
@@ -126,7 +128,7 @@ func (c statsPage) stat(stat *models.Stat) error {
 		} else {
 			err = c.stat(stat)
 		}
-	} else if action == "back" {
+	case "back":
 		err = ErrGoBack
 	}
 
@@ -156,15 +158,16 @@ func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
 	var stat *models.Stat
 	var ok bool
 
-	if action == "create_stat" {
+	switch action {
+	case "create_stat":
 		stat, err = c.createStat(cabinet)
 		if isFormCanceled(err) {
 			fmt.Println("")
 			return c.CabinetStats(cabinet)
 		}
-	} else if action == "back" {
+	case "back":
 		return ErrGoBack
-	} else {
+	default:
 		statUUID := action
 		if stat, ok = c.statsService.Find(statUUID); !ok {
 			err = errors.New("отчет не найден")
@@ -185,10 +188,7 @@ func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
 
 func (c statsPage) chooseCabinetForm() (*models.Cabinet, error) {
 	if len(c.cabsService.All()) == 0 {
-		return nil, errors.New(
-			"Нет рекламных кабинетов.\n" +
-				"Для создания отчета необходимо создать рекламный кабинет.",
-		)
+		return nil, errors.New("Нет рекламных кабинетов.\nДля создания отчета необходимо создать рекламный кабинет")
 	}
 
 	fmt.Println("Выбор кабинета")
@@ -245,7 +245,7 @@ func (c statsPage) createStat(cabinet models.Cabinet) (*models.Stat, error) {
 
 	options.CabinetUUID = cabinet.UUID
 	options.CabinetName = cabinet.Name
-	options.CabinetClientId = cabinet.ClientID
+	options.CabinetClientID = cabinet.ClientID
 	options.CabinetClientSecret = cabinet.ClientSecret
 
 	campaigns, err := chooseCampaignsForm(*c.cabsService, cabinet)
@@ -365,7 +365,7 @@ func (c statsPage) statExportForm() (string, error) {
 	return file, nil
 }
 
-func (c statsPage) printStatTable(stat models.Stat) {
+func (c statsPage) printStatTable(stat *models.Stat) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"Отчет", stat.Options.Name})
@@ -379,7 +379,7 @@ func (c statsPage) printStatTable(stat models.Stat) {
 	fmt.Println(tw.Render())
 }
 
-func (c statsPage) printStatCampaignsTable(stat models.Stat) {
+func (c statsPage) printStatCampaignsTable(stat *models.Stat) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Состояние отчета"})

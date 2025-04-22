@@ -19,7 +19,7 @@ func newStorageCabinets(file string) *storageCabinets {
 	}
 
 	utils.FileInitOrFail(file)
-	utils.JsonFileReadOrFail(file, &s.data, "{}")
+	utils.JSONFileReadOrFail(file, &s.data, "{}")
 
 	return &s
 }
@@ -56,5 +56,5 @@ func (s *storageCabinets) Remove(cabinet models.Cabinet) {
 }
 
 func (s *storageCabinets) saveStorage() {
-	utils.JsonFileWriteOrFail(s.file, s.data)
+	utils.JSONFileWriteOrFail(s.file, s.data)
 }

@@ -20,7 +20,7 @@ func (s *statRequests) All() ([]models.StatRequest, error) {
 		Total string `json:"total"`
 	}{}
 
-	url := urlApi("/client/statistics/externallist")
+	url := urlAPI("/client/statistics/externallist")
 	err := s.api.httpGet(url, &response)
 
 	result := []models.StatRequest{}
@@ -32,7 +32,7 @@ func (s *statRequests) All() ([]models.StatRequest, error) {
 }
 
 type CreateStatRequestOptions struct {
-	CampaignId string `validate:"required,numeric"`
+	CampaignID string `validate:"required,numeric"`
 	DateFrom   string `validate:"required,datetime=2006-01-02"`
 	DateTo     string `validate:"required,datetime=2006-01-02"`
 	GroupBy    string `validate:"required,oneof=NO_GROUP_BY DATE START_OF_WEEK START_OF_MONTH"`
@@ -63,7 +63,7 @@ func (s *statRequests) CreateTotal(campaign models.Campaign, options CreateStatR
 	}
 
 	response := models.StatRequest{}
-	err := s.api.httpPost(urlApi(resource), payload, &response)
+	err := s.api.httpPost(urlAPI(resource), payload, &response)
 
 	return response, err
 }
@@ -98,8 +98,8 @@ func (s *statRequests) CreateObject(campaign models.Campaign, options CreateStat
 	}
 
 	response := models.StatRequest{}
-	err := s.api.httpPost(urlAdvApi(resource), payload, &response)
-	response.Request.CampaignId = campaign.ID
+	err := s.api.httpPost(urlAdvAPI(resource), payload, &response)
+	response.Request.CampaignID = campaign.ID
 
 	return response, err
 }
@@ -107,7 +107,7 @@ func (s *statRequests) CreateObject(campaign models.Campaign, options CreateStat
 func (s *statRequests) Retrieve(uuid string) (models.StatRequest, error) {
 	response := models.StatRequest{}
 
-	url := urlApi("/client/statistics/" + uuid)
+	url := urlAPI("/client/statistics/" + uuid)
 	err := s.api.httpGet(url, &response)
 
 	return response, err

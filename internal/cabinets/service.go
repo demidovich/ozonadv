@@ -71,7 +71,7 @@ func (f *CampaignFilters) ids() map[string]bool {
 		return v
 	}
 
-	s := strings.Replace(f.Title, " ", "", -1)
+	s := strings.ReplaceAll(f.Title, " ", "")
 	s = strings.Trim(s, ",")
 
 	for _, id := range strings.Split(s, ",") {
@@ -133,7 +133,7 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 func (s *Service) ozon(c models.Cabinet) *ozon.Ozon {
 	return ozon.New(
 		ozon.Config{
-			ClientId:     c.ClientID,
+			ClientID:     c.ClientID,
 			ClientSecret: c.ClientSecret,
 		},
 		s.debug,

@@ -12,7 +12,7 @@ type StatItem struct {
 func (s *StatItem) State() string {
 	var val string
 
-	switch true {
+	switch {
 	case s.Request.File != "":
 		val = "Файл скачан"
 	case s.Request.Link != "":

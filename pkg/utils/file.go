@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 )
 
-func JsonFileRead(path string, result any, defaultContent string) error {
+func JSONFileRead(path string, result any, defaultContent string) error {
+	path = filepath.Clean(path)
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	if string(content) == "" {
+	if len(content) == 0 {
 		content = []byte(defaultContent)
 	}
 
@@ -24,20 +26,21 @@ func JsonFileRead(path string, result any, defaultContent string) error {
 	return nil
 }
 
-func JsonFileReadOrFail(path string, result any, defaultContent string) {
-	err := JsonFileRead(path, result, defaultContent)
+func JSONFileReadOrFail(path string, result any, defaultContent string) {
+	err := JSONFileRead(path, result, defaultContent)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func JsonFileWrite(path string, data any) error {
+func JSONFileWrite(path string, data any) error {
+	path = filepath.Clean(path)
 	content, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path, content, 0644)
+	err = os.WriteFile(path, content, 0600) // 0644
 	if err != nil {
 		return err
 	}
@@ -45,15 +48,16 @@ func JsonFileWrite(path string, data any) error {
 	return nil
 }
 
-func JsonFileWriteOrFail(path string, data any) {
-	err := JsonFileWrite(path, data)
+func JSONFileWriteOrFail(path string, data any) {
+	err := JSONFileWrite(path, data)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func DirInit(path string) error {
-	return os.MkdirAll(path, 0777)
+	path = filepath.Clean(path)
+	return os.MkdirAll(path, 0750) // 0777
 }
 
 func DirInitOrFail(path string) {
@@ -70,6 +74,7 @@ func DirExists(path string) bool {
 }
 
 func DirList(path string) ([]string, error) {
+	path = filepath.Clean(path)
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		return []string{}, err
@@ -96,18 +101,19 @@ func DirListOrFail(path string) []string {
 }
 
 func FileInit(path string) error {
+	path = filepath.Clean(path)
+
 	f, err := os.Open(path)
 	if err == nil {
-		f.Close()
-		return nil
+		return f.Close()
 	}
 
 	if os.IsNotExist(err) {
 		f, err = os.Create(path)
-		if err != nil {
-			return err
+		if err == nil {
+			return f.Close()
 		}
-		f.Close()
+		return err
 	}
 
 	return err
@@ -121,9 +127,9 @@ func FileInitOrFail(path string) {
 }
 
 func FileRemoveOrFail(path string) {
+	path = filepath.Clean(path)
 	err := os.Remove(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }

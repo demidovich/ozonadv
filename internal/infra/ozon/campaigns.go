@@ -10,13 +10,13 @@ type campaigns struct {
 }
 
 type FindCampaignsFilters struct {
-	Ids []string
+	IDs []string
 }
 
 func (c *campaigns) Find(filters FindCampaignsFilters) ([]models.Campaign, error) {
 	params := ""
-	if len(filters.Ids) > 0 {
-		params = "?campaignIds=" + strings.Join(filters.Ids, ",")
+	if len(filters.IDs) > 0 {
+		params = "?campaignIDs=" + strings.Join(filters.IDs, ",")
 	}
 
 	response := struct {
@@ -24,7 +24,7 @@ func (c *campaigns) Find(filters FindCampaignsFilters) ([]models.Campaign, error
 		Total string            `json:"total"`
 	}{}
 
-	url := urlApi("/client/campaign") + params
+	url := urlAPI("/client/campaign") + params
 	err := c.api.httpGet(url, &response)
 
 	return response.List, err

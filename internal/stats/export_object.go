@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"ozonadv/internal/models"
+	"path/filepath"
 	"strings"
 )
 
@@ -25,9 +26,9 @@ func newObjectStatExport(storage Storage, debug Debug, stat *models.Stat) object
 func (s objectStatExport) toFile(file string) error {
 	file = strings.TrimSuffix(file, ".csv")
 
-	bannersFile := file + "-banners.csv"
-	videoBannersFile := file + "-video-banners.csv"
-	globalPromoFile := file + "-global-promo.csv"
+	bannersFile := filepath.Clean(file + "-banners.csv")
+	videoBannersFile := filepath.Clean(file + "-video-banners.csv")
+	globalPromoFile := filepath.Clean(file + "-global-promo.csv")
 
 	s.debug.Println("")
 
@@ -69,7 +70,7 @@ func (s objectStatExport) toFile(file string) error {
 			continue
 		}
 
-		s.appendCsvCampaignId(&rows, campaign)
+		s.appendCsvCampaignID(&rows, campaign)
 
 		for _, r := range rows {
 			if campaign.IsBanner() {
@@ -143,7 +144,7 @@ func (s objectStatExport) fileLines(file string) []string {
 	return strings.Split(string(data), "\n")
 }
 
-func (s objectStatExport) appendCsvCampaignId(rows *[]string, campaign models.Campaign) {
+func (s objectStatExport) appendCsvCampaignID(rows *[]string, campaign models.Campaign) {
 	for i := range *rows {
 		(*rows)[i] = campaign.ID + ";" + (*rows)[i]
 	}

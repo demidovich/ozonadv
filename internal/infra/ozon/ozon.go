@@ -1,7 +1,7 @@
 package ozon
 
 type Config struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
 }
 
@@ -13,7 +13,7 @@ type Ozon struct {
 }
 
 func New(config Config, debug Debug) *Ozon {
-	api := newApi(config, debug)
+	api := newAPI(config, debug)
 	return &Ozon{
 		debug:        debug,
 		api:          api,
@@ -30,6 +30,6 @@ func (o *Ozon) StatRequests() *statRequests {
 	return o.statRequests
 }
 
-func (o *Ozon) ApiUsageInfo() {
+func (o *Ozon) APIUsageInfo() {
 	o.debug.Println("[shutdown] выполнено запросов ozon api:", o.api.RequestsCount())
 }

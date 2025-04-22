@@ -13,12 +13,12 @@ var ErrTooManyRequests = errors.New("Ozon 429")
 
 const (
 	apiHost    = "https://api-performance.ozon.ru"
-	advApiHost = "https://performance.ozon.ru"
+	advAPIHost = "https://performance.ozon.ru"
 )
 
 type api struct {
 	debug         Debug
-	clientId      string
+	clientID      string
 	clientSecret  string
 	accessToken   *accessToken
 	resty         *resty.Client
@@ -38,11 +38,11 @@ func (a *accessToken) Valid() bool {
 	return lifetime < (time.Duration(120) * time.Second)
 }
 
-func newApi(cfg Config, debug Debug) *api {
+func newAPI(cfg Config, debug Debug) *api {
 	a := &api{
 		debug:        debug,
 		resty:        resty.New(),
-		clientId:     cfg.ClientId,
+		clientID:     cfg.ClientID,
 		clientSecret: cfg.ClientSecret,
 	}
 
@@ -93,7 +93,7 @@ func (a *api) httpGetRaw(url string) (data []byte, err error) {
 		Get(url)
 
 	if err != nil {
-		return data, fmt.Errorf("GET RAW %s %v", url, err)
+		return data, fmt.Errorf("GET RAW %s %w", url, err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
@@ -106,7 +106,7 @@ func (a *api) httpGetRaw(url string) (data []byte, err error) {
 }
 
 // HTTP Post Request
-func (a *api) httpPost(url string, payload any, result any) error {
+func (a *api) httpPost(url string, payload, result any) error {
 	token, err := a.validAccessToken()
 	if err != nil {
 		return err
@@ -141,10 +141,10 @@ func (a *api) validAccessToken() (string, error) {
 		return a.accessToken.AccessToken, nil
 	}
 
-	url := urlApi("/client/token")
+	url := urlAPI("/client/token")
 
 	payload := map[string]string{
-		"client_id":     a.clientId,
+		"client_id":     a.clientID,
 		"client_secret": a.clientSecret,
 		"grant_type":    "client_credentials",
 	}
@@ -180,10 +180,10 @@ func (a *api) logRequest(method, url string) {
 	a.debug.Printf("[ozon api] %s %s\n", method, url)
 }
 
-func urlApi(resource string) string {
+func urlAPI(resource string) string {
 	return fmt.Sprintf("%s/api%s", apiHost, resource)
 }
 
-func urlAdvApi(resource string) string {
-	return fmt.Sprintf("%s/api/adv-api/external/api%s", advApiHost, resource)
+func urlAdvAPI(resource string) string {
+	return fmt.Sprintf("%s/api/adv-api/external/api%s", advAPIHost, resource)
 }
