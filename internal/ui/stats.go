@@ -10,6 +10,7 @@ import (
 	"ozonadv/internal/ui/forms"
 	"ozonadv/internal/ui/forms/validators"
 	"ozonadv/internal/ui/helpers"
+	"time"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -248,12 +249,8 @@ func (c statsPage) createStat(cabinet models.Cabinet) (*models.Stat, error) {
 	options.CabinetClientID = cabinet.ClientID
 	options.CabinetClientSecret = cabinet.ClientSecret
 
-	campaigns, err := chooseCampaignsForm(*c.cabsService, cabinet)
-
-	if isFormCanceled(err) {
-		return nil, ErrFormCancel
-	}
-
+	// campaigns, err := chooseCampaignsForm(*c.cabsService, cabinet)
+	campaigns, err := c.createStatCampaigns(options, cabinet)
 	if err != nil {
 		return nil, err
 	}
@@ -273,6 +270,34 @@ func (c statsPage) createStat(cabinet models.Cabinet) (*models.Stat, error) {
 	fmt.Println("Отчет создан")
 
 	return stat, err
+}
+
+// Запрос кампаний кабинета, ограничение их по интервалу отчета
+func (c statsPage) createStatCampaigns(options models.StatOptions, cabinet models.Cabinet) ([]models.Campaign, error) {
+	campaigns, err := chooseCampaignsForm(*c.cabsService, cabinet)
+	if err != nil {
+		return campaigns, err
+	}
+
+	statDateFrom, _ := time.Parse("2006-01-02", options.DateFrom)
+	statDateTo, _ := time.Parse("2006-01-02", options.DateTo)
+
+	inInterval := []models.Campaign{}
+	for _, c := range campaigns {
+		campDateTo, err := time.Parse("2006-01-02", c.ToDate)
+		if err == nil && statDateFrom.After(campDateTo) {
+			continue
+		}
+
+		campDateFrom, err := time.Parse("2006-01-02", c.FromDate)
+		if err == nil && statDateTo.Before(campDateFrom) {
+			continue
+		}
+
+		inInterval = append(inInterval, c)
+	}
+
+	return inInterval, nil
 }
 
 func (c statsPage) statOptionsForm(options *models.StatOptions) error {
