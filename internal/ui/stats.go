@@ -294,13 +294,13 @@ func (c statsPage) statOptionsForm(options *models.StatOptions) error {
 				Value(&options.Type),
 			huh.NewInput().
 				Title(forms.RequiredTitle("Начало интервала, дата")).
-				Placeholder("ГГГГ-ДД-ММ").
+				Placeholder("ГГГГ-ММ-ДД").
 				CharLimit(10).
 				Validate(validators.DateRequiured).
 				Value(&options.DateFrom),
 			huh.NewInput().
 				Title(forms.RequiredTitle("Конец интервала, дата")).
-				Placeholder("ГГГГ-ДД-ММ").
+				Placeholder("ГГГГ-ММ-ДД").
 				CharLimit(10).
 				Validate(validators.DateRequiured).
 				Value(&options.DateTo),

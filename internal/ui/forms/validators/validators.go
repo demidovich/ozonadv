@@ -17,7 +17,7 @@ func Required(s string) error {
 
 func Date(s string) error {
 	if !regexpDate.MatchString(s) {
-		return errors.New("поле должно быть в формате ГГГГ-ДД-ММ")
+		return errors.New("поле должно быть в формате ГГГГ-ММ-ДД")
 	}
 
 	return nil
@@ -29,7 +29,7 @@ func DateRequiured(s string) error {
 	}
 
 	if !regexpDate.MatchString(s) {
-		return errors.New("поле должно быть в формате ГГГГ-ДД-ММ")
+		return errors.New("поле должно быть в формате ГГГГ-ММ-ДД")
 	}
 
 	return nil
