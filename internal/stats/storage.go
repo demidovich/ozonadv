@@ -1,6 +1,6 @@
 package stats
 
-import "ozonadv/internal/models"
+import "github.com/demidovich/ozonadv/internal/models"
 
 type Storage interface {
 	All() []*models.Stat

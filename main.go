@@ -5,9 +5,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"ozonadv/internal/app"
-	"ozonadv/internal/ui"
 	"syscall"
+
+	"github.com/demidovich/ozonadv/internal/app"
+	"github.com/demidovich/ozonadv/internal/ui"
 )
 
 func main() {

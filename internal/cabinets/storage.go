@@ -1,6 +1,6 @@
 package cabinets
 
-import "ozonadv/internal/models"
+import "github.com/demidovich/ozonadv/internal/models"
 
 type storage interface {
 	All() []models.Cabinet

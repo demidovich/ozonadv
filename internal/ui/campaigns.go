@@ -2,8 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"ozonadv/internal/cabinets"
-	"ozonadv/internal/models"
+
+	"github.com/demidovich/ozonadv/internal/cabinets"
+	"github.com/demidovich/ozonadv/internal/models"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"

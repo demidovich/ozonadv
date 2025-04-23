@@ -1,4 +1,4 @@
-module ozonadv
+module github.com/demidovich/ozonadv
 
 go 1.24.2
 

@@ -3,13 +3,14 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"ozonadv/internal/cabinets"
-	"ozonadv/internal/models"
-	"ozonadv/internal/stats"
-	"ozonadv/internal/ui/colors"
-	"ozonadv/internal/ui/forms"
-	"ozonadv/internal/ui/forms/validators"
-	"ozonadv/internal/ui/helpers"
+
+	"github.com/demidovich/ozonadv/internal/cabinets"
+	"github.com/demidovich/ozonadv/internal/models"
+	"github.com/demidovich/ozonadv/internal/stats"
+	"github.com/demidovich/ozonadv/internal/ui/colors"
+	"github.com/demidovich/ozonadv/internal/ui/forms"
+	"github.com/demidovich/ozonadv/internal/ui/forms/validators"
+	"github.com/demidovich/ozonadv/internal/ui/helpers"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"

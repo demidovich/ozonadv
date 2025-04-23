@@ -1,8 +1,9 @@
 package ozon
 
 import (
-	"ozonadv/internal/models"
 	"strings"
+
+	"github.com/demidovich/ozonadv/internal/models"
 )
 
 type campaigns struct {

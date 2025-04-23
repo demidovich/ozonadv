@@ -1,9 +1,10 @@
 package stats
 
 import (
-	"ozonadv/internal/infra/ozon"
-	"ozonadv/internal/models"
 	"time"
+
+	"github.com/demidovich/ozonadv/internal/infra/ozon"
+	"github.com/demidovich/ozonadv/internal/models"
 
 	googleUUID "github.com/google/uuid"
 )

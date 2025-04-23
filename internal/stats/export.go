@@ -2,7 +2,8 @@ package stats
 
 import (
 	"errors"
-	"ozonadv/internal/models"
+
+	"github.com/demidovich/ozonadv/internal/models"
 )
 
 type export struct {

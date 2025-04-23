@@ -1,8 +1,8 @@
 package models
 
 import (
-	"ozonadv/pkg/utils"
-	"ozonadv/pkg/validation"
+	"github.com/demidovich/ozonadv/pkg/utils"
+	"github.com/demidovich/ozonadv/pkg/validation"
 )
 
 type Cabinet struct {

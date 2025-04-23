@@ -4,10 +4,11 @@ import (
 	"cmp"
 	"log"
 	"os"
-	"ozonadv/internal/models"
-	"ozonadv/pkg/utils"
 	"path/filepath"
 	"slices"
+
+	"github.com/demidovich/ozonadv/internal/models"
+	"github.com/demidovich/ozonadv/pkg/utils"
 )
 
 type storageStats struct {

@@ -2,10 +2,11 @@ package storage
 
 import (
 	"cmp"
-	"ozonadv/internal/models"
-	"ozonadv/pkg/utils"
 	"slices"
 	"time"
+
+	"github.com/demidovich/ozonadv/internal/models"
+	"github.com/demidovich/ozonadv/pkg/utils"
 )
 
 type storageCabinets struct {
