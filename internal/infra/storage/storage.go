@@ -3,7 +3,8 @@ package storage
 import (
 	"log"
 	"os"
-	"ozonadv/pkg/utils"
+
+	"github.com/demidovich/ozonadv/pkg/utils"
 )
 
 type Storage struct {

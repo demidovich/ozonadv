@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"ozonadv/internal/models"
 	"path/filepath"
 	"strings"
+
+	"github.com/demidovich/ozonadv/internal/models"
 )
 
 type objectStatExport struct {

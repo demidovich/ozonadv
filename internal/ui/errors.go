@@ -3,7 +3,8 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"ozonadv/internal/ui/colors"
+
+	"github.com/demidovich/ozonadv/internal/ui/colors"
 )
 
 var (

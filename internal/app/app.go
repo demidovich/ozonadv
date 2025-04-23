@@ -2,9 +2,10 @@ package app
 
 import (
 	"io"
-	"ozonadv/internal/cabinets"
-	"ozonadv/internal/infra/storage"
-	"ozonadv/internal/stats"
+
+	"github.com/demidovich/ozonadv/internal/cabinets"
+	"github.com/demidovich/ozonadv/internal/infra/storage"
+	"github.com/demidovich/ozonadv/internal/stats"
 )
 
 type Application struct {

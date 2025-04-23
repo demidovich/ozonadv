@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"ozonadv/internal/infra/ozon"
-	"ozonadv/internal/models"
 	"sync"
 	"time"
+
+	"github.com/demidovich/ozonadv/internal/infra/ozon"
+	"github.com/demidovich/ozonadv/internal/models"
 )
 
 const (

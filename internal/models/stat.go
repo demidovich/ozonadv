@@ -2,7 +2,8 @@ package models
 
 import (
 	"encoding/json"
-	"ozonadv/pkg/validation"
+
+	"github.com/demidovich/ozonadv/pkg/validation"
 )
 
 type StatOptions struct {
