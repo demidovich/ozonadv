@@ -18,7 +18,7 @@ func (c *Cabinet) Validate() error {
 }
 
 func (c *Cabinet) ClientSecretMasked(length int) string {
-	return utils.StringMasked(c.ClientSecret, length)
+	return utils.StringMasked(c.ClientSecret, "***", length)
 }
 
 // func (c *Cabinet) EqualTo(other *Cabinet) bool {
