@@ -25,3 +25,13 @@ func Confirm(title string) bool {
 
 	return value
 }
+
+func WaitButton(text string) {
+	_ = huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Negative("").
+				Affirmative(text),
+		),
+	).Run()
+}

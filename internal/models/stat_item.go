@@ -25,3 +25,15 @@ func (s *StatItem) State() string {
 
 	return val
 }
+
+func (s *StatItem) NotStarted() bool {
+	return s.Request.UUID == ""
+}
+
+func (s *StatItem) InProccess() bool {
+	return s.Request.UUID != ""
+}
+
+func (s *StatItem) Completed() bool {
+	return s.Request.File != ""
+}

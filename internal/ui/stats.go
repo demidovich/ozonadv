@@ -95,11 +95,9 @@ func (c statsPage) stat(stat *models.Stat) error {
 	fmt.Println("Параметры отчета")
 	c.printStatTable(stat)
 	fmt.Println("")
-	fmt.Println("Кампании отчета")
-	c.printStatCampaignsTable(stat)
-	fmt.Println("")
 
 	options := []helpers.ListOption{
+		{Key: "Кампании", Value: "campaigns"},
 		{Key: "Загрузка", Value: "download"},
 		{Key: "Экспорт", Value: "export"},
 		{Key: "Удалить", Value: "remove"},
@@ -112,6 +110,9 @@ func (c statsPage) stat(stat *models.Stat) error {
 	}
 
 	switch action {
+	case "campaigns":
+		c.statCampaigns(stat)
+		return c.stat(stat)
 	case "download":
 		if helpers.Confirm("Запустить загрузку отчета?") {
 			c.statsService.Download(stat)
@@ -136,6 +137,16 @@ func (c statsPage) stat(stat *models.Stat) error {
 	}
 
 	return err
+}
+
+func (c statsPage) statCampaigns(stat *models.Stat) error {
+	fmt.Println("Кампании отчета")
+	c.printStatCampaignsTable(stat)
+	fmt.Println("")
+
+	helpers.WaitButton("Назад")
+
+	return nil
 }
 
 func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
@@ -400,7 +411,8 @@ func (c statsPage) printStatTable(stat *models.Stat) {
 	tw.AppendRow(table.Row{"Начало интервала, дата", stat.Options.DateFrom})
 	tw.AppendRow(table.Row{"Конец интервала, дата", stat.Options.DateTo})
 	tw.AppendRow(table.Row{"Группировка", stat.Options.GroupBy})
-	tw.AppendRow(table.Row{"Кампаний", len(stat.Items)})
+	tw.AppendRow(table.Row{"Кампаний всего", len(stat.Items)})
+	tw.AppendRow(table.Row{"Кампаний обработано", len(stat.CampaignsCompleted())})
 	tw.AppendRow(table.Row{"Состояние", stat.StateHuman()})
 
 	fmt.Println(tw.Render())
@@ -416,12 +428,10 @@ func (c statsPage) printStatCampaignsTable(stat *models.Stat) {
 		tw.AppendRow(table.Row{
 			item.Campaign.ID,
 			item.Campaign.AdvObjectType,
-			// c.StateShort(),
 			item.Campaign.TitleTruncated(45),
 			item.Campaign.FromDate,
 			item.Campaign.ToDate,
 			item.State(),
-			// c.Title,
 		})
 	}
 
