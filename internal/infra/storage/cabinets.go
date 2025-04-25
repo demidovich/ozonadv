@@ -9,13 +9,13 @@ import (
 	"github.com/demidovich/ozonadv/pkg/utils"
 )
 
-type storageCabinets struct {
+type cabinetsStorage struct {
 	file string
 	data map[string]models.Cabinet
 }
 
-func newStorageCabinets(file string) *storageCabinets {
-	s := storageCabinets{
+func newCabinetsStorage(file string) *cabinetsStorage {
+	s := cabinetsStorage{
 		file: file,
 	}
 
@@ -25,7 +25,7 @@ func newStorageCabinets(file string) *storageCabinets {
 	return &s
 }
 
-func (s *storageCabinets) All() []models.Cabinet {
+func (s *cabinetsStorage) All() []models.Cabinet {
 	result := make([]models.Cabinet, 0, len(s.data))
 	for _, c := range s.data {
 		result = append(result, c)
@@ -38,24 +38,24 @@ func (s *storageCabinets) All() []models.Cabinet {
 	return result
 }
 
-func (s *storageCabinets) Has(cabinet models.Cabinet) bool {
+func (s *cabinetsStorage) Has(cabinet models.Cabinet) bool {
 	_, ok := s.data[cabinet.UUID]
 	return ok
 }
 
-func (s *storageCabinets) Add(cabinet models.Cabinet) {
+func (s *cabinetsStorage) Add(cabinet models.Cabinet) {
 	cabinet.CreatedAt = time.Now().String()
 	s.data[cabinet.UUID] = cabinet
 
 	s.saveStorage()
 }
 
-func (s *storageCabinets) Remove(cabinet models.Cabinet) {
+func (s *cabinetsStorage) Remove(cabinet models.Cabinet) {
 	delete(s.data, cabinet.UUID)
 
 	s.saveStorage()
 }
 
-func (s *storageCabinets) saveStorage() {
+func (s *cabinetsStorage) saveStorage() {
 	utils.JSONFileWriteOrFail(s.file, s.data)
 }

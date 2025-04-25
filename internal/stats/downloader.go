@@ -264,7 +264,7 @@ func (d *downloader) downloadStat(statRequest models.StatRequest) (string, error
 			continue
 		}
 
-		d.storage.SaveDownloadedFile(d.stat, filename, data)
+		d.storage.AddDownloadsFile(d.stat, filename, data)
 		d.debugStatRequest(&statRequest, "скачан файл: ", filename)
 
 		return filename, nil

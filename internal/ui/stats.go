@@ -112,7 +112,7 @@ func (c statsPage) stat(stat *models.Stat) error {
 	switch action {
 	case "campaigns":
 		c.statCampaigns(stat)
-		return c.stat(stat)
+		err = c.stat(stat)
 	case "download":
 		if helpers.Confirm("Запустить загрузку отчета?") {
 			c.statsService.Download(stat)
@@ -139,14 +139,12 @@ func (c statsPage) stat(stat *models.Stat) error {
 	return err
 }
 
-func (c statsPage) statCampaigns(stat *models.Stat) error {
+func (c statsPage) statCampaigns(stat *models.Stat) {
 	fmt.Println("Кампании отчета")
 	c.printStatCampaignsTable(stat)
 	fmt.Println("")
 
 	helpers.WaitButton("Назад")
-
-	return nil
 }
 
 func (c statsPage) CabinetStats(cabinet models.Cabinet) error {
