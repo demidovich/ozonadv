@@ -1,9 +1,10 @@
 package ozon
 
 import (
-	"ozonadv/internal/models"
-	"ozonadv/pkg/validation"
 	"strings"
+
+	"github.com/demidovich/ozonadv/internal/models"
+	"github.com/demidovich/ozonadv/pkg/validation"
 )
 
 type statRequests struct {

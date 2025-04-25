@@ -3,8 +3,9 @@ package ui
 import (
 	"errors"
 	"os"
-	"ozonadv/internal/app"
-	"ozonadv/internal/ui/helpers"
+
+	"github.com/demidovich/ozonadv/internal/app"
+	"github.com/demidovich/ozonadv/internal/ui/helpers"
 )
 
 type ui struct {

@@ -3,12 +3,13 @@ package cabinets
 import (
 	"io"
 	"log"
-	"ozonadv/internal/infra/ozon"
-	"ozonadv/internal/models"
 	"regexp"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/demidovich/ozonadv/internal/infra/ozon"
+	"github.com/demidovich/ozonadv/internal/models"
 )
 
 type Service struct {

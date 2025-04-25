@@ -2,8 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"ozonadv/internal/cabinets"
-	"ozonadv/internal/models"
+
+	"github.com/demidovich/ozonadv/internal/cabinets"
+	"github.com/demidovich/ozonadv/internal/models"
 
 	"github.com/charmbracelet/huh"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -48,17 +49,17 @@ func chooseCampaignsForm(cabsService cabinets.Service, cabinet models.Cabinet) (
 				Value(&filters.Title),
 			huh.NewMultiSelect[string]().
 				Title("Статусы").
-				Description("Один или несколько статусов, можно не заполнять").
+				Description("Предзаполнены статусы кампаний, которые могли работать").
 				Options(
-					huh.NewOption("RUNNING", "CAMPAIGN_STATE_RUNNING"),
+					huh.NewOption("RUNNING", "CAMPAIGN_STATE_RUNNING").Selected(true),
+					huh.NewOption("INACTIVE", "CAMPAIGN_STATE_INACTIVE").Selected(true),
+					huh.NewOption("STOPPED", "CAMPAIGN_STATE_STOPPED").Selected(true),
+					huh.NewOption("FINISHED", "CAMPAIGN_STATE_FINISHED").Selected(true),
+					huh.NewOption("ARCHIVED", "CAMPAIGN_STATE_ARCHIVED").Selected(true),
+					huh.NewOption("MODERATION DRAFT", "CAMPAIGN_STATE_MODERATION_DRAFT").Selected(true),
+					huh.NewOption("MODERATION IN PROGRESS", "CAMPAIGN_STATE_MODERATION_IN_PROGRESS").Selected(true),
+					huh.NewOption("MODERATION FAILED", "CAMPAIGN_STATE_MODERATION_FAILED").Selected(true),
 					huh.NewOption("PLANNED", "CAMPAIGN_STATE_PLANNED"),
-					huh.NewOption("STOPPED", "CAMPAIGN_STATE_STOPPED"),
-					huh.NewOption("INACTIVE", "CAMPAIGN_STATE_INACTIVE"),
-					huh.NewOption("ARCHIVED", "CAMPAIGN_STATE_ARCHIVED"),
-					huh.NewOption("DRAFT", "CAMPAIGN_STATE_MODERATION_DRAFT"),
-					huh.NewOption("IN PROGRESS", "CAMPAIGN_STATE_MODERATION_IN_PROGRESS"),
-					huh.NewOption("FAILED", "CAMPAIGN_STATE_MODERATION_FAILED"),
-					huh.NewOption("FINISHED", "CAMPAIGN_STATE_FINISHED"),
 				).
 				Value(&filters.States),
 			huh.NewConfirm().

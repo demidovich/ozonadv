@@ -3,15 +3,16 @@ package storage
 import (
 	"log"
 	"os"
-	"ozonadv/pkg/utils"
+
+	"github.com/demidovich/ozonadv/pkg/utils"
 )
 
 type Storage struct {
 	rootDir      string
 	cabinetsFile string
-	cabinets     *storageCabinets
+	cabinets     *cabinetsStorage
 	statsDir     string
-	stats        *storageStats
+	stats        *statsStorage
 }
 
 func NewDefault() *Storage {
@@ -34,9 +35,9 @@ func New(rootDir string) *Storage {
 	return &Storage{
 		rootDir:      rootDir,
 		cabinetsFile: cabinetsFile,
-		cabinets:     newStorageCabinets(cabinetsFile),
+		cabinets:     newCabinetsStorage(cabinetsFile),
 		statsDir:     statsDir,
-		stats:        newStorageStats(statsDir),
+		stats:        newStatsStorage(statsDir),
 	}
 }
 
@@ -44,10 +45,10 @@ func (s *Storage) RootDir() string {
 	return s.rootDir
 }
 
-func (s *Storage) Cabinets() *storageCabinets {
+func (s *Storage) Cabinets() *cabinetsStorage {
 	return s.cabinets
 }
 
-func (s *Storage) Stats() *storageStats {
+func (s *Storage) Stats() *statsStorage {
 	return s.stats
 }

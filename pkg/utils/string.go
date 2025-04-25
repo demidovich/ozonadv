@@ -6,23 +6,34 @@ import (
 	"unicode/utf8"
 )
 
-func StringMasked(str string, length int) string {
-	mask := "***"
-	maskLen := 3
-	minLen := maskLen + 2
-	strLen := utf8.RuneCountInString(str)
+func StringMasked(str, mask string, maxlen int) string {
+	strlen := utf8.RuneCountInString(str)
+	masklen := utf8.RuneCountInString(mask)
 
-	if strLen < minLen || length < minLen {
+	if strlen < maxlen {
+		maxlen = strlen
+	}
+
+	if masklen < 1 {
+		return str
+	}
+
+	if maxlen < 1 || strlen < masklen+2 {
 		return mask
 	}
 
-	segmentLen := int(math.Round(float64((length - maskLen) / 2)))
-	r := []rune(str)
+	var halflen int
+	if maxlen >= masklen+2 {
+		halflen = int(math.Round(float64((maxlen - masklen) / 2)))
+	} else {
+		halflen = int(math.Round(float64((masklen - 2) / 2)))
+	}
 
+	r := []rune(str)
 	return fmt.Sprintf(
 		"%s%s%s",
+		string(r[:halflen]),
 		mask,
-		string(r[:segmentLen]),
-		string(r[strLen-segmentLen:]),
+		string(r[strlen-halflen:]),
 	)
 }

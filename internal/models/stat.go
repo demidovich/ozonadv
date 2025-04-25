@@ -2,7 +2,8 @@ package models
 
 import (
 	"encoding/json"
-	"ozonadv/pkg/validation"
+
+	"github.com/demidovich/ozonadv/pkg/validation"
 )
 
 type StatOptions struct {
@@ -44,7 +45,7 @@ func (s *Stat) StateHuman() string {
 	}
 
 	if completed {
-		return "Загружен"
+		return "Готов к экспорту"
 	} else {
 		return "В процессе"
 	}
@@ -60,10 +61,45 @@ func (s *Stat) AddCampaign(campaign Campaign) {
 	s.Items = append(s.Items, StatItem{Campaign: campaign})
 }
 
-func (s *Stat) Campaigns() []Campaign {
-	result := make([]Campaign, 0, len(s.Items))
-	for _, i := range s.Items {
-		result = append(result, i.Campaign)
+func (s *Stat) Campaigns() []*Campaign {
+	result := make([]*Campaign, 0, len(s.Items))
+	for i := range s.Items {
+		result = append(result, &s.Items[i].Campaign)
+	}
+
+	return result
+}
+
+func (s *Stat) CampaignsNotStarted() []*Campaign {
+	filter := func(i StatItem) bool {
+		return i.NotStarted()
+	}
+
+	return s.campaignsFiltered(filter)
+}
+
+func (s *Stat) CampaignsInProccess() []*Campaign {
+	filter := func(i StatItem) bool {
+		return i.InProccess()
+	}
+
+	return s.campaignsFiltered(filter)
+}
+
+func (s *Stat) CampaignsCompleted() []*Campaign {
+	filter := func(i StatItem) bool {
+		return i.Completed()
+	}
+
+	return s.campaignsFiltered(filter)
+}
+
+func (s *Stat) campaignsFiltered(filter func(i StatItem) bool) []*Campaign {
+	result := make([]*Campaign, 0)
+	for i, item := range s.Items {
+		if filter(item) {
+			result = append(result, &s.Items[i].Campaign)
+		}
 	}
 
 	return result

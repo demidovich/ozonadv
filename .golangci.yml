@@ -62,12 +62,15 @@ linters:
   exclusions:
     presets:
       - comments
+    # paths:
+    #   - "test/"
     rules:
       - path: (.+)_test\.go
         linters:
           - dupl
           - mnd
           - lll
+          - gosec
 
 formatters:
   enable:

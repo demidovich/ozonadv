@@ -4,19 +4,20 @@ import (
 	"cmp"
 	"log"
 	"os"
-	"ozonadv/internal/models"
-	"ozonadv/pkg/utils"
 	"path/filepath"
 	"slices"
+
+	"github.com/demidovich/ozonadv/internal/models"
+	"github.com/demidovich/ozonadv/pkg/utils"
 )
 
-type storageStats struct {
+type statsStorage struct {
 	dir          string
 	downloadsDir string
 }
 
-func newStorageStats(dir string) *storageStats {
-	s := storageStats{
+func newStatsStorage(dir string) *statsStorage {
+	s := statsStorage{
 		dir:          dir,
 		downloadsDir: dir + "/downloads",
 	}
@@ -24,7 +25,7 @@ func newStorageStats(dir string) *storageStats {
 	return &s
 }
 
-func (s *storageStats) All() []*models.Stat {
+func (s *statsStorage) All() []*models.Stat {
 	fnames := utils.DirListOrFail(s.dir)
 	result := make([]*models.Stat, 0, len(fnames))
 
@@ -53,12 +54,12 @@ func (s *storageStats) All() []*models.Stat {
 	return result
 }
 
-func (s *storageStats) Add(st *models.Stat) {
+func (s *statsStorage) Add(st *models.Stat) {
 	file := s.statFile(st)
 	utils.JSONFileWriteOrFail(file, st)
 }
 
-func (s *storageStats) SaveDownloadedFile(stat *models.Stat, filename string, data []byte) {
+func (s *statsStorage) AddDownloadsFile(stat *models.Stat, filename string, data []byte) {
 	utils.DirInitOrFail(s.downloadsDir)
 	file := s.downloadedFile(filename)
 
@@ -68,7 +69,7 @@ func (s *storageStats) SaveDownloadedFile(stat *models.Stat, filename string, da
 	}
 }
 
-func (s *storageStats) ReadDownloadedFile(stat *models.Stat, filename string) []byte {
+func (s *statsStorage) ReadDownloadedFile(stat *models.Stat, filename string) []byte {
 	file := s.downloadedFile(filename)
 	file = filepath.Clean(file)
 
@@ -80,7 +81,7 @@ func (s *storageStats) ReadDownloadedFile(stat *models.Stat, filename string) []
 	return content
 }
 
-func (s *storageStats) Remove(st *models.Stat) {
+func (s *statsStorage) Remove(st *models.Stat) {
 	if utils.DirExists(s.downloadsDir) {
 		for _, f := range utils.DirListOrFail(s.downloadsDir) {
 			file := s.downloadedFile(f)
@@ -96,10 +97,10 @@ func (s *storageStats) Remove(st *models.Stat) {
 	}
 }
 
-func (s *storageStats) statFile(st *models.Stat) string {
+func (s *statsStorage) statFile(st *models.Stat) string {
 	return s.dir + "/" + st.UUID + ".json"
 }
 
-func (s *storageStats) downloadedFile(fname string) string {
+func (s *statsStorage) downloadedFile(fname string) string {
 	return s.downloadsDir + "/" + fname
 }
