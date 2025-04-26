@@ -2,8 +2,10 @@ package storage
 
 import (
 	"cmp"
+	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 
@@ -12,14 +14,12 @@ import (
 )
 
 type statsStorage struct {
-	dir          string
-	downloadsDir string
+	dir string
 }
 
 func newStatsStorage(dir string) *statsStorage {
 	s := statsStorage{
-		dir:          dir,
-		downloadsDir: dir + "/downloads",
+		dir: dir,
 	}
 
 	return &s
@@ -29,17 +29,15 @@ func (s *statsStorage) All() []*models.Stat {
 	fnames := utils.DirListOrFail(s.dir)
 	result := make([]*models.Stat, 0, len(fnames))
 
-	for _, fname := range fnames {
-		if fname == "downloads" {
-			continue
+	for _, statUUID := range fnames {
+		file := s.statFile(statUUID)
+		stat := models.Stat{}
+
+		utils.JSONFileReadOrFail(file, &stat, "{}")
+		if stat.UUID == "" {
+			log.Fatal("некорректные данные в файле " + file)
 		}
 
-		path := s.dir + "/" + fname
-		stat := models.Stat{}
-		utils.JSONFileReadOrFail(path, &stat, "{}")
-		if stat.UUID == "" {
-			log.Fatal("некорректные данные в файле " + path)
-		}
 		result = append(result, &stat)
 	}
 
@@ -47,21 +45,22 @@ func (s *statsStorage) All() []*models.Stat {
 		return cmp.Compare(i.CreatedAt, j.CreatedAt)
 	})
 
-	// sort.Slice(result, func(i, j int) bool {
-	// 	return result[i].CreatedAt > result[j].CreatedAt
-	// })
-
 	return result
 }
 
-func (s *statsStorage) Add(st *models.Stat) {
-	file := s.statFile(st)
-	utils.JSONFileWriteOrFail(file, st)
+func (s *statsStorage) Add(stat *models.Stat) {
+	dir := s.statDir(stat.UUID)
+	utils.DirInitOrFail(dir)
+
+	file := s.statFile(stat.UUID)
+	utils.JSONFileWriteOrFail(file, stat)
 }
 
 func (s *statsStorage) AddDownloadsFile(stat *models.Stat, filename string, data []byte) {
-	utils.DirInitOrFail(s.downloadsDir)
-	file := s.downloadedFile(filename)
+	dir := s.downloadsDir(stat.UUID)
+	utils.DirInitOrFail(dir)
+
+	file := s.downloadsFile(stat.UUID, filename)
 
 	err := os.WriteFile(file, data, 0600)
 	if err != nil {
@@ -69,8 +68,8 @@ func (s *statsStorage) AddDownloadsFile(stat *models.Stat, filename string, data
 	}
 }
 
-func (s *statsStorage) ReadDownloadedFile(stat *models.Stat, filename string) []byte {
-	file := s.downloadedFile(filename)
+func (s *statsStorage) ReadDownloadsFile(stat *models.Stat, filename string) []byte {
+	file := s.downloadsFile(stat.UUID, filename)
 	file = filepath.Clean(file)
 
 	content, err := os.ReadFile(file)
@@ -81,26 +80,29 @@ func (s *statsStorage) ReadDownloadedFile(stat *models.Stat, filename string) []
 	return content
 }
 
-func (s *statsStorage) Remove(st *models.Stat) {
-	if utils.DirExists(s.downloadsDir) {
-		for _, f := range utils.DirListOrFail(s.downloadsDir) {
-			file := s.downloadedFile(f)
-			utils.FileRemoveOrFail(file)
-		}
-	}
+func (s *statsStorage) Remove(stat *models.Stat) {
+	statDir := s.statDir(stat.UUID)
+	statDir = path.Clean(statDir)
 
-	file := s.statFile(st)
-	utils.FileRemoveOrFail(file)
-
-	if err := os.Remove(s.dir); err != nil {
-		log.Fatal(err)
-	}
+	os.RemoveAll(statDir)
 }
 
-func (s *statsStorage) statFile(st *models.Stat) string {
-	return s.dir + "/" + st.UUID + ".json"
+// Generate directory file path
+func (s *statsStorage) statDir(statUUID string) string {
+	return fmt.Sprintf("%s/%s", s.dir, statUUID)
 }
 
-func (s *statsStorage) downloadedFile(fname string) string {
-	return s.downloadsDir + "/" + fname
+// Generate stat.json file path
+func (s *statsStorage) statFile(statUUID string) string {
+	return fmt.Sprintf("%s/%s/stat.json", s.dir, statUUID)
+}
+
+// Generate downloads directory path
+func (s *statsStorage) downloadsDir(statUUID string) string {
+	return fmt.Sprintf("%s/%s/downloads", s.dir, statUUID)
+}
+
+// Generate downloads file path
+func (s *statsStorage) downloadsFile(statUUID string, fname string) string {
+	return fmt.Sprintf("%s/%s/downloads/%s", s.dir, statUUID, fname)
 }

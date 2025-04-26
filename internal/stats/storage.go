@@ -11,5 +11,5 @@ type Storage interface {
 
 	AddDownloadsFile(stat *models.Stat, filename string, data []byte)
 
-	ReadDownloadedFile(stat *models.Stat, filename string) []byte
+	ReadDownloadsFile(stat *models.Stat, filename string) []byte
 }
