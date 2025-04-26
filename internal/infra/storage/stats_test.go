@@ -11,28 +11,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAdd(t *testing.T) {
+func TestStats_Add(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 
 	storage.Add(stat)
 
-	file := fmt.Sprintf("%s/%s.json", storage.dir, stat.UUID)
+	file := fmt.Sprintf("%s/%s/stat.json", storage.dir, stat.UUID)
 	assert.FileExists(t, file)
 }
 
-func TestRemove(t *testing.T) {
+func TestStats_Remove(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 
 	storage.Add(stat)
 	storage.Remove(stat)
 
-	file := fmt.Sprintf("%s/%s.json", storage.dir, stat.UUID)
-	assert.NoFileExists(t, file)
+	statFile := fmt.Sprintf("%s/%s/stat.json", storage.dir, stat.UUID)
+	assert.NoFileExists(t, statFile)
+
+	downloadsDir := fmt.Sprintf("%s/%s/downloads", storage.dir, stat.UUID)
+	assert.NoDirExists(t, downloadsDir)
 }
 
-func TestAll(t *testing.T) {
+func TestStats_All(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 
@@ -43,7 +46,7 @@ func TestAll(t *testing.T) {
 	assert.Equal(t, stat.UUID, all[0].UUID)
 }
 
-func TestAddDownloadsFile(t *testing.T) {
+func TestStats_AddDownloadsFile(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 	fname := gofakeit.UUID() + ".csv"
@@ -51,7 +54,7 @@ func TestAddDownloadsFile(t *testing.T) {
 
 	storage.AddDownloadsFile(stat, fname, []byte(fdata))
 
-	file := fmt.Sprintf("%s/downloads/%s", storage.dir, fname)
+	file := fmt.Sprintf("%s/%s/downloads/%s", storage.dir, stat.UUID, fname)
 	assert.FileExists(t, file)
 
 	data, err := os.ReadFile(file)
@@ -67,13 +70,13 @@ func TestReadDownloadsFile(t *testing.T) {
 	fdata := gofakeit.UUID()
 
 	storage.AddDownloadsFile(stat, fname, []byte(fdata))
-	data := storage.ReadDownloadedFile(stat, fname)
+	data := storage.ReadDownloadsFile(stat, fname)
 
 	assert.Equal(t, fdata, string(data))
 }
 
 func newTestingStatsStorage() *statsStorage {
-	dir := "/tmp/test-ozonadv-stats"
+	dir := os.TempDir() + "/test-ozonadv-stats"
 	os.RemoveAll(dir)
 	utils.DirInitOrFail(dir)
 

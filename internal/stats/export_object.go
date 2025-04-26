@@ -139,7 +139,7 @@ func (s objectStatExport) csvRows(file string) []string {
 }
 
 func (s objectStatExport) fileLines(file string) []string {
-	data := s.storage.ReadDownloadedFile(s.stat, file)
+	data := s.storage.ReadDownloadsFile(s.stat, file)
 	data = bytes.TrimSpace(data)
 
 	return strings.Split(string(data), "\n")
