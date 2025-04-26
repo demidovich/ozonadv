@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAdd(t *testing.T) {
+func TestStats_Add(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 
@@ -21,7 +21,7 @@ func TestAdd(t *testing.T) {
 	assert.FileExists(t, file)
 }
 
-func TestRemove(t *testing.T) {
+func TestStats_Remove(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 
@@ -35,7 +35,7 @@ func TestRemove(t *testing.T) {
 	assert.NoDirExists(t, downloadsDir)
 }
 
-func TestAll(t *testing.T) {
+func TestStats_All(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 
@@ -46,7 +46,7 @@ func TestAll(t *testing.T) {
 	assert.Equal(t, stat.UUID, all[0].UUID)
 }
 
-func TestAddDownloadsFile(t *testing.T) {
+func TestStats_AddDownloadsFile(t *testing.T) {
 	storage := newTestingStatsStorage()
 	stat := factory.Stat().New()
 	fname := gofakeit.UUID() + ".csv"

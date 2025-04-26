@@ -84,7 +84,10 @@ func (s *statsStorage) Remove(stat *models.Stat) {
 	statDir := s.statDir(stat.UUID)
 	statDir = path.Clean(statDir)
 
-	os.RemoveAll(statDir)
+	err := os.RemoveAll(statDir)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Generate directory file path
@@ -103,6 +106,6 @@ func (s *statsStorage) downloadsDir(statUUID string) string {
 }
 
 // Generate downloads file path
-func (s *statsStorage) downloadsFile(statUUID string, fname string) string {
+func (s *statsStorage) downloadsFile(statUUID, fname string) string {
 	return fmt.Sprintf("%s/%s/downloads/%s", s.dir, statUUID, fname)
 }
