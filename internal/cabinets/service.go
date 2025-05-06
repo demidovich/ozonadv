@@ -14,14 +14,15 @@ import (
 
 type Service struct {
 	storage        storage
-	campaignsCache []models.Campaign
+	campaignsCache map[string][]models.Campaign
 	debug          Debug
 }
 
 func NewService(out io.Writer, storage storage, debug Debug) *Service {
 	return &Service{
-		storage: storage,
-		debug:   debug,
+		storage:        storage,
+		campaignsCache: make(map[string][]models.Campaign),
+		debug:          debug,
 	}
 }
 
@@ -83,14 +84,18 @@ func (f *CampaignFilters) ids() map[string]bool {
 }
 
 func (s *Service) Campaigns(cabinet models.Cabinet) ([]models.Campaign, error) {
-	if len(s.campaignsCache) == 0 {
-		var err error
-		if s.campaignsCache, err = s.ozon(cabinet).Campaigns().All(); err != nil {
-			return s.campaignsCache, err
-		}
+	if cache, ok := s.campaignsCache[cabinet.UUID]; ok {
+		return cache, nil
 	}
 
-	return s.campaignsCache, nil
+	result, err := s.ozon(cabinet).Campaigns().All()
+	if err != nil {
+		return result, err
+	}
+
+	s.campaignsCache[cabinet.UUID] = result
+
+	return result, nil
 }
 
 func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilters) ([]models.Campaign, error) {
