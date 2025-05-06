@@ -242,21 +242,28 @@ func (c cabinetsPage) printCabinetTable(cabinet models.Cabinet) {
 func (c cabinetsPage) printStatRequestsTable(statRequests []models.StatRequest) {
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
-	tw.AppendRow(table.Row{"Состояние", "Создан", "Изменен", "ID кампании", "Интервал"})
+	tw.AppendRow(table.Row{"Состояние", "Отчет", "Интервал", "Создан", "Изменен"})
 	tw.AppendRow(table.Row{"", "", "", "", ""})
 
 	for _, item := range statRequests {
 		createdAt, _ := time.Parse(time.RFC3339Nano, item.CreatedAt)
 		updatedAt, _ := time.Parse(time.RFC3339Nano, item.UpdatedAt)
+
 		dateFrom, _ := time.Parse(time.RFC3339Nano, item.DateFrom())
 		dateTo, _ := time.Parse(time.RFC3339Nano, item.DateTo())
+		interval := dateFrom.Format(time.DateOnly) + " - " + dateTo.Format(time.DateOnly)
+
+		name := "#" + item.UUID
+		if stat, ok := c.statsService.FindByRequestUUID(item.UUID); ok {
+			name = stat.NameTruncated(45)
+		}
 
 		tw.AppendRow(table.Row{
 			item.State,
+			name,
+			interval,
 			createdAt.Format(time.DateTime),
 			updatedAt.Format(time.DateTime),
-			item.CampaignID(),
-			dateFrom.Format(time.DateOnly) + " - " + dateTo.Format(time.DateOnly),
 		})
 	}
 

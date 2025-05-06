@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"unicode/utf8"
 
 	"github.com/demidovich/ozonadv/pkg/validation"
 )
@@ -113,6 +114,18 @@ func (s *Stat) ItemByRequestUUID(uuid string) (*StatItem, bool) {
 	}
 
 	return nil, false
+}
+
+func (s *Stat) NameTruncated(length int) string {
+	suffix := "..."
+	suffixLength := utf8.RuneCountInString(suffix)
+
+	if utf8.RuneCountInString(s.Options.Name)+suffixLength <= length {
+		return s.Options.Name
+	}
+
+	r := []rune(s.Options.Name)
+	return string(r[:length-suffixLength]) + suffix
 }
 
 func (s *Stat) ToJSON() (string, error) {

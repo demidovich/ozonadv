@@ -40,11 +40,23 @@ func (s *Service) CabinetAll(cabinet models.Cabinet) []*models.Stat {
 }
 
 func (s *Service) Find(uuid string) (*models.Stat, bool) {
-	for _, c := range s.storage.All() {
-		if c.UUID == uuid {
-			return c, true
+	for _, stat := range s.storage.All() {
+		if stat.UUID == uuid {
+			return stat, true
 		}
 	}
+	return nil, false
+}
+
+func (s *Service) FindByRequestUUID(requestUUID string) (*models.Stat, bool) {
+	for _, stat := range s.storage.All() {
+		for _, item := range stat.Items {
+			if item.Request.UUID == requestUUID {
+				return stat, true
+			}
+		}
+	}
+
 	return nil, false
 }
 
