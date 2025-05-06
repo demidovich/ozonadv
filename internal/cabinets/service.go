@@ -57,6 +57,21 @@ func (s *Service) Remove(c models.Cabinet) {
 	s.storage.Remove(c)
 }
 
+func (s *Service) Campaigns(cabinet models.Cabinet) ([]models.Campaign, error) {
+	if cache, ok := s.campaignsCache[cabinet.UUID]; ok {
+		return cache, nil
+	}
+
+	result, err := s.ozon(cabinet).Campaigns().All()
+	if err != nil {
+		return result, err
+	}
+
+	s.campaignsCache[cabinet.UUID] = result
+
+	return result, nil
+}
+
 type CampaignFilters struct {
 	Title  string
 	States []string
@@ -81,21 +96,6 @@ func (f *CampaignFilters) ids() map[string]bool {
 	}
 
 	return v
-}
-
-func (s *Service) Campaigns(cabinet models.Cabinet) ([]models.Campaign, error) {
-	if cache, ok := s.campaignsCache[cabinet.UUID]; ok {
-		return cache, nil
-	}
-
-	result, err := s.ozon(cabinet).Campaigns().All()
-	if err != nil {
-		return result, err
-	}
-
-	s.campaignsCache[cabinet.UUID] = result
-
-	return result, nil
 }
 
 func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilters) ([]models.Campaign, error) {
@@ -128,6 +128,31 @@ func (s *Service) CampaignsFiltered(cabinet models.Cabinet, filters CampaignFilt
 		for _, campaign := range result {
 			if slices.Contains(filters.States, campaign.State) {
 				filtered = append(filtered, campaign)
+			}
+		}
+		result = filtered
+	}
+
+	return result, nil
+}
+
+type StatRequestFilters struct {
+	States []string
+}
+
+func (s *Service) StatRequestsFiltered(cabinet models.Cabinet, filters StatRequestFilters) ([]models.StatRequest, error) {
+	ozonAPI := s.ozon(cabinet)
+
+	result, err := ozonAPI.StatRequests().All()
+	if err != nil {
+		return result, err
+	}
+
+	if len(filters.States) > 0 {
+		filtered := []models.StatRequest{}
+		for _, statRequest := range result {
+			if slices.Contains(filters.States, statRequest.State) {
+				filtered = append(filtered, statRequest)
 			}
 		}
 		result = filtered

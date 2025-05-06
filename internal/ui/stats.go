@@ -402,6 +402,10 @@ func (c statsPage) statExportForm() (string, error) {
 }
 
 func (c statsPage) printStatTable(stat *models.Stat) {
+	if stat == nil {
+		return
+	}
+
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"Отчет", stat.Options.Name})
@@ -417,10 +421,14 @@ func (c statsPage) printStatTable(stat *models.Stat) {
 }
 
 func (c statsPage) printStatCampaignsTable(stat *models.Stat) {
+	if stat == nil {
+		return
+	}
+
 	tw := table.NewWriter()
 	tw.SetStyle(table.StyleRounded)
 	tw.AppendRow(table.Row{"#", "Тип", "Кампания", "Запуск", "Окончание", "Состояние отчета"})
-	tw.AppendRow(table.Row{"", "", "", "", ""})
+	tw.AppendRow(table.Row{"", "", "", "", "", ""})
 
 	for _, item := range stat.Items {
 		tw.AppendRow(table.Row{

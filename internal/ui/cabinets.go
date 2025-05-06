@@ -75,15 +75,16 @@ func (c cabinetsPage) Home() error {
 		return err
 	}
 
+	c.printCabinetTable(*cabinet)
+
 	return c.cabinet(*cabinet)
 }
 
 func (c cabinetsPage) cabinet(cabinet models.Cabinet) error {
-	c.printCabinetTable(cabinet)
-
 	options := []helpers.ListOption{
 		{Key: "Кампании", Value: "campaigns_list"},
 		{Key: "Отчеты", Value: "stats_list"},
+		{Key: "Активные запросы API", Value: "active_api_requests"},
 		{Key: "Редактировать", Value: "update_cabinet"},
 		{Key: "Удалить", Value: "remove_cabinet"},
 		{Key: "Назад", Value: "back"},
@@ -104,6 +105,11 @@ func (c cabinetsPage) cabinet(cabinet models.Cabinet) error {
 		}
 	case "stats_list":
 		err = c.ui.statsPage.CabinetStats(cabinet)
+	case "active_api_requests":
+		err = c.activeAPIRequests(&cabinet)
+		if err == nil {
+			return c.cabinet(cabinet)
+		}
 	case "update_cabinet":
 		err = c.updateCabinet(&cabinet)
 		if err == nil || isFormCanceled(err) {
@@ -156,6 +162,33 @@ func (c cabinetsPage) updateCabinet(cabinet *models.Cabinet) error {
 	return nil
 }
 
+func (c cabinetsPage) activeAPIRequests(cabinet *models.Cabinet) error {
+	filters := cabinets.StatRequestFilters{
+		States: []string{
+			"NOT_STARTED",
+			"IN_PROGRESS",
+		},
+	}
+
+	requests, err := c.cabsService.StatRequestsFiltered(*cabinet, filters)
+	if err != nil {
+		return err
+	}
+
+	if len(requests) == 0 {
+		fmt.Println("")
+		fmt.Println("Нет активных запросов API")
+		fmt.Println("")
+		return nil
+	}
+
+	fmt.Println("")
+	c.printStatRequestsTable(requests)
+	fmt.Println("")
+
+	return nil
+}
+
 func (c cabinetsPage) editCabinetForm(cabinet *models.Cabinet) error {
 	confirm := false
 	form := huh.NewForm(
@@ -204,4 +237,29 @@ func (c cabinetsPage) printCabinetTable(cabinet models.Cabinet) {
 
 	fmt.Println(tw.Render())
 	fmt.Println("")
+}
+
+func (c cabinetsPage) printStatRequestsTable(statRequests []models.StatRequest) {
+	tw := table.NewWriter()
+	tw.SetStyle(table.StyleRounded)
+	tw.AppendRow(table.Row{"Состояние", "Создан", "Изменен", "ID кампании", "Интервал"})
+	tw.AppendRow(table.Row{"", "", "", "", ""})
+
+	for _, item := range statRequests {
+		createdAt, _ := time.Parse(time.RFC3339Nano, item.CreatedAt)
+		updatedAt, _ := time.Parse(time.RFC3339Nano, item.UpdatedAt)
+		dateFrom, _ := time.Parse(time.RFC3339Nano, item.DateFrom())
+		dateTo, _ := time.Parse(time.RFC3339Nano, item.DateTo())
+
+		tw.AppendRow(table.Row{
+			item.State,
+			createdAt.Format(time.DateTime),
+			updatedAt.Format(time.DateTime),
+			item.CampaignID(),
+			dateFrom.Format(time.DateOnly) + " - " + dateTo.Format(time.DateOnly),
+		})
+	}
+
+	fmt.Println(tw.Render())
+	fmt.Println("Всего запросов:", len(statRequests))
 }
